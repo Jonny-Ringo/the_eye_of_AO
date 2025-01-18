@@ -1,0 +1,198 @@
+body {
+    font-family: 'Roboto', sans-serif;
+    font-weight: 200;
+    margin: 0;
+    padding: 0;
+    background-color: white;
+}
+
+header {
+    background-color: black;
+    color: white;
+    padding: 10px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.loader-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.chart-loader {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.7);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 500;
+}
+
+.loader {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #f3f3f3;
+    border-radius: 50%;
+    border-top: 5px solid #000;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+}
+
+.loader-text {
+    font-size: 1.1rem;
+    color: #333;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Add these new classes */
+.eye-loader {
+    width: 96px;
+    height: 48px;
+    position: relative;
+    margin-bottom: 1rem;
+    transform: rotate(180deg);
+}
+
+.eye-container {
+    position: absolute;
+    inset: 0;
+    /* Create the border using a pseudo-element instead */
+    clip-path: ellipse(47% 48% at 50% 50%);
+    overflow: hidden;
+}
+
+.eye-container::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgb(17, 17, 17);
+    clip-path: ellipse(48% 49% at 50% 50%);
+}
+
+.eye-container::after {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    background: rgb(249, 249, 249);
+    clip-path: ellipse(47% 48% at 50% 50%);
+}
+
+.iris {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 32px;
+    height: 32px;
+    margin-top: -16px;
+    margin-left: -16px;
+    background: rgb(31, 31, 31);
+    border-radius: 9999px;
+    box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+    z-index: 10;
+}
+
+.pupil {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 16px;
+    height: 16px;
+    margin-top: -8px;
+    margin-left: -8px;
+    background: black;
+    border-radius: 9999px;
+}
+
+.reflection {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 8px;
+    height: 8px;
+    background: white;
+    border-radius: 9999px;
+    opacity: 0.9;
+}
+
+.eyelid {
+    position: absolute;
+    inset: 0;
+    background: rgb(17, 17, 17);
+    border-radius: 9999px;
+    transform-origin: bottom;
+    animation: blink 2.5s infinite ease-in-out;
+    z-index: 20;
+}
+
+.lower-lid {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 33.333333%;
+    background: rgb(17, 17, 17);
+    clip-path: ellipse(77% 100% at 50% 100%);
+    transform-origin: top;
+    z-index: 20;
+}
+
+@keyframes blink {
+    0%, 90%, 100% {
+        transform: scaleY(0.1);
+    }
+    95% {
+        transform: scaleY(1);
+    }
+}
+
+.chart-container {
+    position: relative;
+    margin-bottom: 3rem;
+    height: 400px;
+    padding-top: 30px;
+    padding-bottom: 30px;
+    margin-top: 10px;
+    margin-bottom: 15px;
+}
+
+.chart-container h3 {
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: x-large;
+    margin-top: 30px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.chart-container {
+    margin-bottom: 3rem;
+    height: 400px;
+}
+
+.block-info {
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+}
