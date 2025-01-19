@@ -1,4 +1,8 @@
+import { createDataItemSigner, dryrun, message, result, results } from "https://unpkg.com/@permaweb/aoconnect@0.0.59/dist/browser.js";
 import { PROCESSES, generateQuery } from './processes.js';
+
+// Block Tracking Process ID
+const BLOCK_TRACKING_PROCESS = '_g3kxQxL7F4Y9vXvHaR_cEa7oPkcjFpyuuHLMcHKSds';
 
 // Store historical data for each query
 const historicalData = {
@@ -20,7 +24,7 @@ Object.keys(PROCESSES).forEach(processName => {
         data: {
             labels: [],
             datasets: [{
-                label:'',
+                label: '',
                 data: [],
                 borderColor: 'rgb(0, 0, 0)',
                 tension: 0.1,
@@ -58,7 +62,7 @@ Object.keys(PROCESSES).forEach(processName => {
                         label: function(context) {
                             const dataPoint = historicalData[processName][context.dataIndex];
                             const count = dataPoint.count;
-                            
+
                             // If this is the latest period, show "Current data as of [timestamp]"
                             if (context.dataIndex === historicalData[processName].length - 1) {
                                 const currentTime = new Date().toLocaleString(undefined, {
@@ -70,13 +74,18 @@ Object.keys(PROCESSES).forEach(processName => {
                                 });
                                 return `Count: ${count} (Current data as of ${currentTime})`;
                             }
-                            
+
                             return `Count: ${count}`;
                         },
                         title: function(context) {
-                            // Convert the timestamp to local time
                             const date = new Date(context[0].label);
-                            return date.toLocaleString(undefined, {
+                            
+                            // For weekly charts, subtract one day
+                            if (processName.includes('weekly')) {
+                                date.setDate(date.getDate());
+                            }
+                        
+                            return date.toLocaleString('en-US', {
                                 month: 'short',
                                 day: 'numeric',
                                 hour: 'numeric',
@@ -92,6 +101,19 @@ Object.keys(PROCESSES).forEach(processName => {
     });
 });
 
+
+// Debugging function to log chart details
+function logChartDetails() {
+    Object.keys(charts).forEach(processName => {
+        console.log(`Chart for ${processName}:`, {
+            labels: charts[processName].data.labels,
+            data: charts[processName].data.datasets[0].data,
+            historicalData: historicalData[processName]
+        });
+    });
+}
+logChartDetails();
+
 // Initialize loaders to be visible when page loads
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('mainLoader').style.display = 'flex';
@@ -100,152 +122,119 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-async function fetchHistoricalData(periods, processName) {
+
+async function fetchBlockHeights() {
     try {
-        const periodData = await Promise.all(periods.map(async (period) => {
-            const query = generateQuery(processName, period.startHeight, period.endHeight);
+        // First, get the current Arweave block height
+        const infoResponse = await fetch("https://arweave.net/info");
+        const networkInfo = await infoResponse.json();
+        const currentHeight = networkInfo.height;
+        console.log("Current Arweave network height is: " + currentHeight);
 
-            const response = await fetch('https://arweave-search.goldsky.com/graphql', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ query }),
-            });
+        // Dry run to get block history from AO process
+        const blockHistoryResponse = await dryrun({
+            process: BLOCK_TRACKING_PROCESS,
+            data: '',
+            tags: [
+                { name: "Action", value: "BlocksHistory" },
+                { name: "Data-Protocol", value: "ao" },
+                { name: "Type", value: "Message" },
+                { name: "Variant", value: "ao.TN.1" }
+            ],
+        });
 
-            const result = await response.json();
-            return result.data.transactions.count;
-        }));
+        // Check if we have a valid response
+        if (
+            blockHistoryResponse && 
+            blockHistoryResponse.Messages && 
+            blockHistoryResponse.Messages[0] && 
+            blockHistoryResponse.Messages[0].Tags
+        ) {
+            // Find the DailyBlocks tag
+            const dailyBlocksTag = blockHistoryResponse.Messages[0].Tags.find(
+                tag => tag.name === "DailyBlocks"
+            );
 
-        // Update historical data with correct end times
-        historicalData[processName] = periodData.map((count, index) => ({
-            timestamp: periods[index].endTime, // Use the provided end time
-            count: count,
-        }));
+            if (!dailyBlocksTag) {
+                throw new Error("No DailyBlocks tag found in the response.");
+            }
 
-        // Generate labels based on process type (daily vs. weekly)
-        const chart = charts[processName];
-        if (processName.includes('weekly')) {
-            // Smarter label logic for weekly processes (+7 days)
-            chart.data.labels = historicalData[processName].map((d, index, array) => {
-                let labelDate;
-                if (index === 0) {
-                    // Use the actual end time for the first period
-                    labelDate = new Date(d.timestamp);
-                } else {
-                    // Calculate the label as +7 days from the previous label
-                    const prevLabelDate = new Date(array[index - 1].timestamp);
-                    labelDate = new Date(prevLabelDate);
-                    labelDate.setDate(prevLabelDate.getDate() + 7);
-                }
+            const blockData = JSON.parse(dailyBlocksTag.value);
+            
+            // Sort blocks by date (descending)
+            blockData.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-                // Format the label date
-                return labelDate.toLocaleString(undefined, {
-                    month: 'short',
-                    day: 'numeric',
-                    hour: 'numeric',
-                    minute: 'numeric',
-                    hour12: true,
-                });
-            });
+            // Generate periods based on block history, using current network height
+            const dailyPeriods = await getDailyPeriods(currentHeight, blockData);
+            updateDisplayAndFetchData(currentHeight, dailyPeriods);
+
+            // Fetch weekly data
+            await fetchWeeklyData(currentHeight, blockData);
         } else {
-            // Smarter label logic for daily processes (+1 day)
-            chart.data.labels = historicalData[processName].map((d, index, array) => {
-                let labelDate;
-                if (index === 0) {
-                    // Use the actual end time for the first period
-                    labelDate = new Date(d.timestamp);
-                } else {
-                    // Calculate the label as +1 day from the previous label
-                    const prevLabelDate = new Date(array[index - 1].timestamp);
-                    labelDate = new Date(prevLabelDate);
-                    labelDate.setDate(prevLabelDate.getDate() + 1);
-                }
+            throw new Error("No valid block height data found in the response.");
+        }
+    } catch (error) {
+        console.error("Error fetching block heights:", error);
+        // Hide loaders on error
+        document.getElementById('mainLoader').style.display = 'none';
+        Object.keys(PROCESSES).forEach(processName => {
+            document.getElementById(`${processName}Loader`).style.display = 'none';
+        });
+    }
+}
 
-                // Format the label date
-                return labelDate.toLocaleString(undefined, {
-                    month: 'short',
-                    day: 'numeric',
-                    hour: 'numeric',
-                    minute: 'numeric',
-                    hour12: true,
-                });
+async function getDailyPeriods(currentHeight, blockData) {
+    // Find the most recent 0:00 UTC day
+    const lastCheckpoint = getLastDailyCheckpoint(new Date());
+
+    // Add current period first (from last 0:00 UTC to now)
+    const periods = [{
+        endTime: new Date(),
+        startTime: lastCheckpoint,
+        endHeight: currentHeight,
+        startHeight: blockData[0].blockHeight
+    }];
+
+    // Then add historical periods
+    for (let i = 1; i < 14; i++) {
+        const endDate = new Date(lastCheckpoint);
+        endDate.setUTCDate(endDate.getUTCDate() - (i - 1));
+
+        const startDate = new Date(endDate);
+        startDate.setUTCDate(startDate.getUTCDate() - 1);
+
+        // Find blocks closest to these dates
+        const endBlock = findBlockNearDate(blockData, endDate);
+        const startBlock = findBlockNearDate(blockData, startDate);
+
+        if (endBlock && startBlock) {
+            periods.push({
+                endTime: endDate,
+                startTime: startDate,
+                endHeight: endBlock.blockHeight,
+                startHeight: startBlock.blockHeight
             });
         }
-
-        // Update chart data and refresh
-        chart.data.datasets[0].data = historicalData[processName].map((d) => d.count);
-        chart.update('none'); // Force chart update without animation
-        document.getElementById(`${processName}Loader`).style.display = 'none';
-    } catch (error) {
-        console.error(`Error fetching historical data for ${processName}:`, error);
-        // Hide loader on error
-        document.getElementById(`${processName}Loader`).style.display = 'none';
     }
+
+    return periods.reverse(); // Put in chronological order
 }
 
+function findBlockNearDate(blockData, targetDate) {
+    return blockData.reduce((closest, block) => {
+        const blockDate = new Date(block.date);
+        const currentClosestDate = closest ? new Date(closest.date) : null;
+        
+        const blockTimeDiff = Math.abs(blockDate - targetDate);
+        const closestTimeDiff = currentClosestDate 
+            ? Math.abs(currentClosestDate - targetDate) 
+            : Infinity;
 
-async function findBlockAtTime(targetDate, currentHeight) {
-    // Get rough block estimate first (average 2 min per block)
-    const now = new Date();
-    const minutesDiff = (now - targetDate) / (1000 * 60);
-    const estimatedBlocksBack = Math.floor(minutesDiff / 2.13);
-    const estimatedHeight = currentHeight - estimatedBlocksBack;
-    
-    // Expand search range to ensure we find the closest block
-    const searchRange = 100;  // Increased search range
-    const startHeight = Math.max(0, estimatedHeight - searchRange);
-    const endHeight = estimatedHeight + searchRange;
-    
-    const blockPromises = [];
-    for (let height = startHeight; height <= endHeight; height++) {
-        blockPromises.push(
-            fetch(`https://arweave.net/block/height/${height}`)
-                .then(response => response.json())
-                .then(block => ({
-                    height: height,
-                    timestamp: block.timestamp,
-                    date: new Date(block.timestamp * 1000)
-                }))
-                .catch(error => {
-                    console.error(`Error fetching block ${height}:`, error);
-                    return null;
-                })
-        );
-    }
-    
-    const blocks = (await Promise.allSettled(blockPromises))
-        .filter(result => result.status === 'fulfilled' && result.value !== null)
-        .map(result => result.value);
-    
-    // Find block closest to target time
-    let bestBlock = null;
-    let smallestDiff = Infinity;
-    
-    blocks.forEach(block => {
-        const timeDiff = Math.abs(block.date - targetDate);
-        if (timeDiff < smallestDiff) {
-            smallestDiff = timeDiff;
-            bestBlock = block;
-        }
-    });
-
-    // Log the found block with both UTC and local times for verification
-    if (bestBlock) {
-        console.log(`For target ${targetDate.toLocaleString()}`);
-        console.log(`Found block ${bestBlock.height}`);
-        console.log(`UTC: ${bestBlock.date.toUTCString()}`);
-        console.log(`Local: ${bestBlock.date.toLocaleString()}`);
-        console.log('Time Difference (ms):', smallestDiff);
-        console.log('---');
-    }
-
-    return bestBlock;
+        return blockTimeDiff < closestTimeDiff ? block : closest;
+    }, null);
 }
 
-
-
-async function fetchWeeklyData(currentHeight) {
+async function fetchWeeklyData(currentHeight, blockData) {
     try {
         // Show weekly chart loaders
         Object.keys(PROCESSES).forEach(processName => {
@@ -254,7 +243,7 @@ async function fetchWeeklyData(currentHeight) {
             }
         });
 
-        const weeklyPeriods = await getWeeklyPeriods(currentHeight);
+        const weeklyPeriods = await getWeeklyPeriods(currentHeight, blockData);
 
         // Fetch historical data for weekly processes
         for (const processName of Object.keys(PROCESSES)) {
@@ -280,19 +269,16 @@ async function fetchWeeklyData(currentHeight) {
     }
 }
 
-async function getWeeklyPeriods(currentHeight) {
+async function getWeeklyPeriods(currentHeight, blockData) {
     // Find the most recent Sunday at 0:00 UTC
     const lastCheckpoint = getLastSundayCheckpoint(new Date());
-
-    // Get block for last Sunday checkpoint
-    const lastCheckpointBlock = await findBlockAtTime(lastCheckpoint, currentHeight, 50);
 
     // Add current period first (from last Sunday to now)
     const periods = [{
         endTime: new Date(),
         startTime: lastCheckpoint,
         endHeight: currentHeight,
-        startHeight: lastCheckpointBlock.height
+        startHeight: blockData[0].blockHeight
     }];
 
     // Then add historical periods (7 weeks back)
@@ -303,15 +289,18 @@ async function getWeeklyPeriods(currentHeight) {
         const startDate = new Date(endDate);
         startDate.setDate(startDate.getDate() - 7);
 
-        const endBlock = await findBlockAtTime(endDate, currentHeight, 250);
-        const startBlock = await findBlockAtTime(startDate, currentHeight, 250);
+        // Find blocks closest to these dates
+        const endBlock = findBlockNearDate(blockData, endDate);
+        const startBlock = findBlockNearDate(blockData, startDate);
 
-        periods.push({
-            endTime: endDate,
-            startTime: startDate,
-            endHeight: endBlock.height,
-            startHeight: startBlock.height
-        });
+        if (endBlock && startBlock) {
+            periods.push({
+                endTime: endDate,
+                startTime: startDate,
+                endHeight: endBlock.blockHeight,
+                startHeight: startBlock.blockHeight
+            });
+        }
     }
 
     return periods.reverse(); // Put in chronological order
@@ -334,36 +323,10 @@ function getLastSundayCheckpoint(now) {
     return sunday;
 }
 
-async function updateBlockHeight() {
-    try {
-        // Show main loader
-        document.getElementById('mainLoader').style.display = 'flex';
-
-        // Show all chart loaders
-        Object.keys(PROCESSES).forEach(processName => {
-            document.getElementById(`${processName}Loader`).style.display = 'flex';
-        });
-
-        const response = await fetch("https://arweave.net/info");
-        const data = await response.json();
-        const currentHeight = data.height;
-        console.log("Current Arweave height is: " + currentHeight);
-
-        const dailyPeriods = await getDailyPeriods(currentHeight);
-
-        // Update display and fetch daily data
-        updateDisplayAndFetchData(currentHeight, dailyPeriods);
-
-        // Fetch weekly data
-        await fetchWeeklyData(currentHeight);
-    } catch (error) {
-        console.error(error);
-        // Hide loaders on error
-        document.getElementById('mainLoader').style.display = 'none';
-        Object.keys(PROCESSES).forEach(processName => {
-            document.getElementById(`${processName}Loader`).style.display = 'none';
-        });
-    }
+function getLastDailyCheckpoint(now) {
+    const lastCheckpoint = new Date(now);
+    lastCheckpoint.setUTCHours(0, 0, 0, 0);
+    return lastCheckpoint;
 }
 
 function updateDisplayAndFetchData(currentHeight, periods) {
@@ -390,51 +353,167 @@ function updateDisplayAndFetchData(currentHeight, periods) {
     }
 }
 
-async function getDailyPeriods(currentHeight) {
-    // Find the most recent 0:00 UTC day
-    const lastCheckpoint = getLastDailyCheckpoint(new Date());
+// Helper function to generate consistent colors for processes
+function getProcessColor(processName) {
+    const colorMap = {
+        permaswap: 'rgb(54, 162, 235)',
+        botega: 'rgb(255, 99, 132)',
+        qARTransfer: 'rgb(75, 192, 192)',
+        qARweeklyTransfer: 'rgb(153, 102, 255)',
+        wARTransfer: 'rgb(255, 159, 64)',
+        wARweeklyTransfer: 'rgb(199, 199, 199)',
+        llamaLand: 'rgb(255, 205, 86)'
+    };
+    return colorMap[processName] || 'rgb(0, 0, 0)';
+}
 
-    // Get block for last 0:00 UTC checkpoint
-    const lastCheckpointBlock = await findBlockAtTime(lastCheckpoint, currentHeight, 50);
 
-    // Add current period first (from last 0:00 UTC to now)
-    const periods = [{
-        endTime: new Date(),
-        startTime: lastCheckpoint,
-        endHeight: currentHeight,
-        startHeight: lastCheckpointBlock.height
-    }];
+// Existing fetchHistoricalData function remains the same as in the original script
+async function fetchHistoricalData(periods, processName) {
+    try {
+        console.log(`>>> START Fetching historical data for ${processName}`);
+        console.log('Periods:', JSON.stringify(periods, null, 2));
 
-    // Then add historical periods
-    for (let i = 1; i < 14; i++) {
-        const endDate = new Date(lastCheckpoint);
-        endDate.setUTCDate(endDate.getUTCDate() - (i - 1));
+        // Verify the chart exists
+        const chart = charts[processName];
+        if (!chart) {
+            console.error(`CRITICAL: No chart found for process: ${processName}`);
+            console.log('Available charts:', Object.keys(charts));
+            return;
+        }
 
-        const startDate = new Date(endDate);
-        startDate.setUTCDate(startDate.getUTCDate() - 1);
+        // Log available processes in PROCESSES
+        console.log('Available Processes:', Object.keys(PROCESSES));
 
-        const endBlock = await findBlockAtTime(endDate, currentHeight, 50);
-        const startBlock = await findBlockAtTime(startDate, currentHeight, 50);
+        // Verify the process exists in PROCESSES
+        const process = PROCESSES[processName];
+        if (!process) {
+            console.error(`CRITICAL: Process ${processName} not found in PROCESSES`);
+            return;
+        }
 
-        periods.push({
-            endTime: endDate,
-            startTime: startDate,
-            endHeight: endBlock.height,
-            startHeight: startBlock.height
+        // Generate and execute queries for each period
+        const periodData = await Promise.all(periods.map(async (period, index) => {
+            try {
+                // Generate query with current block height
+                const query = generateQuery(processName, period.startHeight, period.endHeight);
+                console.log(`GraphQL Query for ${processName} (Period ${index}):`, query);
+
+                const response = await fetch('https://arweave-search.goldsky.com/graphql', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ query }),
+                });
+
+                const result = await response.json();
+                const count = result.data.transactions.count;
+                
+                console.log(`Period ${index} result for ${processName}:`, {
+                    startHeight: period.startHeight,
+                    endHeight: period.endHeight,
+                    endTime: period.endTime,
+                    count: count
+                });
+
+                return count;
+            } catch (periodError) {
+                console.error(`Error processing period ${index} for ${processName}:`, periodError);
+                return 0;
+            }
+        }));
+
+        // Update historical data
+        historicalData[processName] = periodData.map((count, index) => ({
+            timestamp: periods[index].endTime,
+            count: count
+        }));
+
+        console.log(`Historical data for ${processName}:`, JSON.stringify(historicalData[processName], null, 2));
+
+        // Validate historical data
+        if (historicalData[processName].length === 0) {
+            console.error(`NO HISTORICAL DATA for ${processName}`);
+            return;
+        }
+
+        const chartLabels = historicalData[processName].map((d, index, array) => {
+            let labelDate;
+            if (index === 0) {
+                // Use the actual end time for the first period
+                labelDate = new Date(d.timestamp);
+            } else {
+                // Calculate the label based on process type
+                const prevLabelDate = new Date(array[index - 1].timestamp);
+                labelDate = new Date(prevLabelDate);
+                
+                // Add 1 or 7 days depending on process type
+                const daysToAdd = processName.includes('weekly') ? 7 : 1;
+                labelDate.setDate(prevLabelDate.getDate() + daysToAdd);
+            }
+        
+                // For weekly charts, subtract one day
+                if (processName.includes('weekly')) {
+                    labelDate.setDate(labelDate.getDate());
+                }
+        
+            // Format the label date
+            return labelDate.toLocaleString(undefined, {
+                month: 'short',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: 'numeric',
+                hour12: true,
+            });
         });
+
+        const chartData = historicalData[processName].map((d) => d.count);
+
+        // Log chart preparation details
+        console.log(`Chart Labels for ${processName}:`, chartLabels);
+        console.log(`Chart Data for ${processName}:`, chartData);
+
+        // Update chart
+        chart.data.labels = chartLabels;
+        chart.data.datasets[0].data = chartData;
+        chart.data.datasets[0].label = processName;
+        
+        // Update chart colors dynamically
+        chart.data.datasets[0].borderColor = getProcessColor(processName);
+
+        // Force chart update
+        chart.update('none');
+
+        // Verify chart update
+        console.log(`Final Chart for ${processName}:`, {
+            labels: chart.data.labels,
+            data: chart.data.datasets[0].data
+        });
+
+        // Hide loader
+        const loader = document.getElementById(`${processName}Loader`);
+        if (loader) {
+            loader.style.display = 'none';
+        }
+
+        console.log(`>>> END Successfully updated chart for ${processName}`);
+    } catch (error) {
+        console.error(`COMPREHENSIVE ERROR for ${processName}:`, error);
+        
+        // Hide loader on error
+        const loader = document.getElementById(`${processName}Loader`);
+        if (loader) {
+            loader.style.display = 'none';
+        }
     }
-
-    return periods.reverse(); // Put in chronological order
 }
 
-function getLastDailyCheckpoint(now) {
-    const lastCheckpoint = new Date(now);
-    lastCheckpoint.setUTCHours(0, 0, 0, 0);
-    return lastCheckpoint;
-}
+// Initial update using AO block tracking
+fetchBlockHeights();
 
-// Initial update
-updateBlockHeight();
+// Update every 20 minutes
+setInterval(fetchBlockHeights, 20 * 60 * 1000);
 
-// Update every 5 minutes
-setInterval(updateBlockHeight, 20 * 60 * 1000);
+// Export functions if needed
+export { fetchBlockHeights, fetchHistoricalData };
