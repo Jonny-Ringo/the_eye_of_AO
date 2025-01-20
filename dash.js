@@ -78,22 +78,25 @@ Object.keys(PROCESSES).forEach(processName => {
                             return `Count: ${count}`;
                         },
                         title: function(context) {
-                            const date = new Date(context[0].label);
-                            
-                            // For weekly charts, subtract one day
-                            if (processName.includes('weekly')) {
-                                date.setDate(date.getDate());
-                            }
+                            // Get the data index
+                            const dataIndex = context[0].dataIndex;
                         
+                            // Retrieve the correct timestamp from historical data
+                            const dataPoint = historicalData[processName][dataIndex];
+                            const date = new Date(dataPoint.timestamp); // Use the correct timestamp
+                        
+                            // Format the date using UTC to ensure consistency
                             return date.toLocaleString('en-US', {
+                                year: 'numeric', // Explicitly include the year
                                 month: 'short',
                                 day: 'numeric',
                                 hour: 'numeric',
                                 minute: 'numeric',
                                 hour12: true,
-                                weekday: 'short'
+                                weekday: 'short',
                             });
                         }
+                        
                     }
                 }
             }
@@ -454,9 +457,9 @@ async function fetchHistoricalData(periods, processName) {
             }
         
                 // For weekly charts, subtract one day
-                if (processName.includes('weekly')) {
-                    labelDate.setDate(labelDate.getDate());
-                }
+            if (processName.includes('weekly')) {
+                labelDate.setDate(labelDate.getDate());
+            }
         
             // Format the label date
             return labelDate.toLocaleString(undefined, {
