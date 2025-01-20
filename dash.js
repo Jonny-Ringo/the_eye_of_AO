@@ -371,7 +371,6 @@ function getProcessColor(processName) {
 }
 
 
-// Existing fetchHistoricalData function remains the same as in the original script
 async function fetchHistoricalData(periods, processName) {
     try {
         console.log(`>>> START Fetching historical data for ${processName}`);
@@ -385,21 +384,16 @@ async function fetchHistoricalData(periods, processName) {
             return;
         }
 
-        // Log available processes in PROCESSES
-        console.log('Available Processes:', Object.keys(PROCESSES));
-
-        // Verify the process exists in PROCESSES
-        const process = PROCESSES[processName];
-        if (!process) {
-            console.error(`CRITICAL: Process ${processName} not found in PROCESSES`);
-            return;
-        }
-
         // Generate and execute queries for each period
         const periodData = await Promise.all(periods.map(async (period, index) => {
             try {
                 // Generate query with current block height
-                const query = generateQuery(processName, period.startHeight, period.endHeight);
+                const query = await generateQuery(
+                    processName, 
+                    period.startHeight, 
+                    period.endHeight, 
+                    periods[periods.length - 1].endHeight
+                );
                 console.log(`GraphQL Query for ${processName} (Period ${index}):`, query);
 
                 const response = await fetch('https://arweave-search.goldsky.com/graphql', {
@@ -455,12 +449,12 @@ async function fetchHistoricalData(periods, processName) {
                 const daysToAdd = processName.includes('weekly') ? 7 : 1;
                 labelDate.setDate(prevLabelDate.getDate() + daysToAdd);
             }
-        
-                // For weekly charts, subtract one day
+
+            // For weekly charts, add one day
             if (processName.includes('weekly')) {
                 labelDate.setDate(labelDate.getDate());
             }
-        
+
             // Format the label date
             return labelDate.toLocaleString(undefined, {
                 month: 'short',
@@ -511,7 +505,6 @@ async function fetchHistoricalData(periods, processName) {
         }
     }
 }
-
 // Initial update using AO block tracking
 fetchBlockHeights();
 

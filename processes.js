@@ -1,11 +1,6 @@
-// processes.js
 
-const PROCESSES = {
-    permaswap: {
-        description: "Permaswap Order Notice Processes",
-        protocol: "ao",
-        action: "Order-Notice",
-        addresses: [
+
+const INITIAL_PERMASWAP_ADDRESSES = [
             "xZwIYa2DapmKmOpqOn9iMN0YQnYV4hgtwKadiKBpbt8",
             "SMKH5JnFE7c0MjsURMVRZn7kUerg1yMwcnVbWJJBEDU",
             "tnzfEWXA9CRxr9lBGZbZfVEZux44lZj3pqMJCK5cHgc",
@@ -14,51 +9,23 @@ const PROCESSES = {
             "-9lYCEgMbASuQMr76ddhnaT3H996UFjMPc5jOs3kiAk",
             "qhMOXu9ANdOmOE38fHC3PnJuRsAQ6JzGFNq09oBSmpM",
             "7AOIMfTZVpX52-XYBDS7VHsXdqEYYsGdYND_MoEVEwg",
-            "JQecF9LdXyMOWb0F4UZcneoDR1988l8SKDW-FnM6Axk",
-            "_laMMu5weQgrtDhKjd4dIOZDej7XKwXcaHJmgOcPvK4",
-            "cp5016JIc7wPNEM9NKa3xLV5zPTGtvt9PdIdy0gpOyo",
-            "yOeciNnbw6VdvsOhYu318Z4sGB--nprGpaIn_-jFzIY",
-            "xRt-J-awbZqQ7IgzrM5yxRCS9ub0oxnyjyfmRuVU_hg",
-            "230cSNf7AWy6VsBTftbTXW76xR5H1Ki42nT2xM2fA6M",
-            "ke26NoD1Q3AgNQZdcO-LSfxL0gQRF1Eod39BlRqeEpY",
-            "-SFWHD17LTZR12vI792gUvsM40eioWSIZ1MFvyPA3zE"
-        ]
+];
+
+const PROCESSES = {
+    permaswap: {
+        description: "Permaswap Order Notice Processes",
+        protocol: "ao",
+        action: "Order-Notice",
+        spawnerProcess: "5G5_ftQT6f2OsmJ8EZ4-84eRcIMNEmUyH9aQSD85f9I",
+
     },
     botega: {
         description: "Botega Order Confirmation Processes",
         protocol: "ao",
         action: "Order-Confirmation",
-        addresses: [
-            "lmaw9BhyycEIyxWhr0kF_tTcfoSoduDX8fChpHn2eQM",
-            "Bv5mfnx5Ln2BU60inXPnMOGMwecJXadV4oqw7iwjzSk",
-            "sCuP9nTQ8i1zWwl62z6bVnSpdzTyNnp3xVKqyGKX1rY",
-            "vn5lUv8OaevTb45iI_qykad_d9MP69kuYg5mZW1zCHE",
-            "9JgTfmz0d32tRSp4Z5ZNQygAPoDjWfEvdiWRsx4ECWU",
-            "EJX9HmxurbeXUCaoTTo38P0Wbc5mNrLNrfW3cSg_3rM",
-            "OuyYisy9BguYvrmFG-_kOsh7Zq4fw4RUGTZ0Z3X8FhA",
-            "N_JfhIr5Bwz6VTnbL0quOIzn4tgw3P-zxMo0jt6Mk1g",
-            "BeowMvoHuSHbDllewXW6P3QecJDa_059rxqMXQHD3ts",
-            "EFGxspbF5cZEtsuXRZT1BSisOJfpYN9G0bIsDC5lyDI",
-            "BHxdWnUKGlSjSOe5M6gDja4zUokHLaqoH7ykWS2y_aA",
-            "Uy7d7N6s08xE8zpBpkwNQ6Iay9I5-mZvVnTYwlB-548",
-            "wAxZpk1ZHezVlvm7xvYm4dDzI5DwSaaAaLPhHFxdr8w",
-            "oqg_h_L6k4s9W1u3tNqTyo4DDDHiwCiAPSsV5nkG1Pc",
-            "bxpz3u2USXv8Ictxb0aso3l8V9UTimaiGp9henzDsl8",
-            "wvrRUDLrXmzeoIOk4vqOdjIMWG6NddkGG_GxoY6HHKg",
-            "n6v-AxqxvxigDr2iH-tW1_q7z2kO6WMCudDESOCXKRg",
-            "_MJbfFO79PJvVuKcqv9fF0_TABK2RlMcTJYHpyDB_8I",
-            "mMUl4kDwoMHtFcVzpVQHPHJ9ypy8O9ttKYUEoCUBdrg",
-            "uqk91fL2tOmMI_XYzE2cuk4bmE62gyWu_MNr-25L5Lk",
-            "NX9PKbLVIyka3KPZghnEekw9FB2dfzbzVabpY-ZN1Dg",
-            "nHWcfNzeqjZ8Bot4R-xs_7Jez7Fl2AeDzKlN7qWmS24",
-            "O8mgmJoXJiibdXRdu8Ndze6BE5rYQ5bWW3KQuKzlRfU",
-            "V-aAEX7HVu8AMOSqIhAR6myLrCZh2DOhX12OSYv5ypc",
-            "4MYqWdc4_TcvVU0zoNMzuIZkUnazrSf0d-FsVjEPtSU",
-            "V-aAEX7HVu8AMOSqIhAR6myLrCZh2DOhX12OSYv5ypc",
-            "cT-lzIxPC41nzfkqqmgRuj9csiUmz3Fa1Q2zOmsBwc8",
-            "WuAkqYvunUtsD8uvpsK9XtR7_5-fbnH3ATD4DJrl-Ac"
-        ]
+        spawnerProcess: "3XBGLrygs11K63F_7mldWz4veNx6Llg6hI2yZs8LKHo",
     },
+
     qARTransfer: {
         description: "qAR Token Transfer",
         recipients: ["NG-0lVX882MG5nhARrSzyprEK6ejonHpdUmaaMPsHE8"],
@@ -87,8 +54,206 @@ const PROCESSES = {
     }
 };
 
-// Helper function to generate GraphQL query based on process type
-function generateQuery(processType, startHeight, endHeight, currentHeight ) {
+// Function to fetch Permaswap processes
+async function fetchPermaswapProcesses() {
+    const buildQuery = (cursor) => `
+        query {
+            transactions(
+            block: {min: 0}
+                tags: [
+                    { name: "From-Process", values: "5G5_ftQT6f2OsmJ8EZ4-84eRcIMNEmUyH9aQSD85f9I" }
+                    { name: "Action", values: "Spawned" }
+                ],
+                first: 100,
+                after: ${cursor ? `"${cursor}"` : null}
+            ) {
+                edges {
+                    node {
+                        id
+                        tags {
+                            name
+                            value
+                        }
+                    }
+                    cursor
+                }
+                pageInfo {
+                    hasNextPage
+                }
+            }
+        }
+    `;
+
+    const processAddresses = new Set();
+    let hasNextPage = true;
+    let cursor = null;
+    let pageNum = 1;
+
+    console.log("Starting to fetch Permaswap processes...");
+
+    while (hasNextPage) {
+        console.log(`Fetching page ${pageNum}...`);
+        pageNum++;
+
+        try {
+            const response = await fetch('https://arweave-search.goldsky.com/graphql', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ query: buildQuery(cursor) }),
+            });
+
+            const result = await response.json();
+
+            if (result.errors) {
+                console.error('GraphQL errors:', result.errors);
+                break;
+            }
+
+            const transactions = result.data.transactions;
+
+            // Process current page
+            transactions.edges.forEach((edge) => {
+                const processTags = edge.node.tags.filter((tag) => tag.name === "Process");
+                processTags.forEach((processTag) => {
+                    processAddresses.add(processTag.value);
+                });
+            });
+
+            // Check if there's another page
+            hasNextPage = transactions.pageInfo.hasNextPage;
+            if (hasNextPage) {
+                cursor = transactions.edges[transactions.edges.length - 1].cursor;
+                console.log(`Updated cursor to: ${cursor}`);
+            } else {
+                console.log("No more pages to fetch.");
+            }
+        } catch (error) {
+            console.error('Error during fetch:', error);
+            break;
+        }
+    }
+
+        // Add manually specified addresses
+        const manualAddresses = [
+            "xZwIYa2DapmKmOpqOn9iMN0YQnYV4hgtwKadiKBpbt8",
+            "SMKH5JnFE7c0MjsURMVRZn7kUerg1yMwcnVbWJJBEDU",
+            "tnzfEWXA9CRxr9lBGZbZfVEZux44lZj3pqMJCK5cHgc",
+            "dBbZhQoV4Lq9Bzbm0vlTrHmOZT7NchC_Dillbmqx0tM",
+            "vJY-ed1Aoa0pGgQ30BcpO9ehGBu1PfNHUlwV9W8_n5A",
+            "-9lYCEgMbASuQMr76ddhnaT3H996UFjMPc5jOs3kiAk",
+            "qhMOXu9ANdOmOE38fHC3PnJuRsAQ6JzGFNq09oBSmpM",
+            "7AOIMfTZVpX52-XYBDS7VHsXdqEYYsGdYND_MoEVEwg",
+        ];
+    
+        manualAddresses.forEach((address) => processAddresses.add(address));
+    
+        const processList = Array.from(processAddresses);
+    
+        console.log('Total Extracted Permaswap Process Addresses:', processList.length);
+        console.log('Extracted Permaswap Process Addresses:', processList);
+    
+        return processList;
+}
+
+// Function to fetch Botega processes
+async function fetchBotegaProcesses() {
+    const buildQuery = (cursor) => `
+        query {
+            transactions(
+                block: { min: 0 }
+                tags: [
+                    { name: "From-Process", values: "3XBGLrygs11K63F_7mldWz4veNx6Llg6hI2yZs8LKHo" }
+                    { name: "Action", values: "Spawned" }
+                ],
+                first: 100,
+                after: ${cursor ? `"${cursor}"` : null}
+            ) {
+                edges {
+                    node {
+                        id
+                        tags {
+                            name
+                            value
+                        }
+                    }
+                    cursor
+                }
+                pageInfo {
+                    hasNextPage
+                }
+            }
+        }
+    `;
+
+    const processAddresses = new Set();
+    let hasNextPage = true;
+    let cursor = null;
+    let pageNum = 1;
+
+    console.log("Starting to fetch Botega processes...");
+
+    while (hasNextPage) {
+        console.log(`Fetching page ${pageNum}...`);
+        pageNum++;
+
+        try {
+            const response = await fetch('https://arweave-search.goldsky.com/graphql', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ query: buildQuery(cursor) }),
+            });
+
+            const result = await response.json();
+
+            if (result.errors) {
+                console.error('GraphQL errors:', result.errors);
+                break;
+            }
+
+            const transactions = result.data.transactions;
+
+            // Process current page
+            transactions.edges.forEach((edge) => {
+                // Check for the presence of tags before filtering
+                if (edge.node.tags) {
+                    const processTags = edge.node.tags.filter((tag) => tag.name === "Process");
+                    processTags.forEach((processTag) => {
+                        processAddresses.add(processTag.value);
+                    });
+                } else {
+                    console.warn("Skipping edge with missing tags:", edge);
+                }
+            });
+            
+
+            // Check if there's another page
+            hasNextPage = transactions.pageInfo.hasNextPage;
+            if (hasNextPage) {
+                cursor = transactions.edges[transactions.edges.length - 1].cursor;
+                console.log(`Updated cursor to: ${cursor}`);
+            } else {
+                console.log("No more pages to fetch.");
+            }
+        } catch (error) {
+            console.error('Error during fetch:', error);
+            break;
+        }
+    }
+
+    const processList = Array.from(processAddresses);
+
+    console.log('Total Extracted Botega Process Addresses:', processList.length);
+    console.log('Extracted Botega Process Addresses:', processList);
+
+    return processList;
+}
+
+
+async function generateQuery(processType, startHeight, endHeight, currentHeight) {
     const process = PROCESSES[processType];
     
     if (!process) {
@@ -102,20 +267,43 @@ function generateQuery(processType, startHeight, endHeight, currentHeight ) {
 
     switch(processType) {
         case 'permaswap':
-        case 'botega':
+            // Dynamically fetch addresses for Permaswap
+            const permaswapAddresses = await fetchPermaswapProcesses();
+            console.log(`Permaswap Addresses for block range ${startHeight}-${endHeight}:`, permaswapAddresses);
+
             return `query {
                 transactions (
                     ${blockRange}
                     tags: [
                         { name: "Data-Protocol", values: ["${process.protocol}"] }
                         { name: "Action", values: ["${process.action}"] }
-                        { values: ${JSON.stringify(process.addresses)} }
+                        { values: ${JSON.stringify(permaswapAddresses)} }
                     ]
                 ) {
                     count
                 }
             }`;
 
+        case 'botega':
+        // Dynamically fetch addresses for Botega
+        const botegaAddresses = await fetchBotegaProcesses();
+        console.log(`Botega Addresses for block range ${startHeight}-${endHeight}:`, botegaAddresses);
+
+        return `query {
+            transactions (
+                ${blockRange}
+                tags: [
+                    { name: "Data-Protocol", values: ["${process.protocol}"] }
+                    { name: "Action", values: ["${process.action}"] }
+                    { values: ${JSON.stringify(botegaAddresses)} }
+                ]
+            ) {
+                count
+            }
+        }`;
+
+
+        // Other processes remain the same
         case 'qARTransfer':
         case 'qARweeklyTransfer':
         case 'wARTransfer':
