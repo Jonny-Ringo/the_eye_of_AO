@@ -14,94 +14,262 @@ const historicalData = {
 };
 
 const charts = {};
-Chart.defaults.plugins.legend.display = false;
+// Chart.defaults.plugins.legend.display = false; 
 
 // Update the chart initialization to use PROCESSES
 Object.keys(PROCESSES).forEach(processName => {
-    const ctx = document.getElementById(processName + 'Chart').getContext('2d');
-    charts[processName] = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: [],
-            datasets: [{
-                label: '',
-                data: [],
-                borderColor: 'rgb(0, 0, 0)',
-                tension: 0.1,
-                pointRadius: 5
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true
+        if (processName === 'qARTransfer') {
+            const ctx = document.getElementById(processName + 'Chart').getContext('2d');
+            charts[processName] = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'qAR Transfers',
+                            data: [],
+                            borderColor: getProcessColor('qARTransfer'),
+                            tension: 0.1,
+                            pointRadius: 5
+                        },
+                        {
+                            label: 'wAR Transfers',
+                            data: [],
+                            borderColor: getProcessColor('wARTransfer'),
+                            tension: 0.1,
+                            pointRadius: 5
+                        }
+                    ]
                 },
-                x: {
-                    ticks: {
-                        maxRotation: 45,
-                        minRotation: 45,
-                        callback: function(value, index, ticks) {
-                            // Convert UTC to local time
-                            const date = new Date(this.getLabelForValue(value));
-                            return date.toLocaleString(undefined, {
-                                month: 'short',
-                                day: 'numeric',
-                                hour: 'numeric',
-                                minute: 'numeric',
-                                hour12: true
-                            });
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                usePointStyle: true,
+                                pointStyle: 'line',
+                                pointRadius: 5,
+                                // Optional: if you want to make the line match the dataset's line
+                                generateLabels: function(chart) {
+                                    const originalLabels = Chart.defaults.plugins.legend.labels.generateLabels(chart);
+                                    return originalLabels.map((label, index) => {
+                                        const datasetColor = chart.data.datasets[index].borderColor;
+                                        return {
+                                            ...label,
+                                            fillStyle: datasetColor,
+                                            strokeStyle: datasetColor,
+                                            lineWidth: 2
+                                        };
+                                    });
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        },
+                        x: {
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45,
+                                callback: function(value, index, ticks) {
+                                    const date = new Date(this.getLabelForValue(value));
+                                    return date.toLocaleString(undefined, {
+                                        month: 'short',
+                                        day: 'numeric',
+                                        hour: 'numeric',
+                                        minute: 'numeric',
+                                        hour12: true
+                                    });
+                                }
+                            }
                         }
                     }
                 }
+            });
+        } else if (processName === 'qARweeklyTransfer') {
+            const ctx = document.getElementById(processName + 'Chart').getContext('2d');
+            charts[processName] = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'qAR Weekly Transfers',
+                            data: [],
+                            borderColor: getProcessColor('qARweeklyTransfer'),
+                            tension: 0.1,
+                            pointRadius: 5
+                        },
+                        {
+                            label: 'wAR Weekly Transfers',
+                            data: [],
+                            borderColor: getProcessColor('wARweeklyTransfer'),
+                            tension: 0.1,
+                            pointRadius: 5
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                usePointStyle: true,
+                                pointStyle: 'line',
+                                pointRadius: 5,
+                                // Optional: if you want to make the line match the dataset's line
+                                generateLabels: function(chart) {
+                                    const originalLabels = Chart.defaults.plugins.legend.labels.generateLabels(chart);
+                                    return originalLabels.map((label, index) => {
+                                        const datasetColor = chart.data.datasets[index].borderColor;
+                                        return {
+                                            ...label,
+                                            fillStyle: datasetColor,
+                                            strokeStyle: datasetColor,
+                                            lineWidth: 2
+                                        };
+                                    });
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        },
+                        x: {
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45,
+                                callback: function(value, index, ticks) {
+                                    const date = new Date(this.getLabelForValue(value));
+                                    return date.toLocaleString(undefined, {
+                                        month: 'short',
+                                        day: 'numeric',
+                                        hour: 'numeric',
+                                        minute: 'numeric',
+                                        hour12: true
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        } else if (processName !== 'wARTransfer' && processName !== 'wARweeklyTransfer') {  // Skip both wAR charts
+    
+            // Your existing chart creation code for other charts
+            const ctx = document.getElementById(processName + 'Chart').getContext('2d');
+        charts[processName] = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: '',
+                    data: [],
+                    borderColor: 'rgb(0, 0, 0)',
+                    tension: 0.1,
+                    pointRadius: 5
+                }]
             },
-            plugins: {
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            const dataPoint = historicalData[processName][context.dataIndex];
-                            const count = dataPoint.count;
-
-                            // If this is the latest period, show "Current data as of [timestamp]"
-                            if (context.dataIndex === historicalData[processName].length - 1) {
-                                const currentTime = new Date().toLocaleString(undefined, {
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    },
+                    x: {
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 45,
+                            callback: function(value, index, ticks) {
+                                // Convert UTC to local time
+                                const date = new Date(this.getLabelForValue(value));
+                                return date.toLocaleString(undefined, {
                                     month: 'short',
                                     day: 'numeric',
                                     hour: 'numeric',
                                     minute: 'numeric',
                                     hour12: true
                                 });
-                                return `Count: ${count} (Current data as of ${currentTime})`;
                             }
-
-                            return `Count: ${count}`;
-                        },
-                        title: function(context) {
-                            // Get the data index
-                            const dataIndex = context[0].dataIndex;
-                        
-                            // Retrieve the correct timestamp from historical data
-                            const dataPoint = historicalData[processName][dataIndex];
-                            const date = new Date(dataPoint.timestamp); // Use the correct timestamp
-                        
-                            // Format the date using UTC to ensure consistency
-                            return date.toLocaleString('en-US', {
-                                year: 'numeric', // Explicitly include the year
-                                month: 'short',
-                                day: 'numeric',
-                                hour: 'numeric',
-                                minute: 'numeric',
-                                hour12: true,
-                                weekday: 'short',
-                            });
                         }
-                        
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        labels: {
+                            usePointStyle: true,
+                            pointStyle: 'line',
+                            pointRadius: 5,
+                            generateLabels: function(chart) {
+                                const originalLabels = Chart.defaults.plugins.legend.labels.generateLabels(chart);
+                                return originalLabels.map((label, index) => {
+                                    const datasetColor = chart.data.datasets[index].borderColor;
+                                    return {
+                                        ...label,
+                                        fillStyle: datasetColor,
+                                        strokeStyle: datasetColor,
+                                        lineWidth: 2
+                                    };
+                                });
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const dataPoint = historicalData[processName][context.dataIndex];
+                                const count = dataPoint.count;
+
+                                // If this is the latest period, show "Current data as of [timestamp]"
+                                if (context.dataIndex === historicalData[processName].length - 1) {
+                                    const currentTime = new Date().toLocaleString(undefined, {
+                                        month: 'short',
+                                        day: 'numeric',
+                                        hour: 'numeric',
+                                        minute: 'numeric',
+                                        hour12: true
+                                    });
+                                    return `Count: ${count} (Current data as of ${currentTime})`;
+                                }
+
+                                return `Count: ${count}`;
+                            },
+                            title: function(context) {
+                                // Get the data index
+                                const dataIndex = context[0].dataIndex;
+                            
+                                // Retrieve the correct timestamp from historical data
+                                const dataPoint = historicalData[processName][dataIndex];
+                                const date = new Date(dataPoint.timestamp); // Use the correct timestamp
+                            
+                                // Format the date using UTC to ensure consistency
+                                return date.toLocaleString('en-US', {
+                                    year: 'numeric', // Explicitly include the year
+                                    month: 'short',
+                                    day: 'numeric',
+                                    hour: 'numeric',
+                                    minute: 'numeric',
+                                    hour12: true,
+                                    weekday: 'short',
+                                });
+                            }
+                            
+                        }
                     }
                 }
             }
-        }
-    });
+        });
+    }
 });
 
 
@@ -121,7 +289,12 @@ logChartDetails();
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('mainLoader').style.display = 'flex';
     Object.keys(PROCESSES).forEach(processName => {
-        document.getElementById(`${processName}Loader`).style.display = 'flex';
+        const loaderElement = document.getElementById(`${processName}Loader`);
+        if (loaderElement) {
+            loaderElement.style.display = 'flex';
+        } else {
+            console.warn(`No loader found for process: ${processName}`);
+        }
     });
 });
 
@@ -169,6 +342,7 @@ async function fetchBlockHeights() {
 
             // Generate periods based on block history, using current network height
             const dailyPeriods = await getDailyPeriods(currentHeight, blockData);
+            
             updateDisplayAndFetchData(currentHeight, dailyPeriods);
 
             // Fetch weekly data
@@ -179,9 +353,12 @@ async function fetchBlockHeights() {
     } catch (error) {
         console.error("Error fetching block heights:", error);
         // Hide loaders on error
-        document.getElementById('mainLoader').style.display = 'none';
+
         Object.keys(PROCESSES).forEach(processName => {
-            document.getElementById(`${processName}Loader`).style.display = 'none';
+            const loaderElement = document.getElementById(`${processName}Loader`);
+            if (loaderElement) {
+                loaderElement.style.display = 'none';
+            }
         });
     }
 }
@@ -242,7 +419,12 @@ async function fetchWeeklyData(currentHeight, blockData) {
         // Show weekly chart loaders
         Object.keys(PROCESSES).forEach(processName => {
             if (processName.includes('weekly')) {
-                document.getElementById(`${processName}Loader`).style.display = 'flex';
+                const loaderElement = document.getElementById(`${processName}Loader`);
+                if (loaderElement) {
+                    loaderElement.style.display = 'flex';
+                } else {
+                    console.warn(`No loader found for weekly process: ${processName}`);
+                }
             }
         });
 
@@ -258,7 +440,10 @@ async function fetchWeeklyData(currentHeight, blockData) {
         // Hide weekly chart loaders
         Object.keys(PROCESSES).forEach(processName => {
             if (processName.includes('weekly')) {
-                document.getElementById(`${processName}Loader`).style.display = 'none';
+                const loaderElement = document.getElementById(`${processName}Loader`);
+                if (loaderElement) {
+                    loaderElement.style.display = 'none';
+                }
             }
         });
     } catch (error) {
@@ -266,7 +451,10 @@ async function fetchWeeklyData(currentHeight, blockData) {
         // Hide weekly loaders on error
         Object.keys(PROCESSES).forEach(processName => {
             if (processName.includes('weekly')) {
-                document.getElementById(`${processName}Loader`).style.display = 'none';
+                const loaderElement = document.getElementById(`${processName}Loader`);
+                if (loaderElement) {
+                    loaderElement.style.display = 'none';
+                }
             }
         });
     }
@@ -276,12 +464,15 @@ async function getWeeklyPeriods(currentHeight, blockData) {
     // Find the most recent Sunday at 0:00 UTC
     const lastCheckpoint = getLastSundayCheckpoint(new Date());
 
-    // Add current period first (from last Sunday to now)
+    // For the current period, we need to find the block at the start of this week
+    const currentWeekStartBlock = findBlockNearDate(blockData, lastCheckpoint);
+    
+    // Add current period (from last Sunday to now)
     const periods = [{
         endTime: new Date(),
         startTime: lastCheckpoint,
         endHeight: currentHeight,
-        startHeight: blockData[0].blockHeight
+        startHeight: currentWeekStartBlock ? currentWeekStartBlock.blockHeight : blockData[0].blockHeight
     }];
 
     // Then add historical periods (7 weeks back)
@@ -306,7 +497,8 @@ async function getWeeklyPeriods(currentHeight, blockData) {
         }
     }
 
-    return periods.reverse(); // Put in chronological order
+    // Sort periods chronologically
+    return periods.sort((a, b) => a.startTime - b.startTime);
 }
 
 function getLastSundayCheckpoint(now) {
@@ -346,7 +538,7 @@ function updateDisplayAndFetchData(currentHeight, periods) {
     document.getElementById('blockInfo').textContent =
         `Current Block: ${currentHeight} | Latest Period (${timeStr}): ${latestPeriod.startHeight} - ${latestPeriod.endHeight}`;
 
-    document.getElementById('mainLoader').style.display = 'none';
+
 
     // Fetch historical data for daily processes
     for (const processName of Object.keys(PROCESSES)) {
@@ -375,8 +567,279 @@ async function fetchHistoricalData(periods, processName) {
     try {
         console.log(`>>> START Fetching historical data for ${processName}`);
         console.log('Periods:', JSON.stringify(periods, null, 2));
+        if (!window.firstChartLoaded) {
+            // For the combined charts, check if either dataset has non-zero data
+            if (processName === 'qARTransfer' || processName === 'qARweeklyTransfer') {
+                const combinedQuery = await Promise.all([
+                    generateQuery(
+                        processName.replace('weekly', ''), 
+                        periods[periods.length - 1].startHeight, 
+                        periods[periods.length - 1].endHeight, 
+                        periods[periods.length - 1].endHeight
+                    ),
+                    generateQuery(
+                        processName.replace('weekly', '') === 'qARTransfer' ? 'wARTransfer' : 'wARweeklyTransfer', 
+                        periods[periods.length - 1].startHeight, 
+                        periods[periods.length - 1].endHeight, 
+                        periods[periods.length - 1].endHeight
+                    )
+                ]);
 
-        // Verify the chart exists
+                const [qResponse, wResponse] = await Promise.all([
+                    fetch('https://arweave-search.goldsky.com/graphql', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query: combinedQuery[0] }),
+                    }),
+                    fetch('https://arweave-search.goldsky.com/graphql', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query: combinedQuery[1] }),
+                    })
+                ]);
+
+                const [qResult, wResult] = await Promise.all([qResponse.json(), wResponse.json()]);
+                const hasData = qResult.data.transactions.count > 0 || wResult.data.transactions.count > 0;
+
+                if (hasData) {
+                    window.firstChartLoaded = true;
+                    document.getElementById('mainLoader').style.display = 'none';
+                }
+            } 
+            // For other single charts
+            else {
+                const query = await generateQuery(
+                    processName, 
+                    periods[periods.length - 1].startHeight, 
+                    periods[periods.length - 1].endHeight, 
+                    periods[periods.length - 1].endHeight
+                );
+
+                const response = await fetch('https://arweave-search.goldsky.com/graphql', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query }),
+                });
+
+                const result = await response.json();
+                const hasData = result.data.transactions.count > 0;
+
+                if (hasData) {
+                    window.firstChartLoaded = true;
+                    document.getElementById('mainLoader').style.display = 'none';
+                }
+            }
+        }
+        // Special handling for qAR chart which will contain both datasets
+        if (processName === 'qARTransfer') {
+            // Fetch qAR and wAR data in parallel
+            const [qARPeriodData, wARPeriodData] = await Promise.all([
+                // Fetch qAR data
+                Promise.all(periods.map(async (period, index) => {
+                    try {
+                        const query = await generateQuery(
+                            'qARTransfer',
+                            period.startHeight,
+                            period.endHeight,
+                            periods[periods.length - 1].endHeight
+                        );
+                        const response = await fetch('https://arweave-search.goldsky.com/graphql', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ query }),
+                        });
+                        const result = await response.json();
+                        return result.data.transactions.count;
+                    } catch (error) {
+                        console.error(`Error fetching qAR data for period ${index}:`, error);
+                        return 0;
+                    }
+                })),
+                // Fetch wAR data
+                Promise.all(periods.map(async (period, index) => {
+                    try {
+                        const query = await generateQuery(
+                            'wARTransfer',
+                            period.startHeight,
+                            period.endHeight,
+                            periods[periods.length - 1].endHeight
+                        );
+                        const response = await fetch('https://arweave-search.goldsky.com/graphql', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ query }),
+                        });
+                        const result = await response.json();
+                        return result.data.transactions.count;
+                    } catch (error) {
+                        console.error(`Error fetching wAR data for period ${index}:`, error);
+                        return 0;
+                    }
+                }))
+            ]);
+
+            // Update historical data for both datasets
+            historicalData['qARTransfer'] = qARPeriodData.map((count, index) => ({
+                timestamp: periods[index].endTime,
+                count: count
+            }));
+            historicalData['wARTransfer'] = wARPeriodData.map((count, index) => ({
+                timestamp: periods[index].endTime,
+                count: count
+            }));
+
+            // Generate chart labels
+            const chartLabels = periods.map(period => {
+                const labelDate = new Date(period.endTime);
+                return labelDate.toLocaleString(undefined, {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: 'numeric',
+                    hour12: true,
+                });
+            });
+
+            // Update the combined chart
+            const chart = charts[processName];
+            chart.data.labels = chartLabels;
+            chart.data.datasets = [
+                {
+                    label: 'qAR Transfers',
+                    data: qARPeriodData,
+                    borderColor: getProcessColor('qARTransfer'),
+                    tension: 0.1,
+                    pointRadius: 5
+                },
+                {
+                    label: 'wAR Transfers',
+                    data: wARPeriodData,
+                    borderColor: getProcessColor('wARTransfer'),
+                    tension: 0.1,
+                    pointRadius: 5
+                }
+            ];
+
+            chart.update('none');
+
+            // Hide loader
+            const loader = document.getElementById(`qARTransferLoader`);
+            if (loader) {
+                loader.style.display = 'none';
+            }
+            
+            console.log(`>>> END Successfully updated combined transfer chart`);
+            return;
+        }
+
+        if (processName === 'qARweeklyTransfer') {
+            // Fetch qAR and wAR weekly data in parallel
+            const [qARPeriodData, wARPeriodData] = await Promise.all([
+                // Fetch qAR weekly data
+                Promise.all(periods.map(async (period, index) => {
+                    try {
+                        const query = await generateQuery(
+                            'qARweeklyTransfer',
+                            period.startHeight,
+                            period.endHeight,
+                            periods[periods.length - 1].endHeight
+                        );
+                        const response = await fetch('https://arweave-search.goldsky.com/graphql', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ query }),
+                        });
+                        const result = await response.json();
+                        return result.data.transactions.count;
+                    } catch (error) {
+                        console.error(`Error fetching qAR weekly data for period ${index}:`, error);
+                        return 0;
+                    }
+                })),
+                // Fetch wAR weekly data
+                Promise.all(periods.map(async (period, index) => {
+                    try {
+                        const query = await generateQuery(
+                            'wARweeklyTransfer',
+                            period.startHeight,
+                            period.endHeight,
+                            periods[periods.length - 1].endHeight
+                        );
+                        const response = await fetch('https://arweave-search.goldsky.com/graphql', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ query }),
+                        });
+                        const result = await response.json();
+                        return result.data.transactions.count;
+                    } catch (error) {
+                        console.error(`Error fetching wAR weekly data for period ${index}:`, error);
+                        return 0;
+                    }
+                }))
+            ]);
+        
+            // Update historical data
+            historicalData['qARweeklyTransfer'] = qARPeriodData.map((count, index) => ({
+                timestamp: periods[index].endTime,
+                count: count
+            }));
+            historicalData['wARweeklyTransfer'] = wARPeriodData.map((count, index) => ({
+                timestamp: periods[index].endTime,
+                count: count
+            }));
+        
+            // Update the combined weekly chart
+            const chart = charts[processName];
+            chart.data.labels = periods.map(period => {
+                const labelDate = new Date(period.endTime);
+                return labelDate.toLocaleString(undefined, {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: 'numeric',
+                    hour12: true,
+                });
+            });
+            chart.data.datasets = [
+                {
+                    label: 'qAR Weekly Transfers',
+                    data: qARPeriodData,
+                    borderColor: getProcessColor('qARweeklyTransfer'),
+                    tension: 0.1,
+                    pointRadius: 5
+                },
+                {
+                    label: 'wAR Weekly Transfers',
+                    data: wARPeriodData,
+                    borderColor: getProcessColor('wARweeklyTransfer'),
+                    tension: 0.1,
+                    pointRadius: 5
+                }
+            ];
+        
+            chart.update('none');
+        
+            // Hide loader
+            const loader = document.getElementById(`qARweeklyTransferLoader`);
+            if (loader) {
+                loader.style.display = 'none';
+            }
+            
+            console.log(`>>> END Successfully updated combined weekly transfer chart`);
+            return;
+        }
+        
+        // Skip processing for wAR weekly transfer since it's now part of the combined chart
+        if (processName === 'wARweeklyTransfer') {
+            const loader = document.getElementById(`wARweeklyTransferLoader`);
+            if (loader) {
+                loader.style.display = 'none';
+            }
+            return;
+        }
+
+        // Original code for other charts continues here
         const chart = charts[processName];
         if (!chart) {
             console.error(`CRITICAL: No chart found for process: ${processName}`);
@@ -384,10 +847,9 @@ async function fetchHistoricalData(periods, processName) {
             return;
         }
 
-        // Generate and execute queries for each period
+        // Rest of your original code for other charts...
         const periodData = await Promise.all(periods.map(async (period, index) => {
             try {
-                // Generate query with current block height
                 const query = await generateQuery(
                     processName, 
                     period.startHeight, 
@@ -427,35 +889,21 @@ async function fetchHistoricalData(periods, processName) {
             count: count
         }));
 
-        console.log(`Historical data for ${processName}:`, JSON.stringify(historicalData[processName], null, 2));
-
-        // Validate historical data
-        if (historicalData[processName].length === 0) {
-            console.error(`NO HISTORICAL DATA for ${processName}`);
-            return;
-        }
-
         const chartLabels = historicalData[processName].map((d, index, array) => {
             let labelDate;
             if (index === 0) {
-                // Use the actual end time for the first period
                 labelDate = new Date(d.timestamp);
             } else {
-                // Calculate the label based on process type
                 const prevLabelDate = new Date(array[index - 1].timestamp);
                 labelDate = new Date(prevLabelDate);
-                
-                // Add 1 or 7 days depending on process type
                 const daysToAdd = processName.includes('weekly') ? 7 : 1;
                 labelDate.setDate(prevLabelDate.getDate() + daysToAdd);
             }
 
-            // For weekly charts, add one day
             if (processName.includes('weekly')) {
                 labelDate.setDate(labelDate.getDate());
             }
 
-            // Format the label date
             return labelDate.toLocaleString(undefined, {
                 month: 'short',
                 day: 'numeric',
@@ -467,26 +915,12 @@ async function fetchHistoricalData(periods, processName) {
 
         const chartData = historicalData[processName].map((d) => d.count);
 
-        // Log chart preparation details
-        console.log(`Chart Labels for ${processName}:`, chartLabels);
-        console.log(`Chart Data for ${processName}:`, chartData);
-
         // Update chart
         chart.data.labels = chartLabels;
         chart.data.datasets[0].data = chartData;
         chart.data.datasets[0].label = processName;
-        
-        // Update chart colors dynamically
         chart.data.datasets[0].borderColor = getProcessColor(processName);
-
-        // Force chart update
         chart.update('none');
-
-        // Verify chart update
-        console.log(`Final Chart for ${processName}:`, {
-            labels: chart.data.labels,
-            data: chart.data.datasets[0].data
-        });
 
         // Hide loader
         const loader = document.getElementById(`${processName}Loader`);
@@ -497,8 +931,6 @@ async function fetchHistoricalData(periods, processName) {
         console.log(`>>> END Successfully updated chart for ${processName}`);
     } catch (error) {
         console.error(`COMPREHENSIVE ERROR for ${processName}:`, error);
-        
-        // Hide loader on error
         const loader = document.getElementById(`${processName}Loader`);
         if (loader) {
             loader.style.display = 'none';
