@@ -13,7 +13,6 @@ MAX_HISTORY_RECORDS = 1000
 -- Initialize tables if they don't exist
 Db:exec([[CREATE TABLE IF NOT EXISTS RecentBlocks (timestamp INTEGER, blockHeight INTEGER);]])
 Db:exec([[CREATE TABLE IF NOT EXISTS DailyBlocks (date TEXT, timestamp INTEGER, blockHeight INTEGER);]])
-Db:exec([[CREATE TABLE IF NOT EXISTS WeeklyBlocks (date TEXT, timestamp INTEGER, blockHeight INTEGER);]])
 
 -- Function to clear all historical entries
 function clearTables()
@@ -139,35 +138,14 @@ Handlers.add('cron',
         )
 
         if closestBlock then
-            -- Insert daily block
-            dbAdmin:apply([[INSERT INTO DailyBlocks (date, timestamp, blockHeight) VALUES (?, ?, ?);]], {nextDate, closestBlock.timestamp, closestBlock.blockHeight})
+            -- Add +1 to the block height before inserting
+            local adjustedBlockHeight = closestBlock.blockHeight + 1
+            
+            -- Insert daily block with adjusted height
+            dbAdmin:apply([[INSERT INTO DailyBlocks (date, timestamp, blockHeight) VALUES (?, ?, ?);]], 
+                {nextDate, closestBlock.timestamp, adjustedBlockHeight})
         
-            -- Get the last recorded weekly block date
-            local lastWeeklyDateRow = dbAdmin:select([[SELECT date FROM WeeklyBlocks ORDER BY date DESC LIMIT 1;]], {})
-        
-            local nextWeeklyDate
-            if #lastWeeklyDateRow > 0 then
-                local lastWeeklyDate = lastWeeklyDateRow[1].date
-                
-                -- Parse the last weekly date
-                local lastYear = tonumber(lastWeeklyDate:sub(1,4))
-                local lastMonth = tonumber(lastWeeklyDate:sub(6,7))
-                local lastDay = tonumber(lastWeeklyDate:sub(9,10))
-                
-                -- Create a date object and add 7 days
-                local nextWeeklyTime = os.time({year=lastYear, month=lastMonth, day=lastDay})
-                nextWeeklyTime = nextWeeklyTime + (7 * 24 * 60 * 60)  -- Add 7 days in seconds
-                
-                nextWeeklyDate = os.date("!%Y-%m-%d", nextWeeklyTime)
-            end
-        
-            -- Use this nextWeeklyDate to determine if a weekly block should be inserted
-            if nextWeeklyDate and nextDate == nextWeeklyDate then
-                dbAdmin:apply([[INSERT INTO WeeklyBlocks (date, timestamp, blockHeight) VALUES (?, ?, ?);]], {nextDate, closestBlock.timestamp, closestBlock.blockHeight})
-                print(string.format("Inserted weekly block %d for date %s", closestBlock.blockHeight, nextDate))
-            end
-        
-            print(string.format("Inserted daily block %d for date %s", closestBlock.blockHeight, nextDate))
+            print(string.format("Inserted daily block %d for date %s", adjustedBlockHeight, nextDate))
         else
             print("No suitable block found for the target date.")
         end
