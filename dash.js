@@ -8,9 +8,13 @@ const BLOCK_TRACKING_PROCESS = '_g3kxQxL7F4Y9vXvHaR_cEa7oPkcjFpyuuHLMcHKSds';
 const historicalData = {
     qARTransfer: [],
     wARTransfer: [],
+    wUSDCTransfer: [],
+    USDATransfer: [],
+    AOTransfer: [],
     permaswap: [],
     botega: [],
-    llamaLand: []
+    llamaLand: [],
+    qARwARTotalSupply: [] 
 };
 
 const charts = {};
@@ -18,154 +22,375 @@ const charts = {};
 
 // Update the chart initialization to use PROCESSES
 Object.keys(PROCESSES).forEach(processName => {
-        if (processName === 'qARTransfer') {
-            const ctx = document.getElementById(processName + 'Chart').getContext('2d');
-            charts[processName] = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: [],
-                    datasets: [
-                        {
-                            label: 'qAR Transfers',
-                            data: [],
-                            borderColor: getProcessColor('qARTransfer'),
-                            tension: 0.1,
-                            pointRadius: 5
-                        },
-                        {
-                            label: 'wAR Transfers',
-                            data: [],
-                            borderColor: getProcessColor('wARTransfer'),
-                            tension: 0.1,
-                            pointRadius: 5
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            labels: {
-                                usePointStyle: true,
-                                pointStyle: 'line',
-                                pointRadius: 5,
-                                // Optional: if you want to make the line match the dataset's line
-                                generateLabels: function(chart) {
-                                    const originalLabels = Chart.defaults.plugins.legend.labels.generateLabels(chart);
-                                    return originalLabels.map((label, index) => {
-                                        const datasetColor = chart.data.datasets[index].borderColor;
-                                        return {
-                                            ...label,
-                                            fillStyle: datasetColor,
-                                            strokeStyle: datasetColor,
-                                            lineWidth: 2
-                                        };
-                                    });
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        },
-                        x: {
-                            ticks: {
-                                maxRotation: 45,
-                                minRotation: 45,
-                                callback: function(value, index, ticks) {
-                                    const date = new Date(this.getLabelForValue(value));
-                                    return date.toLocaleString(undefined, {
-                                        month: 'short',
-                                        day: 'numeric',
-                                        hour: 'numeric',
-                                        minute: 'numeric',
-                                        hour12: true
-                                    });
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        } else if (processName === 'qARweeklyTransfer') {
-            const ctx = document.getElementById(processName + 'Chart').getContext('2d');
-            charts[processName] = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: [],
-                    datasets: [
-                        {
-                            label: 'qAR Weekly Transfers',
-                            data: [],
-                            borderColor: getProcessColor('qARweeklyTransfer'),
-                            tension: 0.1,
-                            pointRadius: 5
-                        },
-                        {
-                            label: 'wAR Weekly Transfers',
-                            data: [],
-                            borderColor: getProcessColor('wARweeklyTransfer'),
-                            tension: 0.1,
-                            pointRadius: 5
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            labels: {
-                                usePointStyle: true,
-                                pointStyle: 'line',
-                                pointRadius: 5,
-                                // Optional: if you want to make the line match the dataset's line
-                                generateLabels: function(chart) {
-                                    const originalLabels = Chart.defaults.plugins.legend.labels.generateLabels(chart);
-                                    return originalLabels.map((label, index) => {
-                                        const datasetColor = chart.data.datasets[index].borderColor;
-                                        return {
-                                            ...label,
-                                            fillStyle: datasetColor,
-                                            strokeStyle: datasetColor,
-                                            lineWidth: 2
-                                        };
-                                    });
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        },
-                        x: {
-                            ticks: {
-                                maxRotation: 45,
-                                minRotation: 45,
-                                callback: function(value, index, ticks) {
-                                    const date = new Date(this.getLabelForValue(value));
-                                    return date.toLocaleString(undefined, {
-                                        month: 'short',
-                                        day: 'numeric',
-                                        hour: 'numeric',
-                                        minute: 'numeric',
-                                        hour12: true
-                                    });
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        } else if (processName !== 'wARTransfer' && processName !== 'wARweeklyTransfer') {  // Skip both wAR charts
+    // Skip creating charts for processes that are part of combined charts
+    if (processName === 'USDATransfer' || processName === 'wARTransfer' || processName === 'wARweeklyTransfer') {
+        return; // Skip chart creation for these processes
+    }
     
-            // Your existing chart creation code for other charts
-            const ctx = document.getElementById(processName + 'Chart').getContext('2d');
+    if (processName === 'qARTransfer') {
+        const ctx = document.getElementById(processName + 'Chart').getContext('2d');
+        charts[processName] = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: 'qAR Transfers',
+                        data: [],
+                        borderColor: getProcessColor('qARTransfer'),
+                        tension: 0.1,
+                        pointRadius: 5
+                    },
+                    {
+                        label: 'wAR Transfers',
+                        data: [],
+                        borderColor: getProcessColor('wARTransfer'),
+                        tension: 0.1,
+                        pointRadius: 5
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        labels: {
+                            usePointStyle: true,
+                            pointStyle: 'line',
+                            pointRadius: 5,
+                            generateLabels: function(chart) {
+                                const originalLabels = Chart.defaults.plugins.legend.labels.generateLabels(chart);
+                                return originalLabels.map((label, index) => {
+                                    const datasetColor = chart.data.datasets[index].borderColor;
+                                    return {
+                                        ...label,
+                                        fillStyle: datasetColor,
+                                        strokeStyle: datasetColor,
+                                        lineWidth: 2
+                                    };
+                                });
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    },
+                    x: {
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 45,
+                            callback: function(value, index, ticks) {
+                                const date = new Date(this.getLabelForValue(value));
+                                return date.toLocaleString(undefined, {
+                                    month: 'short',
+                                    day: 'numeric',
+                                    hour: 'numeric',
+                                    minute: 'numeric',
+                                    hour12: true
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    } else if (processName === 'wUSDCTransfer') {
+        const ctx = document.getElementById(processName + 'Chart').getContext('2d');
+        charts[processName] = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: 'wUSDC Transfers',
+                        data: [],
+                        borderColor: getProcessColor('wUSDCTransfer'),
+                        tension: 0.1,
+                        pointRadius: 5
+                    },
+                    {
+                        label: 'USDA Transfers',
+                        data: [],
+                        borderColor: getProcessColor('USDATransfer'),
+                        tension: 0.1,
+                        pointRadius: 5
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        labels: {
+                            usePointStyle: true,
+                            pointStyle: 'line',
+                            pointRadius: 5,
+                            generateLabels: function(chart) {
+                                const originalLabels = Chart.defaults.plugins.legend.labels.generateLabels(chart);
+                                return originalLabels.map((label, index) => {
+                                    const datasetColor = chart.data.datasets[index].borderColor;
+                                    return {
+                                        ...label,
+                                        fillStyle: datasetColor,
+                                        strokeStyle: datasetColor,
+                                        lineWidth: 2
+                                    };
+                                });
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    },
+                    x: {
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 45,
+                            callback: function(value, index, ticks) {
+                                const date = new Date(this.getLabelForValue(value));
+                                return date.toLocaleString(undefined, {
+                                    month: 'short',
+                                    day: 'numeric',
+                                    hour: 'numeric',
+                                    minute: 'numeric',
+                                    hour12: true
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    } else if (processName === 'qARweeklyTransfer') {
+        const ctx = document.getElementById(processName + 'Chart').getContext('2d');
+        charts[processName] = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: 'qAR Weekly Transfers',
+                        data: [],
+                        borderColor: getProcessColor('qARTransfer'),
+                        tension: 0.1,
+                        pointRadius: 5
+                    },
+                    {
+                        label: 'wAR Weekly Transfers',
+                        data: [],
+                        borderColor: getProcessColor('wARTransfer'),
+                        tension: 0.1,
+                        pointRadius: 5
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        labels: {
+                            usePointStyle: true,
+                            pointStyle: 'line',
+                            pointRadius: 5,
+                            generateLabels: function(chart) {
+                                const originalLabels = Chart.defaults.plugins.legend.labels.generateLabels(chart);
+                                return originalLabels.map((label, index) => {
+                                    const datasetColor = chart.data.datasets[index].borderColor;
+                                    return {
+                                        ...label,
+                                        fillStyle: datasetColor,
+                                        strokeStyle: datasetColor,
+                                        lineWidth: 2
+                                    };
+                                });
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    },
+                    x: {
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 45,
+                            callback: function(value, index, ticks) {
+                                const date = new Date(this.getLabelForValue(value));
+                                return date.toLocaleString(undefined, {
+                                    month: 'short',
+                                    day: 'numeric',
+                                    hour: 'numeric',
+                                    minute: 'numeric',
+                                    hour12: true
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    } else if (processName === 'AOTransfer') {
+        const ctx = document.getElementById(processName + 'Chart').getContext('2d');
+        charts[processName] = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'AO Transfers',
+                    data: [],
+                    borderColor: getProcessColor('AOTransfer'),
+                    tension: 0.1,
+                    pointRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        labels: {
+                            usePointStyle: true,
+                            pointStyle: 'line',
+                            pointRadius: 5,
+                            generateLabels: function(chart) {
+                                const originalLabels = Chart.defaults.plugins.legend.labels.generateLabels(chart);
+                                return originalLabels.map((label, index) => {
+                                    const datasetColor = chart.data.datasets[index].borderColor;
+                                    return {
+                                        ...label,
+                                        fillStyle: datasetColor,
+                                        strokeStyle: datasetColor,
+                                        lineWidth: 2
+                                    };
+                                });
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    },
+                    x: {
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 45,
+                            callback: function(value, index, ticks) {
+                                const date = new Date(this.getLabelForValue(value));
+                                return date.toLocaleString(undefined, {
+                                    month: 'short',
+                                    day: 'numeric',
+                                    hour: 'numeric',
+                                    minute: 'numeric',
+                                    hour12: true
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    } else if (processName === 'qARwARTotalSupply') {
+        // New supply chart initialization
+        const ctx = document.getElementById('qAR-wARTotalSupplyChart').getContext('2d');
+        charts[processName] = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: 'qAR Total Supply',
+                        data: [],
+                        borderColor: getProcessColor('qARTransfer'),
+                        tension: 0.1,
+                        pointRadius: 5
+                    },
+                    {
+                        label: 'wAR Total Supply',
+                        data: [],
+                        borderColor: getProcessColor('wARTransfer'),
+                        tension: 0.1,
+                        pointRadius: 5
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        labels: {
+                            usePointStyle: true,
+                            pointStyle: 'line',
+                            pointRadius: 5,
+                            generateLabels: function(chart) {
+                                const originalLabels = Chart.defaults.plugins.legend.labels.generateLabels(chart);
+                                return originalLabels.map((label, index) => {
+                                    const datasetColor = chart.data.datasets[index].borderColor;
+                                    return {
+                                        ...label,
+                                        fillStyle: datasetColor,
+                                        strokeStyle: datasetColor,
+                                        lineWidth: 2
+                                    };
+                                });
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.raw;
+                                return `Supply: ${Math.round(value).toLocaleString()}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return Number(value).toLocaleString();
+                            }
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            sampleSize: 30,
+                            maxRotation: 45,
+                            minRotation: 45,
+                            callback: function(value, index, ticks) {
+                                const date = new Date(this.getLabelForValue(value));
+                                return date.toLocaleString(undefined, {
+                                    month: 'short',
+                                    day: 'numeric',
+                                    hour: 'numeric',
+                                    minute: 'numeric',
+                                    hour12: true
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    } else {
+        // Your existing chart creation code for other charts
+        const ctx = document.getElementById(processName + 'Chart').getContext('2d');
         charts[processName] = new Chart(ctx, {
             type: 'line',
             data: {
@@ -263,7 +488,6 @@ Object.keys(PROCESSES).forEach(processName => {
                                     weekday: 'short',
                                 });
                             }
-                            
                         }
                     }
                 }
@@ -554,10 +778,11 @@ function getProcessColor(processName) {
         permaswap: 'rgb(54, 162, 235)',
         botega: 'rgb(255, 99, 132)',
         qARTransfer: 'rgb(75, 192, 192)',
-        qARweeklyTransfer: 'rgb(153, 102, 255)',
         wARTransfer: 'rgb(255, 159, 64)',
-        wARweeklyTransfer: 'rgb(199, 199, 199)',
-        llamaLand: 'rgb(255, 205, 86)'
+        llamaLand: 'rgb(255, 205, 86)',
+        AOTransfer: 'rgb(47, 243, 8)',
+        wUSDCTransfer: 'rgb(19, 62, 252)',
+        USDATransfer: 'rgb(51, 139, 0)'
     };
     return colorMap[processName] || 'rgb(0, 0, 0)';
 }
@@ -567,6 +792,235 @@ async function fetchHistoricalData(periods, processName) {
     try {
         console.log(`>>> START Fetching historical data for ${processName}`);
         console.log('Periods:', JSON.stringify(periods, null, 2));
+        if (processName === 'wUSDCTransfer') {
+            // Fetch wUSDC and USDA data in parallel
+            const [wUSDCPeriodData, USDAPeriodData] = await Promise.all([
+                // Fetch wUSDC data
+                Promise.all(periods.map(async (period, index) => {
+                    try {
+                        const query = await generateQuery(
+                            'wUSDCTransfer',
+                            period.startHeight,
+                            period.endHeight,
+                            periods[periods.length - 1].endHeight
+                        );
+                        const response = await fetch('https://arweave-search.goldsky.com/graphql', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ query }),
+                        });
+                        const result = await response.json();
+                        return result.data.transactions.count;
+                    } catch (error) {
+                        console.error(`Error fetching wUSDC data for period ${index}:`, error);
+                        return 0;
+                    }
+                })),
+                // Fetch USDA data
+                Promise.all(periods.map(async (period, index) => {
+                    try {
+                        const query = await generateQuery(
+                            'USDATransfer',
+                            period.startHeight,
+                            period.endHeight,
+                            periods[periods.length - 1].endHeight
+                        );
+                        const response = await fetch('https://arweave-search.goldsky.com/graphql', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ query }),
+                        });
+                        const result = await response.json();
+                        return result.data.transactions.count;
+                    } catch (error) {
+                        console.error(`Error fetching USDA data for period ${index}:`, error);
+                        return 0;
+                    }
+                }))
+            ]);
+        
+            // Update historical data for both datasets
+            historicalData['wUSDCTransfer'] = wUSDCPeriodData.map((count, index) => ({
+                timestamp: periods[index].endTime,
+                count: count
+            }));
+            historicalData['USDATransfer'] = USDAPeriodData.map((count, index) => ({
+                timestamp: periods[index].endTime,
+                count: count
+            }));
+        
+            // Generate chart labels
+            const chartLabels = periods.map(period => {
+                const labelDate = new Date(period.endTime);
+                return labelDate.toLocaleString(undefined, {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: 'numeric',
+                    hour12: true,
+                });
+            });
+        
+            // Update the combined chart
+            const chart = charts[processName];
+            chart.data.labels = chartLabels;
+            chart.data.datasets = [
+                {
+                    label: 'wUSDC Transfers',
+                    data: wUSDCPeriodData,
+                    borderColor: getProcessColor('wUSDCTransfer'),
+                    tension: 0.1,
+                    pointRadius: 5
+                },
+                {
+                    label: 'USDA Transfers',
+                    data: USDAPeriodData,
+                    borderColor: getProcessColor('USDATransfer'),
+                    tension: 0.1,
+                    pointRadius: 5
+                }
+            ];
+        
+            chart.update('none');
+        
+            // Hide loader
+            const loader = document.getElementById(`wUSDCTransferLoader`);
+            if (loader) {
+                loader.style.display = 'none';
+            }
+            
+            console.log(`>>> END Successfully updated combined wUSDC/USDA transfer chart`);
+            return;
+        }
+        if (processName === 'qARwARTotalSupply') {
+            try {
+                // Fetch qAR supply history
+                const qARResponse = await dryrun({
+                    process: 'e4kbo6uYtQc9vDZ1YkwZnwXLUWL-XCUx4XhLP25vRx0',
+                    data: '',
+                    tags: [
+                        { name: "Action", value: "SupplyHistory" },
+                        { name: "Data-Protocol", value: "ao" },
+                        { name: "Type", value: "Message" },
+                        { name: "Variant", value: "ao.TN.1" }
+                    ],
+                });
+        
+                // Fetch wAR supply history
+                const wARResponse = await dryrun({
+                    process: 'ekKjTNc7soQFx_bJJMIJYX29125XkgIsl-75aaJ7IYU',
+                    data: '',
+                    tags: [
+                        { name: "Action", value: "SupplyHistory" },
+                        { name: "Data-Protocol", value: "ao" },
+                        { name: "Type", value: "Message" },
+                        { name: "Variant", value: "ao.TN.1" }
+                    ],
+                });
+        
+                // Process qAR data
+                const qARSupplyTag = qARResponse.Messages[0].Tags.find(
+                    tag => tag.name === "DailySupply"
+                );
+                const qARSupplyData = JSON.parse(qARSupplyTag.value);
+        
+                // Process wAR data
+                const wARSupplyTag = wARResponse.Messages[0].Tags.find(
+                    tag => tag.name === "DailySupply"
+                );
+                const wARSupplyData = JSON.parse(wARSupplyTag.value);
+        
+                // Log the raw data for debugging
+                console.log('qAR Supply Data:', qARSupplyData);
+                console.log('wAR Supply Data:', wARSupplyData);
+        
+                // Sort and align the data
+                const allDates = [...new Set([
+                    ...qARSupplyData.map(d => d.date),
+                    ...wARSupplyData.map(d => d.date)
+                ])].sort();
+        
+                // Update historical data
+                historicalData[processName] = allDates.map(date => {
+                    const qAREntry = qARSupplyData.find(d => d.date === date);
+                    const wAREntry = wARSupplyData.find(d => d.date === date);
+                    
+                    return {
+                        timestamp: date,
+                        qARSupply: qAREntry ? Number(qAREntry.totalSupply) / 1e12 : null,
+                        wARSupply: wAREntry ? Number(wAREntry.totalSupply) / 1e12 : null
+                    };
+                }).filter(entry => entry.qARSupply !== null && entry.wARSupply !== null);
+        
+                // Debug logging
+                console.log('Processing supply data for chart update');
+                console.log('Historical Data:', historicalData[processName]);
+                
+                const chart = charts[processName];
+                console.log('Found chart:', chart);
+
+                if (!chart) {
+                    console.error('Chart not found for:', processName);
+                    return;
+                }
+
+                // Create labels and datasets
+                const last30Days = historicalData[processName].slice(-30);
+
+                // Create labels and datasets
+                const labels = last30Days.map(d => 
+                    new Date(d.timestamp).toLocaleString(undefined, {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: 'numeric',
+                        hour12: true
+                    })
+                );
+                
+                const qARData = last30Days.map(d => d.qARSupply);
+                const wARData = last30Days.map(d => d.wARSupply);
+                console.log('qAR data points:', qARData);
+                console.log('wAR data points:', wARData);
+
+                // Update chart data
+                chart.data.labels = labels;
+                chart.data.datasets = [
+                    {
+                        label: 'qAR Total Supply',
+                        data: qARData,
+                        borderColor: getProcessColor('qARTransfer'),
+                        tension: 0.1,
+                        pointRadius: 5
+                    },
+                    {
+                        label: 'wAR Total Supply',
+                        data: wARData,
+                        borderColor: getProcessColor('wARTransfer'),
+                        tension: 0.1,
+                        pointRadius: 5
+                    }
+                ];
+
+                console.log('Updated chart data:', chart.data);
+                
+                // Force a full chart update
+                chart.update();  // Remove 'none' option to force full redraw
+
+                console.log('Chart update completed');
+
+                // Hide loader
+                const loader = document.getElementById('qAR-wARTotalSupplyLoader');
+                if (loader) {
+                    loader.style.display = 'none';
+                }
+
+                return;
+            } catch (error) {
+                console.error('Error updating supply chart:', error);
+                throw error;  // Re-throw to see full error stack
+            }
+        }
         if (!window.firstChartLoaded) {
             // For the combined charts, check if either dataset has non-zero data
             if (processName === 'qARTransfer' || processName === 'qARweeklyTransfer') {
@@ -805,14 +1259,14 @@ async function fetchHistoricalData(periods, processName) {
                 {
                     label: 'qAR Weekly Transfers',
                     data: qARPeriodData,
-                    borderColor: getProcessColor('qARweeklyTransfer'),
+                    borderColor: getProcessColor('qARTransfer'),
                     tension: 0.1,
                     pointRadius: 5
                 },
                 {
                     label: 'wAR Weekly Transfers',
                     data: wARPeriodData,
-                    borderColor: getProcessColor('wARweeklyTransfer'),
+                    borderColor: getProcessColor('wARTransfer'),
                     tension: 0.1,
                     pointRadius: 5
                 }

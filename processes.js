@@ -46,6 +46,27 @@ const PROCESSES = {
         recipients: ["xU9zFkq3X2ZQ6olwNVvr1vUWIjc3kXTWr7xKQD6dh10"],
         action: "Transfer"
     },
+    wUSDCTransfer: {
+        description: "wUSDC Token Transfer",
+        recipients: ["7zH9dlMNoxprab9loshv3Y7WG45DOny_Vrq9KrXObdQ"],
+        action: "Transfer"
+    },
+    USDATransfer: {
+        description: "USDA Token Transfer",
+        recipients: ["o2eqRo_mwJrvToPyeZf7igiJOJz-efODYq3m6ufb4HM"],
+        action: "Transfer"
+    },
+    AOTransfer: {
+        description: "AO Token Transfer",
+        recipients: ["0syT13r0s0tgPmIed95bJnuSqaD29HQNN8D3ElLSrsc"],
+        action: "Transfer"
+    },
+    qARwARTotalSupply: {
+        description: "qAR/wAR Total Supply",
+        qARProcess: "e4kbo6uYtQc9vDZ1YkwZnwXLUWL-XCUx4XhLP25vRx0",
+        wARProcess: "ekKjTNc7soQFx_bJJMIJYX29125XkgIsl-75aaJ7IYU",
+        action: "SupplyHistory"
+    },
     llamaLand: {
         description: "LlamaLand Login Info",
         fromProcess: "2dFSGGlc5xJb0sWinAnEFHM-62tQEbhDzi1v5ldWX5k",
@@ -308,6 +329,9 @@ async function generateQuery(processType, startHeight, endHeight, currentHeight)
         case 'qARweeklyTransfer':
         case 'wARTransfer':
         case 'wARweeklyTransfer':
+        case 'wUSDCTransfer':
+        case 'USDATransfer':
+        case 'AOTransfer':
             return `query {
                 transactions (
                     ${blockRange}

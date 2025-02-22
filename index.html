@@ -47,8 +47,27 @@
     </div>
 
     <div class="container">
+
         <div class="chart-container">
-            <h3>Daily qAR Transfer Volume</h3>
+            <h3>wUSDC/USDA Daily Transaction Count</h3>
+            <div id="wUSDCTransferLoader" class="chart-loader">
+                <div class="loader"></div>
+                <div class="loader-text">Fetching Transaction History...</div>
+            </div>
+            <canvas id="wUSDCTransferChart"></canvas>
+        </div>
+    
+        <div class="chart-container">
+            <h3>AO Daily Transaction Count</h3>
+            <div id="AOTransferLoader" class="chart-loader">
+                <div class="loader"></div>
+                <div class="loader-text">Fetching Transaction History...</div>
+            </div>
+            <canvas id="AOTransferChart"></canvas>
+        </div>
+
+        <div class="chart-container">
+            <h3>qAR/wAR Daily Transaction Count</h3>
             <div id="qARTransferLoader" class="chart-loader">
                 <div class="loader"></div>
                 <div class="loader-text">Fetching Transaction History...</div>
@@ -57,7 +76,7 @@
         </div>
 
         <div class="chart-container">
-            <h3>Weekly qAR Transfer Volume</h3>
+            <h3>qAR/wAR Weekly Transaction Count</h3>
             <div id="qARweeklyTransferLoader" class="chart-loader">
                 <div class="loader"></div>
                 <div class="loader-text">Fetching Transaction History...</div>
@@ -66,25 +85,17 @@
         </div>
 
         <div class="chart-container">
-            <h3>Daily wAR Transfer Volume</h3>
-            <div id="wARTransferLoader" class="chart-loader">
+            <h3>qAR/wAR Daily Total Supply</h3>
+            <div id="qAR-wARTotalSupplyLoader" class="chart-loader">
                 <div class="loader"></div>
-                <div class="loader-text">Fetching Transaction History...</div>
+                <div class="loader-text">Fetching Supply History...</div>
             </div>
-            <canvas id="wARTransferChart"></canvas>
+            <canvas id="qAR-wARTotalSupplyChart"></canvas>
         </div>
 
-        <div class="chart-container">
-            <h3>Weekly wAR Transfer Volume</h3>
-            <div id="wARweeklyTransferLoader" class="chart-loader">
-                <div class="loader"></div>
-                <div class="loader-text">Fetching Transaction History...</div>
-            </div>
-            <canvas id="wARweeklyTransferChart"></canvas>
-        </div>
 
         <div class="chart-container">
-            <h3>Daily Permaswap Swap Volume</h3>
+            <h3>Permaswap Daily Swap Volume</h3>
             <div id="permaswapLoader" class="chart-loader">
                 <div class="loader"></div>
                 <div class="loader-text">Fetching Transaction History...</div>
@@ -93,7 +104,7 @@
         </div>
 
         <div class="chart-container">
-            <h3>Daily Botega Swap Volume</h3>
+            <h3>Botega Daily Swap Volume</h3>
             <div id="botegaLoader" class="chart-loader">
                 <div class="loader"></div>
                 <div class="loader-text">Fetching Transaction History...</div>
@@ -102,7 +113,7 @@
         </div>
 
         <div class="chart-container">
-            <h3>Daily Llama Land Players</h3>
+            <h3>Llama Land Daily Player Count</h3>
             <div id="llamaLandLoader" class="chart-loader">
                 <div class="loader"></div>
                 <div class="loader-text">Fetching Player History...</div>
