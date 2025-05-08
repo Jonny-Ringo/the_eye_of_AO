@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>👁️ The Eye of AO</title>
+        <meta name="description" content="👁️ The Eye of AO is a data dashboard for monitoring the AO Compute Network.">
+        <meta name="keywords" content="Arweave, AO, data, dashboard, blockchain, graphs, charts, analytics, monitoring, HyperBEAM">
+        <meta name="robots" content="index, follow">
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <meta name="language" content="English">
+        <meta name="author" content="Jonny Ringo">
+        <link rel="icon" href="../eyecon.png">
+        
+        <!-- Open Graph / Facebook -->
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="https://eye-of-ao.arweave.net/">
+        <meta property="og:title" content="👁️ The Eye of AO">
+        <meta property="og:description" content="Data dashboard for monitoring the AO Compute Network">
+        <meta property="og:image" content="../preview.png">
+        <meta property="og:image:width" content="1200">
+        <meta property="og:image:height" content="630">
+        <meta property="og:site_name" content="The Eye of AO">
+        
+        <!-- Twitter -->
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:url" content="https://eye-of-ao.arweave.net/">
+        <meta name="twitter:title" content="👁️ The Eye of AO">
+        <meta name="twitter:description" content="Data dashboard for monitoring the AO Compute Network">
+        <meta name="twitter:image" content="../preview.png">
+        <meta name="twitter:creator" content="Jonny Ringo">
+ 
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom styles -->
+    <link rel="stylesheet" href="../dash.css">
+    <link rel="stylesheet" href="hyperbeam-uptime.css">
+    
+    <!-- Icons (optional) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <header>
+        <div class="container header-content">
+            <div class="logo">
+                <div>
+                    <h1>👁️ The Eye of AO</h1>
+                </div>
+            </div>
+            <div class="header-info">
+                <div class="network-badge">HyperBEAM Mainnet</div>
+            </div>
+        </div>
+        <nav class="navbar">
+            <div class="navbar-container">
+                <a href="../index.html" class="nav-item">Network Stats</a>
+                <a href="../legacynet/uptime.html" class="nav-item">Legacynet Uptime</a>
+                <a href="hyperbeam-uptime.html" class="nav-item active">HyperBEAM Uptime</a>
+            </div>
+        </nav>
+    </header>
+
+    <nav>
+        <div class="container">
+            <div class="nav-links">
+                <a href="#mainnetNodes" class="nav-link active" id="mainnetNodesLink">HyperBEAM Nodes</a>
+                <a href="#customNodes" class="nav-link" id="customNodesLink">Custom Node Dashboard</a>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="page-header">
+            <h1>HyperBEAM Network Status</h1>
+            <h2>Real-time Availability Monitor</h2>
+        </div>
+         
+        <div class="summary">
+            <h2>Network Status</h2>
+            <p id="summaryText">Checking node availability...</p>
+        </div>
+
+
+        <section id="mainnetNodesContent" class="active">
+            <h2 class="page-header">HyperBEAM Mainnet Nodes</h2>
+            <div class="status-container" id="mainnetStatusContainer">
+                <!-- Node status cards will be added here dynamically -->
+            </div>
+            <div class="last-updated" id="mainnetLastUpdated">Last update: Waiting for first scan...</div>
+        </section>
+    </div>
+
+    <div class="container">
+        <section id="customNodesContent">
+            <h2 class="page-header">Custom Node Dashboard</h2>
+        
+            <div class="additional-node-container">
+                <div class="node-input-group">
+                    <div class="protocol-toggle">
+                        <div class="toggle-buttons">
+                            <button class="toggle-button selected" id="hbHttpsToggle">HTTPS</button>
+                            <button class="toggle-button" id="hbHttpToggle">HTTP</button>
+                        </div>
+                    </div>
+                    <input type="text" id="additionalNode" placeholder="Add HyperBEAM node (e.g., beam01.example.com)">
+                </div>
+                <div class="node-input-group">
+                    <div class="protocol-toggle">
+                        <div class="toggle-buttons">
+                            <button class="toggle-button selected" id="cuHttpsToggle">HTTPS</button>
+                            <button class="toggle-button" id="cuHttpToggle">HTTP</button>
+                        </div>
+                    </div>
+                    <input type="text" id="additionalCuNode" placeholder="Add CU node (leave blank if none)">
+                </div>
+                <div class="node-action-buttons">
+                    <button class="add-node-btn" id="addNodeBtn">
+                        <i class="fas fa-plus"></i> Add Node
+                    </button>
+                    <button class="remove-node-btn" id="removeNodeBtn">
+                        <i class="fas fa-minus"></i> Remove Node
+                    </button>
+                </div>
+            </div>
+
+            <div class="status-container" id="customStatusContainer">
+                <!-- Custom node status cards will be added here dynamically -->
+            </div>
+            <div class="last-updated" id="customLastUpdated">Last update: Waiting for first scan...</div>
+        </section>
+    </div>
+
+    <footer>
+        <div class="container footer-content">
+            <div class="footer-text">2025 The Eye of AO</div>
+            <div class="footer-text">Data refreshes automatically every 20 minutes</div>
+        </div>
+    </footer>
+
+    <script type="module" src="hyperbeam-uptime.js"></script>
+    <script src="nav.js"></script>
+    
+    <!-- Add this just before the closing body tag -->
+    <script>
+        // Add support for FontAwesome fallback
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if FontAwesome failed to load
+            const fontAwesomeFailed = document.querySelector('.fas.fa-sync-alt') && 
+                                     window.getComputedStyle(document.querySelector('.fas.fa-sync-alt')).fontFamily !== 'Font Awesome 6 Free';
+            
+            if (fontAwesomeFailed) {
+                // Replace icons with simple text
+                document.querySelector('.add-node-btn').textContent = '+ Add Node';
+                document.querySelector('.remove-node-btn').textContent = '- Remove Node';
+                
+                // Replace all node action icons
+                document.querySelectorAll('.node-actions a').forEach(link => {
+                    if (link.title === 'Visit Node') {
+                        link.textContent = '→';
+                    } else if (link.title === 'View Metadata') {
+                        link.textContent = 'ℹ';
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

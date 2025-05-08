@@ -13,6 +13,7 @@ MAX_HISTORY_RECORDS = 1000
 -- Initialize tables if they don't exist
 Db:exec([[CREATE TABLE IF NOT EXISTS RecentBlocks (timestamp INTEGER, blockHeight INTEGER);]])
 Db:exec([[CREATE TABLE IF NOT EXISTS DailyBlocks (date TEXT, timestamp INTEGER, blockHeight INTEGER);]])
+Db:exec([[CREATE TABLE IF NOT EXISTS WeeklyBlocks (date TEXT, timestamp INTEGER, blockHeight INTEGER);]])
 
 -- Function to clear all historical entries
 function clearTables()
@@ -23,7 +24,7 @@ end
 
 -- Function to insert historical data
 function insertHistoricalBlock(blockHeight, timestamp, isWeekly)
-    local dateStr = os.date("!%Y-%m-%d", timestamp / 1000)
+    local dateStr = os.date("!%Y-%m-%d", math.floor(timestamp / 1000))
     
     if isWeekly then
         dbAdmin:apply([[
@@ -38,6 +39,28 @@ function insertHistoricalBlock(blockHeight, timestamp, isWeekly)
         ]], {dateStr, timestamp, blockHeight})
         print(string.format("Inserted daily block %d for date %s", blockHeight, dateStr))
     end
+end
+
+-- Sync state on spawn
+InitialSync = InitialSync or 'INCOMPLETE'
+if InitialSync == 'INCOMPLETE' then
+  -- Get current blocks data
+  local recentBlocks = dbAdmin:select([[SELECT * FROM RecentBlocks ORDER BY timestamp DESC;]], {})
+  local dailyBlocks = dbAdmin:select([[SELECT * FROM DailyBlocks ORDER BY timestamp DESC;]], {})
+  local weeklyBlocks = dbAdmin:select([[SELECT * FROM WeeklyBlocks ORDER BY timestamp DESC;]], {})
+  
+  -- Send initial state
+  Send({ 
+    device = 'patch@1.0', 
+    cache = { 
+      recentBlocks = recentBlocks,
+      dailyBlocks = dailyBlocks,
+      weeklyBlocks = weeklyBlocks
+    } 
+  })
+  
+  InitialSync = 'COMPLETE'
+  print("Initial state sync complete")
 end
 
 -- Function to print current blocks data
@@ -97,6 +120,7 @@ local function findClosestToMidnight(blocks, targetTimestamp)
     return closestBlock
 end
 
+-- Process Cron messages
 -- Process Cron messages
 Handlers.add('cron',
     function(m) return m.Action == "Cron" end,
@@ -165,6 +189,15 @@ Handlers.add('cron',
                 {nextDate, closestBlock.timestamp, adjustedBlockHeight})
         
             print(string.format("Inserted daily block %d for date %s", adjustedBlockHeight, nextDate))
+            
+            -- Sync state only after successfully inserting a daily block
+            local dailyBlocks = dbAdmin:select([[SELECT * FROM DailyBlocks ORDER BY timestamp DESC;]], {})
+            Send({ 
+              device = 'patch@1.0', 
+              cache = { 
+                dailyBlocks = dailyBlocks
+              } 
+            })
         else
             print("No suitable block found for the target date.")
         end
