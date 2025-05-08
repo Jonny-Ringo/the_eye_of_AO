@@ -1,36 +1,74 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The EYE of AO 👁</title>
-    <meta name="description" content="The Eye of AO is a data dashboard for the AO Compute Network.">
-    <meta name="keywords" content="Arweave, AO, data, dashboard, blockchain, graphs, charts">
-    <meta name="robots" content="index, follow">
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta name="language" content="English">
-    <meta name="author" content="Jonny Ringo">
-
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://eye-of-ao.ar.io/">
-    <meta property="og:title" content="The EYE of AO 👁">
-    <meta property="og:description" content="The Eye of AO is a data dashboard for the AO Compute Network.">
-    <meta property="og:image" content="">
-
-
-
-
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    <!-- Chart.js for graphs -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
-    <link rel="stylesheet" href="dash.css">
-</head>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>👁️ The Eye of AO</title>
+        <meta name="description" content="👁️ The Eye of AO is a data dashboard for monitoring the AO Compute Network.">
+        <meta name="keywords" content="Arweave, AO, data, dashboard, blockchain, graphs, charts, analytics, monitoring, HyperBEAM">
+        <meta name="robots" content="index, follow">
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <meta name="language" content="English">
+        <meta name="author" content="Jonny Ringo">
+        <link rel="icon" href="eyecon.png">
+        
+        <!-- Open Graph / Facebook -->
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="https://eye-of-ao.arweave.net/">
+        <meta property="og:title" content="👁️ The Eye of AO">
+        <meta property="og:description" content="Data dashboard for monitoring the AO Compute Network">
+        <meta property="og:image" content="preview.png">
+        <meta property="og:image:width" content="1200">
+        <meta property="og:image:height" content="630">
+        <meta property="og:site_name" content="The Eye of AO">
+        
+        <!-- Twitter -->
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:url" content="https://eye-of-ao.arweave.net/">
+        <meta name="twitter:title" content="👁️ The Eye of AO">
+        <meta name="twitter:description" content="Data dashboard for monitoring the AO Compute Network">
+        <meta name="twitter:image" content="preview.png">
+        <meta name="twitter:creator" content="Jonny Ringo">
+        
+        <!-- Fonts -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+        
+        <!-- Chart.js for graphs -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+        
+        <!-- Custom styles -->
+        <link rel="stylesheet" href="dash.css">
+    </head>
 <body>
     <header>
-        <h1>The Eye of AO 👁</h1>
-        <h3>Early Dev Release</h3>
-        <div id="blockInfo" class="block-info"></div>
+        <div class="container header-content">
+            <div class="logo">
+                <div>
+                    <h1>👁️ The Eye of AO</h1>
+                </div>
+            </div>
+            <div class="header-info">
+                <div id="blockInfo" class="block-info">Loading network status...</div>
+            </div>
+        </div>
+        <nav class="navbar">
+            <div class="navbar-container">
+                <a href="index.html" class="nav-item">Network Stats</a>
+                <a href="legacynet/uptime.html" class="nav-item">Legacynet Uptime</a>
+                <a href="hyperbeam/hyperbeam-uptime.html" class="nav-item">HyperBEAM Uptime</a>
+            </div>
+        </nav>
     </header>
+    <nav>
+        <div class="container">
+            <div class="nav-links">
+                <a href="#networkStats" class="nav-link active" id="networkStatsLink">AO Network Stats</a>
+                <a href="#gamingStats" class="nav-link" id="gamingStatsLink">Gaming Stats</a>
+            </div>
+        </div>
+    </nav>
 
     <div id="mainLoader" class="loader-container">
         <div class="eye-loader">
@@ -43,84 +81,221 @@
                 <div class="lower-lid"></div>
             </div>
         </div>
-        <div class="loader-text">Fetching Blockheight Data...</div>
+        <div class="loader-text">Syncing with AO Network...</div>
     </div>
 
     <div class="container">
 
-        <div class="chart-container">
-            <h3>wUSDC/USDA Daily Transaction Count</h3>
-            <div id="wUSDCTransferLoader" class="chart-loader">
-                <div class="loader"></div>
-                <div class="loader-text">Fetching Transaction History...</div>
-            </div>
-            <canvas id="wUSDCTransferChart"></canvas>
-        </div>
-    
-        <div class="chart-container">
-            <h3>AO Daily Transaction Count</h3>
-            <div id="AOTransferLoader" class="chart-loader">
-                <div class="loader"></div>
-                <div class="loader-text">Fetching Transaction History...</div>
-            </div>
-            <canvas id="AOTransferChart"></canvas>
-        </div>
 
-        <div class="chart-container">
-            <h3>qAR/wAR Daily Transaction Count</h3>
-            <div id="qARTransferLoader" class="chart-loader">
-                <div class="loader"></div>
-                <div class="loader-text">Fetching Transaction History...</div>
+        <section id="networkStatsContent" class="active">
+            <div class="page-header">
+                <h1>AO Network Stats</h1>
             </div>
-            <canvas id="qARTransferChart"></canvas>
-        </div>
-
-        <div class="chart-container">
-            <h3>qAR/wAR Weekly Transaction Count</h3>
-            <div id="qARweeklyTransferLoader" class="chart-loader">
-                <div class="loader"></div>
-                <div class="loader-text">Fetching Transaction History...</div>
-            </div>
-            <canvas id="qARweeklyTransferChart"></canvas>
-        </div>
-
-        <div class="chart-container">
-            <h3>qAR/wAR Daily Total Supply</h3>
-            <div id="qAR-wARTotalSupplyLoader" class="chart-loader">
-                <div class="loader"></div>
-                <div class="loader-text">Fetching Supply History...</div>
-            </div>
-            <canvas id="qAR-wARTotalSupplyChart"></canvas>
-        </div>
 
 
-        <div class="chart-container">
-            <h3>Permaswap Daily Swap Volume</h3>
-            <div id="permaswapLoader" class="chart-loader">
-                <div class="loader"></div>
-                <div class="loader-text">Fetching Transaction History...</div>
-            </div>
-            <canvas id="permaswapChart"></canvas>
-        </div>
+            <div class="dashboard-grid">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">wUSDC/USDA Daily Transaction Count</h3>
+                    </div>
+                    <div class="chart-body">
+                        <div id="wUSDCTransferLoader" class="chart-loader">
+                            <div class="loader"></div>
+                            <div class="loader-text">Fetching Transaction History...</div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="wUSDCTransferChart"></canvas>
+                        </div>
+                        <div class="chart-actions">
+                            <button class="chart-action-btn">1W</button>
+                            <button class="chart-action-btn">1M</button>
+                            <button class="chart-action-btn">3M</button>
+                        </div>
+                    </div>
+                </div>
 
-        <div class="chart-container">
-            <h3>Botega Daily Swap Volume</h3>
-            <div id="botegaLoader" class="chart-loader">
-                <div class="loader"></div>
-                <div class="loader-text">Fetching Transaction History...</div>
-            </div>
-            <canvas id="botegaChart"></canvas>
-        </div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">AO Daily Transaction Count</h3>
+                    </div>
+                    <div class="chart-body">
+                        <div id="AOTransferLoader" class="chart-loader">
+                            <div class="loader"></div>
+                            <div class="loader-text">Fetching Transaction History...</div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="AOTransferChart"></canvas>
+                        </div>
+                        <div class="chart-actions">
+                            <button class="chart-action-btn">1W</button>
+                            <button class="chart-action-btn">1M</button>
+                            <button class="chart-action-btn">3M</button>
+                        </div>
+                    </div>
+                </div>
 
-        <div class="chart-container">
-            <h3>Llama Land Daily Player Count</h3>
-            <div id="llamaLandLoader" class="chart-loader">
-                <div class="loader"></div>
-                <div class="loader-text">Fetching Player History...</div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">qAR/wAR Daily Transaction Count</h3>
+                    </div>
+                    <div class="chart-body">
+                        <div id="qARTransferLoader" class="chart-loader">
+                            <div class="loader"></div>
+                            <div class="loader-text">Fetching Transaction History...</div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="qARTransferChart"></canvas>
+                        </div>
+                        <div class="chart-actions">
+                            <button class="chart-action-btn">1W</button>
+                            <button class="chart-action-btn">1M</button>
+                            <button class="chart-action-btn">3M</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">qAR/wAR Weekly Transaction Count</h3>
+                    </div>
+                    <div class="chart-body">
+                        <div id="qARweeklyTransferLoader" class="chart-loader">
+                            <div class="loader"></div>
+                            <div class="loader-text">Fetching Transaction History...</div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="qARweeklyTransferChart"></canvas>
+                        </div>
+                        <div class="chart-actions">
+                            <button class="chart-action-btn">1W</button>
+                            <button class="chart-action-btn">1M</button>
+                            <button class="chart-action-btn">3M</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">qAR/wAR Daily Total Supply</h3>
+                    </div>
+                    <div class="chart-body">
+                        <div id="qAR-wARTotalSupplyLoader" class="chart-loader">
+                            <div class="loader"></div>
+                            <div class="loader-text">Fetching Supply History...</div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="qAR-wARTotalSupplyChart"></canvas>
+                        </div>
+                        <div class="chart-actions">
+                            <button class="chart-action-btn">1W</button>
+                            <button class="chart-action-btn">1M</button>
+                            <button class="chart-action-btn">3M</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Permaswap Daily Swap Volume</h3>
+                    </div>
+                    <div class="chart-body">
+                        <div id="permaswapLoader" class="chart-loader">
+                            <div class="loader"></div>
+                            <div class="loader-text">Fetching Transaction History...</div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="permaswapChart"></canvas>
+                        </div>
+                        <div class="chart-actions">
+                            <button class="chart-action-btn">1W</button>
+                            <button class="chart-action-btn">1M</button>
+                            <button class="chart-action-btn">3M</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Botega Daily Swap Volume</h3>
+                    </div>
+                    <div class="chart-body">
+                        <div id="botegaLoader" class="chart-loader">
+                            <div class="loader"></div>
+                            <div class="loader-text">Fetching Transaction History...</div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="botegaChart"></canvas>
+                        </div>
+                        <div class="chart-actions">
+                            <button class="chart-action-btn">1W</button>
+                            <button class="chart-action-btn">1M</button>
+                            <button class="chart-action-btn">3M</button>
+                        </div>
+                    </div>
+                </div>
+        </section>
+
+
+
+        <section id="gamingStatsContent">
+
+            <div class="page-header">
+                <h1>Gaming on AO</h1>
             </div>
-            <canvas id="llamaLandChart"></canvas>
-        </div>
+
+            <div class="dashboard-grid">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Llama Land Daily Player Count</h3>
+                    </div>
+                    <div class="chart-body">
+                        <div id="llamaLandLoader" class="chart-loader">
+                            <div class="loader"></div>
+                            <div class="loader-text">Fetching Player History...</div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="llamaLandChart"></canvas>
+                        </div>
+                        <div class="chart-actions">
+                            <button class="chart-action-btn">1W</button>
+                            <button class="chart-action-btn">1M</button>
+                            <button class="chart-action-btn">3M</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Stargrid Battle Tactics Daily Player Count</h3>
+                    </div>
+                    <div class="chart-body">
+                        <div id="stargridLoader" class="chart-loader">
+                            <div class="loader"></div>
+                            <div class="loader-text">Fetching Player History...</div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="stargridChart"></canvas>
+                        </div>
+                        <div class="chart-actions">
+                            <button class="chart-action-btn">1W</button>
+                            <button class="chart-action-btn">1M</button>
+                            <button class="chart-action-btn">3M</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
     </div>
-</body>
 
-<script src="dash.js" type = "module"></script>
+    <footer>
+        <div class="container footer-content">
+            <div class="footer-text">2025 The Eye of AO</div>
+            <div class="footer-text">Data refreshes automatically every 20 minutes</div>
+        </div>
+    </footer>
+
+    <!-- Load application using ES modules -->
+    <script type="module" src="index.js"></script>
+    <script src="nav.js"></script>
+</body>
+</html>
