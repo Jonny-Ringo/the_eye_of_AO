@@ -20,8 +20,7 @@ const config = {
         baseUrl: 'https://cu.ao-testnet.xyz/',
         nodePrefix: 'https://cu',
         nodeSuffix: '.ao-testnet.xyz/',
-        initialNodes: 150, // We'll start by checking this many nodes
-        maxNodes: 2000    // Maximum nodes to check automatically
+        initialNodes: 75, // Check CU1 - CU75
     },
     autoRefreshInterval: 1200000 // Auto-refresh every 20 minutes
 };

@@ -1,55 +1,77 @@
-document.addEventListener('DOMContentLoaded', function() {
-    // Get elements with the new IDs
-    const networkStatsLink = document.getElementById('networkStatsLink');
-    const gamingStatsLink = document.getElementById('gamingStatsLink');
-    const networkStatsContent = document.getElementById('networkStatsContent');
-    const gamingStatsContent = document.getElementById('gamingStatsContent');
-
-    // Function to switch between sections
-    function switchSection(section) {
-        // Remove active class from all links and content
-        networkStatsLink.classList.remove('active');
-        gamingStatsLink.classList.remove('active');
-        networkStatsContent.classList.remove('active');
-        gamingStatsContent.classList.remove('active');
-        
-        // Add active class to appropriate section
-        if (section === 'networkStats') {
-            networkStatsLink.classList.add('active');
-            networkStatsContent.classList.add('active');
-            window.history.pushState({section: 'networkStats'}, 'Network Stats', '#networkStats');
-        } else if (section === 'gamingStats') {
-            gamingStatsLink.classList.add('active');
-            gamingStatsContent.classList.add('active');
-            window.history.pushState({section: 'gamingStats'}, 'Gaming Stats', '#gamingStats');
+document.addEventListener('DOMContentLoaded', function () {
+    const sections = [
+        {
+            links: ['networkStatsLink', 'gamingStatsLink'],
+            contents: ['networkStatsContent', 'gamingStatsContent'],
+            default: 'networkStats'
+        },
+        {
+            links: ['theFirst150Link', 'hundredThouNodesLink', 'lCustomNodesLink'],
+            contents: ['theFirst150Content', 'hundredThouNodesContent', 'lCustomNodesContent'],
+            default: 'theFirst150'
+        },
+        {
+            links: ['mainnetNodesLink', 'hbCustomNodesLink'],
+            contents: ['mainnetNodesContent', 'hbCustomNodesContent'],
+            default: 'mainnetNodes'
         }
+    ];
+
+    function findSectionConfigByHash(hash) {
+        return sections.find(config =>
+            config.links.some(linkId => hash.includes(linkId.replace('Link', '')))
+        );
     }
-    
-    // Event listeners for navigation
-    networkStatsLink.addEventListener('click', function(e) {
-        e.preventDefault();
-        switchSection('networkStats');
+
+    function switchSection(sectionId, config) {
+        // Clean up all
+        config.links.forEach(linkId => {
+            const el = document.getElementById(linkId);
+            if (el) el.classList.remove('active');
+        });
+        config.contents.forEach(contentId => {
+            const el = document.getElementById(contentId);
+            if (el) el.classList.remove('active');
+        });
+
+        // Activate selected
+        const activeLink = document.getElementById(`${sectionId}Link`);
+        const activeContent = document.getElementById(`${sectionId}Content`);
+        if (activeLink) activeLink.classList.add('active');
+        if (activeContent) activeContent.classList.add('active');
+
+        // Push state
+        window.history.pushState({ section: sectionId }, '', `#${sectionId}`);
+    }
+
+    // Bind click handlers
+    sections.forEach(config => {
+        config.links.forEach(linkId => {
+            const link = document.getElementById(linkId);
+            if (link) {
+                const sectionId = linkId.replace('Link', '');
+                link.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    switchSection(sectionId, config);
+                });
+            }
+        });
     });
 
-    gamingStatsLink.addEventListener('click', function(e) {
-        e.preventDefault();
-        switchSection('gamingStats');
+    // Handle browser nav
+    window.addEventListener('popstate', function (e) {
+        const hash = window.location.hash.replace('#', '');
+        const config = findSectionConfigByHash(hash) || sections[0];
+        switchSection(hash || config.default, config);
     });
-    
-    // Handle browser back/forward
-    window.addEventListener('popstate', function(e) {
-        if (e.state && e.state.section) {
-            switchSection(e.state.section);
-        } else {
-            switchSection('networkStats');
-        }
-    });
-    
-    // Check hash on page load
-    if (window.location.hash === '#gamingStats') {
-        switchSection('gamingStats');
-    } else {
-        switchSection('networkStats');
-        window.history.replaceState({section: 'networkStats'}, 'Network Stats', '#networkStats');
-    }
+
+    // Load correct section on page load
+    const hash = window.location.hash.replace('#', '');
+    const config = findSectionConfigByHash(hash) || sections.find(cfg =>
+        cfg.links.some(id => document.getElementById(id))
+    ) || sections[0];
+    const initial = hash || config.default;
+
+    switchSection(initial, config);
+    window.history.replaceState({ section: initial }, '', `#${initial}`);
 });

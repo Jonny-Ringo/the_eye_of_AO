@@ -1146,9 +1146,13 @@ async function loadProcessChart(processName, periods, currentHeight) {
         console.error(`Error loading ${processName} chart:`, error);
         throw error; // Rethrow to allow caller to handle
     } finally {
-        // Always hide the loader, even if there was an error
-        toggleChartLoader(processName, false);
-    }
+  // Let these charts manage their loader manually AFTER visual paint
+  const skipAutoToggle = ['qARweeklyTransfer', 'wUSDCTransfer'];
+  if (!skipAutoToggle.includes(processName)) {
+    toggleChartLoader(processName, false);
+  }
+}
+
 }
 
 /**

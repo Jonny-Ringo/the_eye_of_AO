@@ -173,6 +173,7 @@ export function setupTimeRangeButtons(fetchDataCallback, fetchWeeklyCallback) {
                         if (timeRange === '1M' || timeRange === '3M') {
                             await fetchDataCallback(processName, timeRange);
                         } else {
+                            
                             updateChartTimeRange(processName, timeRange);
                         }
                     }
