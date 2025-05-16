@@ -33,7 +33,7 @@ export function toggleChartLoader(processName, show = true) {
     
     // Handle special cases for various chart loaders
     if (processName === 'qARwARTotalSupply') {
-        loaderId = 'qAR-wARTotalSupplyLoader';
+        loaderId = 'qARwARTotalSupplyLoader';
     } else if (processName === 'wARweeklyTransfer') {
         // wARweeklyTransfer shares the same loader as qARweeklyTransfer
         loaderId = 'qARweeklyTransferLoader';
@@ -173,7 +173,6 @@ export function setupTimeRangeButtons(fetchDataCallback, fetchWeeklyCallback) {
                         if (timeRange === '1M' || timeRange === '3M') {
                             await fetchDataCallback(processName, timeRange);
                         } else {
-                            
                             updateChartTimeRange(processName, timeRange);
                         }
                     }
