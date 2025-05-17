@@ -27,18 +27,6 @@ export const PROCESSES = {
         spawnerProcess: "3XBGLrygs11K63F_7mldWz4veNx6Llg6hI2yZs8LKHo",
         defaultAddresses: []
     },
-    qARTransfer: {
-        description: "qAR Token Transfer",
-        fromProcess: ["NG-0lVX882MG5nhARrSzyprEK6ejonHpdUmaaMPsHE8"],
-        action: "Credit-Notice",
-        displayName: "qAR Transfers"
-    },
-    qARweeklyTransfer: {
-        description: "qAR Weekly Token Transfer",
-        fromProcess: ["NG-0lVX882MG5nhARrSzyprEK6ejonHpdUmaaMPsHE8"],
-        action: "Credit-Notice",
-        displayName: "qAR Weekly Transfers"
-    },
     wARTransfer: {
         description: "wAR Token Transfer",
         fromProcess: ["xU9zFkq3X2ZQ6olwNVvr1vUWIjc3kXTWr7xKQD6dh10"],
@@ -69,9 +57,8 @@ export const PROCESSES = {
         action: "Credit-Notice",
         displayName: "AO Transfers"
     },
-    qARwARTotalSupply: {
-        description: "qAR/wAR Total Supply",
-        qARProcess: "e4kbo6uYtQc9vDZ1YkwZnwXLUWL-XCUx4XhLP25vRx0",
+    wARTotalSupply: {
+        description: "wAR Total Supply",
         wARProcess: "Bi6bSPz-IyOCX9ZNedmLzv7Z6yxsrj9nHE1TnZzm_ks",
         action: "SupplyHistory"
     },
@@ -264,8 +251,6 @@ export async function generateQuery(processType, startHeight, endHeight, current
             }`;
         }
             
-        case 'qARTransfer':
-        case 'qARweeklyTransfer':
         case 'wARTransfer':
         case 'wARweeklyTransfer':
         case 'wUSDCTransfer':

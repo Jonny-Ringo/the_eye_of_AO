@@ -6,9 +6,7 @@
 export const CHART_COLORS = {
     permaswap: 'rgb(54, 162, 235)',
     botega: 'rgb(255, 99, 132)',
-    qARTransfer: 'rgb(75, 192, 192)',
     wARTransfer: 'rgb(255, 159, 64)',
-    qARweeklyTransfer: 'rgb(75, 192, 192)',
     wARweeklyTransfer: 'rgb(255, 159, 64)',
     llamaLand: 'rgb(255, 205, 86)',
     stargrid: 'rgb(131, 86, 255)',

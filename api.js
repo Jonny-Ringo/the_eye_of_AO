@@ -105,8 +105,8 @@ export async function fetchBlockHistory() {
 }
 
 /**
- * Fetches supply history for qAR and wAR tokens
- * @returns {Promise<Object>} Object with qAR and wAR supply data
+ * Fetches supply history for wAR tokens
+ * @returns {Promise<Object>} Object with wAR supply data
  */
 export async function fetchSupplyHistory() {
     try {
@@ -119,20 +119,8 @@ export async function fetchSupplyHistory() {
             }
         }
         
-        // Fetch qAR and wAR supply history in parallel
-        const [qARResponse, wARResponse] = await Promise.all([
-            // Fetch qAR supply history
-            dryrun({
-                process: 'e4kbo6uYtQc9vDZ1YkwZnwXLUWL-XCUx4XhLP25vRx0',
-                data: '',
-                tags: [
-                    { name: "Action", value: "SupplyHistory" },
-                    { name: "Data-Protocol", value: "ao" },
-                    { name: "Type", value: "Message" },
-                    { name: "Variant", value: "ao.TN.1" }
-                ],
-            }),
-            // Fetch wAR supply history
+        // Fetch wAR supply history
+        const [wARResponse] = await Promise.all([
             dryrun({
                 process: 'Bi6bSPz-IyOCX9ZNedmLzv7Z6yxsrj9nHE1TnZzm_ks',
                 data: '',
@@ -145,12 +133,6 @@ export async function fetchSupplyHistory() {
             })
         ]);
 
-        // Process qAR data
-        const qARSupplyTag = qARResponse.Messages[0].Tags.find(
-            tag => tag.name === "DailySupply"
-        );
-        const qARSupplyData = JSON.parse(qARSupplyTag.value);
-
         // Process wAR data
         const wARSupplyTag = wARResponse.Messages[0].Tags.find(
             tag => tag.name === "DailySupply"
@@ -158,7 +140,6 @@ export async function fetchSupplyHistory() {
         const wARSupplyData = JSON.parse(wARSupplyTag.value);
 
         const supplyData = {
-            qAR: qARSupplyData,
             wAR: wARSupplyData
         };
         
