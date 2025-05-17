@@ -10,14 +10,14 @@
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <meta name="language" content="English">
         <meta name="author" content="Jonny Ringo">
-        <link rel="icon" href="../eyecon.png">
+        <link rel="icon" href="../images/eyecon.png">
         
         <!-- Open Graph / Facebook -->
         <meta property="og:type" content="website">
         <meta property="og:url" content="https://eye-of-ao.arweave.net/">
         <meta property="og:title" content="👁️ The Eye of AO">
         <meta property="og:description" content="Data dashboard for monitoring the AO Compute Network">
-        <meta property="og:image" content="../preview.png">
+        <meta property="og:image" content="../images/preview.png">
         <meta property="og:image:width" content="1200">
         <meta property="og:image:height" content="630">
         <meta property="og:site_name" content="The Eye of AO">
@@ -56,21 +56,38 @@
         </div>
         <nav class="navbar">
             <div class="navbar-container">
-                <a href="../index.html" class="nav-item">Network Stats</a>
-                <a href="../legacynet/uptime.html" class="nav-item">Legacynet Uptime</a>
-                <a href="hyperbeam-uptime.html" class="nav-item active">HyperBEAM Uptime</a>
+        
+                <!-- Network Stats -->
+                <div class="nav-dropdown">
+                    <a href="../index.html" class="nav-item dropdown-toggle">Network Stats ▾</a>
+                    <div class="dropdown-menu">
+                        <a href="../index.html#networkStats" class="nav-item">AO Network Stats</a>
+                        <a href="../index.html#gamingStats" class="nav-item">Gaming Stats</a>
+                    </div>
+                </div>
+        
+                <!-- Legacynet Uptime -->
+                <div class="nav-dropdown">
+                    <a href="../legacynet/uptime.html" class="nav-item dropdown-toggle">Legacynet Uptime ▾</a>
+                    <div class="dropdown-menu">
+                        <a href="../legacynet/uptime.html#theFirst150" class="nav-item">The First 150</a>
+                        <a href="../legacynet/uptime.html#hundredThouNodes" class="nav-item">100k Nodes</a>
+                        <a href="../legacynet/uptime.html#lCustomNodes" class="nav-item">Custom Node Dashboard</a>
+                    </div>
+                </div>
+        
+                <!-- HyperBEAM Uptime -->
+                <div class="nav-dropdown">
+                    <a href="hyperbeam-uptime.html" class="nav-item dropdown-toggle">HyperBEAM Uptime ▾</a>
+                    <div class="dropdown-menu">
+                        <a href="#mainnetNodes" class="nav-item" id="hbMainnetNodesLink">HyperBEAM Nodes</a>
+                        <a href="#customNodes" class="nav-item" id="hbCustomNodesLink">Custom Node Dashboard</a>
+                    </div>
+                </div>
+        
             </div>
         </nav>
     </header>
-
-    <nav>
-        <div class="container">
-            <div class="nav-links">
-                <a href="#mainnetNodes" class="nav-link active" id="mainnetNodesLink">HyperBEAM Nodes</a>
-                <a href="#customNodes" class="nav-link" id="customNodesLink">Custom Node Dashboard</a>
-            </div>
-        </div>
-    </nav>
     
     <div class="container">
         <div class="page-header">
@@ -94,7 +111,7 @@
     </div>
 
     <div class="container">
-        <section id="customNodesContent">
+        <section id="hbCustomNodesContent">
             <h2 class="page-header">Custom Node Dashboard</h2>
         
             <div class="additional-node-container">
@@ -141,7 +158,7 @@
     </footer>
 
     <script type="module" src="hyperbeam-uptime.js"></script>
-    <script src="nav.js"></script>
+    <script src="../nav.js"></script>
     
     <!-- Add this just before the closing body tag -->
     <script>

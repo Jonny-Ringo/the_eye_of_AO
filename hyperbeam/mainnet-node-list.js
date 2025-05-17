@@ -22,6 +22,11 @@ const mainnetNodes = [
         proxy: false
     },
     {
+        hb: "https://router-1.forward.computer",
+        cu: "--",
+        proxy: false
+    },
+    {
       hb: "https://hb.perplex.finance/",
       cu: "https://cu.perplex.finance/",
       proxy: false
@@ -37,24 +42,9 @@ const mainnetNodes = [
       proxy: false
     },
     {
-      hb: "http://hb.arnode.asia/",
-      cu: "http://cu.arnode.asia/",
-      proxy: true
-    },
-    {
       hb: "http://girls.onthewifi.com/",
       cu: "--",
       proxy: true
-    },
-    {
-      hb: "http://arlink.xyz:10000/",
-      cu: "http://arlink.xyz:6363/",
-      proxy: true
-    },
-    {
-      hb: "https://aothecomputer.xyz/",
-      cu: "--",
-      proxy: false
     },
     {
       hb: "https://hb.ao.p10node.com/",
@@ -67,11 +57,6 @@ const mainnetNodes = [
       proxy: false
     },
     {
-      hb: "https://hb.zoao.tech/",
-      cu: "--",
-      proxy: false
-    },
-    {
       hb: "https://dai-gnostics.com/",
       cu: "http://dai-gnostics.com:6363/",
       proxy: true
@@ -79,11 +64,6 @@ const mainnetNodes = [
     {
       hb: "https://hb.arweave.asia/",
       cu: "https://cu.arweave.asia/",
-      proxy: false
-    },
-    {
-      hb: "https://hbu.ionode.online/",
-      cu: "--",
       proxy: false
     },
     {
@@ -108,11 +88,6 @@ const mainnetNodes = [
       },
     {
       hb: "http://185.177.124.64:10000/",
-      cu: "--",
-      proxy: true
-    },
-    {
-      hb: "http://daemongate.io/hyper",
       cu: "--",
       proxy: true
     },
@@ -363,11 +338,6 @@ const mainnetNodes = [
       },
       {
         hb: "http://213.160.68.7:10001/",
-        cu: "--",
-        proxy: true
-      },
-      {
-        hb: "http://lab.bemjax.com:9696/",
         cu: "--",
         proxy: true
       },

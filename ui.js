@@ -33,7 +33,7 @@ export function toggleChartLoader(processName, show = true) {
     
     // Handle special cases for various chart loaders
     if (processName === 'qARwARTotalSupply') {
-        loaderId = 'qAR-wARTotalSupplyLoader';
+        loaderId = 'qARwARTotalSupplyLoader';
     } else if (processName === 'wARweeklyTransfer') {
         // wARweeklyTransfer shares the same loader as qARweeklyTransfer
         loaderId = 'qARweeklyTransferLoader';

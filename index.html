@@ -10,14 +10,14 @@
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <meta name="language" content="English">
         <meta name="author" content="Jonny Ringo">
-        <link rel="icon" href="eyecon.png">
+        <link rel="icon" href="images/eyecon.png">
         
         <!-- Open Graph / Facebook -->
         <meta property="og:type" content="website">
         <meta property="og:url" content="https://eye-of-ao.arweave.net/">
         <meta property="og:title" content="👁️ The Eye of AO">
         <meta property="og:description" content="Data dashboard for monitoring the AO Compute Network">
-        <meta property="og:image" content="preview.png">
+        <meta property="og:image" content="images/preview.png">
         <meta property="og:image:width" content="1200">
         <meta property="og:image:height" content="630">
         <meta property="og:site_name" content="The Eye of AO">
@@ -55,20 +55,38 @@
         </div>
         <nav class="navbar">
             <div class="navbar-container">
-                <a href="index.html" class="nav-item">Network Stats</a>
-                <a href="legacynet/uptime.html" class="nav-item">Legacynet Uptime</a>
-                <a href="hyperbeam/hyperbeam-uptime.html" class="nav-item">HyperBEAM Uptime</a>
+        
+                <!-- Network Stats -->
+                <div class="nav-dropdown">
+                    <a href="index.html" class="nav-item dropdown-toggle">Network Stats ▾</a>
+                    <div class="dropdown-menu">
+                        <a href="#networkStats" class="nav-item">AO Network Stats</a>
+                        <a href="#gamingStats" class="nav-item">Gaming Stats</a>
+                    </div>
+                </div>
+        
+                <!-- Legacynet Uptime -->
+                <div class="nav-dropdown">
+                    <a href="legacynet/uptime.html" class="nav-item dropdown-toggle">Legacynet Uptime ▾</a>
+                    <div class="dropdown-menu">
+                        <a href="legacynet/uptime.html#theFirst150" class="nav-item">The First 150</a>
+                        <a href="legacynet/uptime.html#hundredThouNodes" class="nav-item">100k Nodes</a>
+                        <a href="legacynet/uptime.html#lCustomNodes" class="nav-item">Custom Node Dashboard</a>
+                    </div>
+                </div>
+        
+                <!-- HyperBEAM Uptime -->
+                <div class="nav-dropdown">
+                    <a href="hyperbeam/hyperbeam-uptime.html" class="nav-item dropdown-toggle">HyperBEAM Uptime ▾</a>
+                    <div class="dropdown-menu">
+                        <a href="hyperbeam/hyperbeam-uptime.html#hbMainnetNodes" class="nav-item">HyperBEAM Nodes</a>
+                        <a href="hyperbeam/hyperbeam-uptime.html#hbCustomNodes" class="nav-item">Custom Node Dashboard</a>
+                    </div>
+                </div>
+        
             </div>
         </nav>
     </header>
-    <nav>
-        <div class="container">
-            <div class="nav-links">
-                <a href="#networkStats" class="nav-link active" id="networkStatsLink">AO Network Stats</a>
-                <a href="#gamingStats" class="nav-link" id="gamingStatsLink">Gaming Stats</a>
-            </div>
-        </div>
-    </nav>
 
     <div id="mainLoader" class="loader-container">
         <div class="eye-loader">
@@ -179,7 +197,7 @@
                         <h3 class="chart-title">qAR/wAR Daily Total Supply</h3>
                     </div>
                     <div class="chart-body">
-                        <div id="qAR-wARTotalSupplyLoader" class="chart-loader">
+                        <div id="qARwARTotalSupplyLoader" class="chart-loader">
                             <div class="loader"></div>
                             <div class="loader-text">Fetching Supply History...</div>
                         </div>

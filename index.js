@@ -1070,6 +1070,7 @@ async function loadProcessChart(processName, periods, currentHeight) {
             // Update the chart
             const timeRange = getChartTimeRange('qARTransfer');
             updateCombinedChart('qARTransfer', 'wARTransfer', timeRange);
+            toggleChartLoader(processName, false); // Add this line
             
         } else if (processName === 'wUSDCTransfer') {
             // Fetch data for both wUSDC and USDA transfers
@@ -1099,6 +1100,7 @@ async function loadProcessChart(processName, periods, currentHeight) {
             // Update the chart
             const timeRange = getChartTimeRange('wUSDCTransfer');
             updateCombinedChart('wUSDCTransfer', 'USDATransfer', timeRange);
+            toggleChartLoader(processName, false);
             
         } else if (processName === 'qARweeklyTransfer') {
             // Fetch data for both qAR and wAR weekly
@@ -1128,6 +1130,7 @@ async function loadProcessChart(processName, periods, currentHeight) {
             // Update the chart
             const timeRange = getChartTimeRange('qARweeklyTransfer');
             updateCombinedChart('qARweeklyTransfer', 'wARweeklyTransfer', timeRange);
+            toggleChartLoader(processName, false);
             
         } else {
             // Standard chart
@@ -1140,14 +1143,12 @@ async function loadProcessChart(processName, periods, currentHeight) {
                 // Update the chart
                 const timeRange = getChartTimeRange(processName);
                 updateChartTimeRange(processName, timeRange);
+                toggleChartLoader(processName, false);
             }
         }
     } catch (error) {
         console.error(`Error loading ${processName} chart:`, error);
         throw error; // Rethrow to allow caller to handle
-    } finally {
-        // Always hide the loader, even if there was an error
-        toggleChartLoader(processName, false);
     }
 }
 
