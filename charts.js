@@ -26,7 +26,7 @@ function createWeeklyTooltipCallbacks() {
             const dataIndex = context.dataIndex;
             
             // Determine which process data to use based on dataset index
-            const processName = datasetIndex === 0 ? 'qARweeklyTransfer' : 'wARweeklyTransfer';
+            const processName = 'wARweeklyTransfer';
             const data = historicalData[processName];
             
             // If we don't have data or the index is out of bounds, show the raw value
@@ -47,14 +47,6 @@ function createWeeklyTooltipCallbacks() {
         title: function(context) {
             const dataIndex = context[0].dataIndex;
             
-            // Try to get timestamp from qAR data first
-            const qARData = historicalData['qARweeklyTransfer'];
-            if (qARData && qARData[dataIndex]) {
-                const date = new Date(qARData[dataIndex].timestamp);
-                return formatDate(date, TIME_FORMAT.tooltip);
-            }
-            
-            // Fall back to wAR data if needed
             const wARData = historicalData['wARweeklyTransfer'];
             if (wARData && wARData[dataIndex]) {
                 const date = new Date(wARData[dataIndex].timestamp);
@@ -254,17 +246,10 @@ function createCombinedChart(primaryProcess, secondaryProcess) {
     let displayName1, displayName2, color1, color2;
     
     // For weekly charts, use the non-weekly process colors
-    if (primaryProcess === 'qARweeklyTransfer') {
-        displayName1 = 'qAR Weekly Transfers';
-        displayName2 = 'wAR Weekly Transfers';
-        color1 = getProcessColor('qARTransfer'); // Use qARTransfer color
-        color2 = getProcessColor('wARTransfer'); // Use wARTransfer color
-    } else {
-        displayName1 = getProcessDisplayName(primaryProcess);
-        displayName2 = getProcessDisplayName(secondaryProcess);
-        color1 = getProcessColor(primaryProcess);
-        color2 = getProcessColor(secondaryProcess);
-    }
+    displayName1 = getProcessDisplayName(primaryProcess);
+    displayName2 = getProcessDisplayName(secondaryProcess);
+    color1 = getProcessColor(primaryProcess);
+    color2 = getProcessColor(secondaryProcess);
     
     return new Chart(ctx, {
         type: 'line',
@@ -294,7 +279,7 @@ function createCombinedChart(primaryProcess, secondaryProcess) {
             plugins: {
                 legend: createLegendConfig(),
                 tooltip: {
-                    callbacks: primaryProcess === 'qARweeklyTransfer' ? 
+                    callbacks: primaryProcess === 'wARweeklyTransfer' ? 
                         createWeeklyTooltipCallbacks() : 
                         createCombinedTooltipCallbacks(primaryProcess, secondaryProcess)
                 }
@@ -304,11 +289,11 @@ function createCombinedChart(primaryProcess, secondaryProcess) {
 }
 
 /**
- * Creates a supply chart for qAR and wAR
+ * Creates a supply chart for wAR
  * @returns {Object} Chart instance
  */
 function createSupplyChart() {
-    const canvasId = 'qAR-wARTotalSupplyChart';
+    const canvasId = 'wARTotalSupplyChart';
     const ctx = document.getElementById(canvasId)?.getContext('2d');
     
     if (!ctx) {
@@ -321,13 +306,6 @@ function createSupplyChart() {
         data: {
             labels: [],
             datasets: [
-                {
-                    label: 'qAR Total Supply',
-                    data: [],
-                    borderColor: getProcessColor('qARTransfer'),
-                    tension: CHART_DEFAULTS.tension,
-                    pointRadius: CHART_DEFAULTS.pointRadius
-                },
                 {
                     label: 'wAR Total Supply',
                     data: [],
@@ -418,20 +396,14 @@ export function initializeCharts() {
         }
     });
     
-    // Special case: qAR/wAR combined chart
-    charts['qARTransfer'] = createCombinedChart('qARTransfer', 'wARTransfer');
-    
     // Special case: wUSDC/USDA combined chart
     charts['wUSDCTransfer'] = createCombinedChart('wUSDCTransfer', 'USDATransfer');
     
-    // Special case: qAR/wAR weekly transfer chart
-    charts['qARweeklyTransfer'] = createCombinedChart('qARweeklyTransfer', 'wARweeklyTransfer');
-    
-    // Special case: qAR/wAR total supply chart
-    charts['qARwARTotalSupply'] = createSupplyChart();
+    // Special case: wAR total supply chart
+    charts['wARTotalSupply'] = createSupplyChart();
     
     // Standard charts for remaining processes
-    ['AOTransfer', 'permaswap', 'botega', 'llamaLand', 'stargrid'].forEach(processName => {
+    ['wARweeklyTransfer', 'wARTransfer', 'AOTransfer', 'permaswap', 'botega', 'llamaLand', 'stargrid'].forEach(processName => {
         charts[processName] = createStandardChart(processName);
     });
 
@@ -504,14 +476,8 @@ export function updateCombinedChart(primaryProcess, secondaryProcess, timeRange)
     const filteredSecondaryData = filterDataByTimeRange(secondaryData, timeRange);
     
     // Choose the right approach based on the process type
-    if (primaryProcess === 'qARweeklyTransfer') {
-        // For weekly charts, special handling to ensure proper alignment
-        updateWeeklyCombinedChart(chart, filteredPrimaryData, filteredSecondaryData);
-    } else {
-        // For other combined charts, standard approach
-        updateStandardCombinedChart(chart, primaryProcess, secondaryProcess, 
+    updateStandardCombinedChart(chart, primaryProcess, secondaryProcess, 
             filteredPrimaryData, filteredSecondaryData);
-    }
 }
 
 /**
@@ -630,73 +596,12 @@ function createCombinedTooltipCallbacks(primaryProcess, secondaryProcess) {
 }
 
 /**
- * Updates the weekly combined chart
- * @param {Object} chart - The chart instance
- * @param {Array} qARData - qAR weekly data
- * @param {Array} wARData - wAR weekly data
- */
-function updateWeeklyCombinedChart(chart, qARData, wARData) {
-    // First, create a merged timeline that includes both qAR and wAR timestamps
-    const allTimestamps = [
-        ...qARData.map(d => new Date(d.timestamp).toISOString()),
-        ...wARData.map(d => new Date(d.timestamp).toISOString())
-    ];
-    
-    // Create a sorted unique array of timestamps
-    const uniqueTimestamps = [...new Set(allTimestamps)].sort();
-    
-    // Now create the datasets with properly aligned data points
-    const qARValues = [];
-    const wARValues = [];
-    const labels = [];
-    
-    // Create aligned datasets for tooltip access
-    const alignedQARData = [];
-    const alignedWARData = [];
-    
-    uniqueTimestamps.forEach(timestamp => {
-        const qARPoint = qARData.find(d => new Date(d.timestamp).toISOString() === timestamp);
-        const wARPoint = wARData.find(d => new Date(d.timestamp).toISOString() === timestamp);
-        
-        qARValues.push(qARPoint ? qARPoint.count : null);
-        wARValues.push(wARPoint ? wARPoint.count : null);
-        
-        // Add to aligned data arrays for tooltips
-        alignedQARData.push(qARPoint || { timestamp, count: null });
-        alignedWARData.push(wARPoint || { timestamp, count: null });
-        
-        const date = new Date(timestamp);
-        labels.push(formatDate(date));
-    });
-    
-    // Store the aligned data for tooltip access
-    historicalData['qARweeklyTransfer'] = alignedQARData;
-    historicalData['wARweeklyTransfer'] = alignedWARData;
-    
-    // Update chart with the aligned data
-    chart.data.labels = labels;
-    chart.data.datasets[0].data = qARValues;
-    chart.data.datasets[1].data = wARValues;
-    
-    // Set appropriate labels
-    chart.data.datasets[0].label = 'qAR Weekly Transfers';
-    chart.data.datasets[1].label = 'wAR Weekly Transfers';
-    
-    // Set appropriate colors (using the non-weekly process colors)
-    chart.data.datasets[0].borderColor = getProcessColor('qARTransfer');
-    chart.data.datasets[1].borderColor = getProcessColor('wARTransfer');
-    
-    // Update the chart with animation disabled for performance
-    chart.update('none');
-}
-
-/**
- * Updates the supply chart with qAR and wAR supply data
+ * Updates the supply chart with wAR supply data
  * @param {Array} supplyData - Array of supply data points
  * @param {string} timeRange - The selected time range
  */
 export function updateSupplyChart(supplyData, timeRange) {
-    const chart = charts['qARwARTotalSupply'];
+    const chart = charts['wARTotalSupply'];
     if (!chart) {
         console.error('No supply chart found');
         return;
@@ -715,15 +620,14 @@ export function updateSupplyChart(supplyData, timeRange) {
         return new Date(a.timestamp) - new Date(b.timestamp);
     });
     
-    // Create labels and datasets
+    // Create labels and datasets (just wAR now)
     const labels = sortedData.map(d => formatDate(new Date(d.timestamp)));
-    const qARSupply = sortedData.map(d => d.qARSupply);
     const wARSupply = sortedData.map(d => d.wARSupply);
     
-    // Update chart
+    // Update chart with only wAR data
     chart.data.labels = labels;
-    chart.data.datasets[0].data = qARSupply;
-    chart.data.datasets[1].data = wARSupply;
+    chart.data.datasets[0].data = wARSupply;
+    chart.data.datasets[0].label = 'wAR Total Supply';
     
     // Update the chart
     chart.update('none');
@@ -757,15 +661,11 @@ export function updateChartTimeRange(processName, timeRange) {
     historicalData[processName] = filteredData;
     
     // Handle special combined charts
-    if (processName === 'qARTransfer') {
-        updateCombinedChart('qARTransfer', 'wARTransfer', timeRange);
-    } else if (processName === 'wUSDCTransfer') {
+    if (processName === 'wUSDCTransfer') {
         updateCombinedChart('wUSDCTransfer', 'USDATransfer', timeRange);
-    } else if (processName === 'qARweeklyTransfer') {
-        updateCombinedChart('qARweeklyTransfer', 'wARweeklyTransfer', timeRange);
-    } else if (processName === 'qARwARTotalSupply') {
-        const supplyData = historicalData[processName] || [];
-        updateSupplyChart(supplyData, timeRange);
+    } else if (processName === 'wARTotalSupply') {
+        // Call the specialized function for supply chart
+        updateSupplyChart(historicalData[processName], timeRange);
     } else {
         // Standard single-line charts
         const filteredByTimeRange = filterDataByTimeRange(filteredData, timeRange);

@@ -32,15 +32,7 @@ export function toggleChartLoader(processName, show = true) {
     let loaderId;
     
     // Handle special cases for various chart loaders
-    if (processName === 'qARwARTotalSupply') {
-        loaderId = 'qARwARTotalSupplyLoader';
-    } else if (processName === 'wARweeklyTransfer') {
-        // wARweeklyTransfer shares the same loader as qARweeklyTransfer
-        loaderId = 'qARweeklyTransferLoader';
-    } else if (processName === 'wARTransfer') {
-        // wARTransfer shares the same loader as qARTransfer
-        loaderId = 'qARTransferLoader'; 
-    } else if (processName === 'USDATransfer') {
+    if (processName === 'USDATransfer') {
         // USDATransfer shares the same loader as wUSDCTransfer
         loaderId = 'wUSDCTransferLoader';
     } else {
@@ -97,9 +89,9 @@ export function setupTimeRangeButtons(fetchDataCallback, fetchWeeklyCallback) {
     
     // Initialize chartTimeRanges for each process
     const processNames = [
-        'qARTransfer', 'wARTransfer', 'wUSDCTransfer', 'USDATransfer', 
+         'wARTransfer', 'wUSDCTransfer', 'USDATransfer', 
         'AOTransfer', 'permaswap', 'botega', 'llamaLand',
-        'qARweeklyTransfer', 'wARweeklyTransfer', 'qARwARTotalSupply', 'stargrid'
+         'wARweeklyTransfer', 'wARTotalSupply', 'stargrid'
     ];
     
     processNames.forEach(processName => {
@@ -117,8 +109,8 @@ export function setupTimeRangeButtons(fetchDataCallback, fetchWeeklyCallback) {
         
         // Get process name from canvas ID
         let processName;
-        if (canvas.id === 'qAR-wARTotalSupplyChart') {
-            processName = 'qARwARTotalSupply';
+        if (canvas.id === 'wARTotalSupplyChart') {
+            processName = 'wARTotalSupply';
         } else {
             processName = canvas.id.replace('Chart', '');
         }
@@ -158,8 +150,8 @@ export function setupTimeRangeButtons(fetchDataCallback, fetchWeeklyCallback) {
                 chartTimeRanges[processName] = timeRange;
                 
                 try {
-                    // Special handling for qAR/wAR combined chart
-                    if (processName === 'qARTransfer') {
+                    // Special handling for wAR chart
+                    if (processName === 'wARTransfer') {
                         // Make sure we update both datasets
                         if (timeRange === '1M' || timeRange === '3M') {
                             await fetchDataCallback(processName, timeRange);
@@ -183,8 +175,8 @@ export function setupTimeRangeButtons(fetchDataCallback, fetchWeeklyCallback) {
                         await fetchDataCallback(processName, timeRange);
                     } 
                     // For weekly charts
-                    // Special handling for qAR/wAR weekly combined chart
-                    else if (processName === 'qARweeklyTransfer') {
+                    // Special handling for wAR weekly combined chart
+                    else if (processName === 'wARweeklyTransfer') {
                         if (timeRange === '1M' || timeRange === '3M') {
                             await fetchWeeklyCallback(processName, timeRange);
                         } else {

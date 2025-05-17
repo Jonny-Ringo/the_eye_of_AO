@@ -41,7 +41,6 @@ async function fetchAdditionalWeeklyData(processName, timeRange) {
     if (!processName.includes('weekly')) return;
     
     try {
-        
         // Fetch network info and block history if not already available
         const networkInfo = window.currentNetworkInfo || await fetchNetworkInfo();
         window.currentNetworkInfo = networkInfo;
@@ -64,6 +63,7 @@ async function fetchAdditionalWeeklyData(processName, timeRange) {
                 return true;
             }
         }
+        
         // Generate more historical weekly periods based on the selected time range
         let extendedPeriods;
         if (timeRange === '1M') {
@@ -94,7 +94,6 @@ async function fetchAdditionalWeeklyData(processName, timeRange) {
         const newData = await fetchProcessData(processName, newPeriods, currentHeight);
         
         if (newData.length > 0) {
-            
             // Merge new data with existing data, preventing duplicates
             const mergedData = [...existingData]; // Start with existing data
             
@@ -126,50 +125,9 @@ async function fetchAdditionalWeeklyData(processName, timeRange) {
             
             // Update historical data
             historicalData[processName] = sortedData;
-                
-            // If this is qARweeklyTransfer, also update wARweeklyTransfer
-            if (processName === 'qARweeklyTransfer') {
-                // Fetch wAR weekly data for the same periods
-                const wARData = await fetchProcessData('wARweeklyTransfer', newPeriods, currentHeight);
-                
-                if (wARData.length > 0) {
-                    // Update wAR data
-                    const existingWARData = historicalData['wARweeklyTransfer'] || [];
-                    const mergedWARData = [...existingWARData];
-                    
-                    wARData.forEach(newItem => {
-                        // Check if we already have data for this week
-                        const existingIndex = mergedWARData.findIndex(item => 
-                            isSameWeek(item.timestamp, newItem.timestamp)
-                        );
-                        
-                        if (existingIndex >= 0) {
-                            // Update existing entry instead of adding a duplicate
-                            // Only update if the new entry is more recent or has different data
-                            const existingTime = new Date(mergedWARData[existingIndex].timestamp).getTime();
-                            const newTime = new Date(newItem.timestamp).getTime();
-                            
-                            if (newTime >= existingTime || mergedWARData[existingIndex].count !== newItem.count) {
-                                mergedWARData[existingIndex] = newItem;
-                            }
-                        } else {
-                            // Add new entry if we don't have data for this week yet
-                            mergedWARData.push(newItem);
-                        }
-                    });
-                    
-                    // Sort chronologically
-                    const sortedWARData = mergedWARData.sort((a, b) => 
-                        new Date(a.timestamp) - new Date(b.timestamp)
-                    );
-                    
-                    // Update wAR historical data
-                    historicalData['wARweeklyTransfer'] = sortedWARData;
-
-                    updateChartTimeRange(processName, timeRange);
-                    return true; // Return success
-                }
-            }
+            
+            updateChartTimeRange(processName, timeRange);
+            return true; // Return success
         } else {
             console.log(`No new data points found for ${processName}`);
         }
@@ -258,18 +216,7 @@ export async function fetchAdditionalData(processName, timeRange) {
             return; // No additional data needed
         }
         
-        // Special handling for qAR/wAR combined chart
-        if (processName === 'qARTransfer') {
-            // Handle qAR data
-            await fetchAndUpdateProcessData('qARTransfer', extendedPeriods, currentHeight);
-            
-            // Handle wAR data
-            await fetchAndUpdateProcessData('wARTransfer', extendedPeriods, currentHeight);
-            
-            // Update the chart with the new time range
-            updateChartTimeRange('qARTransfer', timeRange);
-            return;
-        } else if (processName === 'wUSDCTransfer') {
+        if (processName === 'wUSDCTransfer') {
             // Similar handling for wUSDC/USDA
             await fetchAndUpdateProcessData('wUSDCTransfer', extendedPeriods, currentHeight);
             await fetchAndUpdateProcessData('USDATransfer', extendedPeriods, currentHeight);
@@ -400,35 +347,20 @@ function generateExtendedDailyPeriods(currentHeight, blockData, days) {
 
 
 /**
- * Updates the supply chart with data from the qAR and wAR processes
+ * Updates the supply chart with data from the wAR processes
  */
 async function updateSupplyChart() {
     try {
-        toggleChartLoader('qARwARTotalSupply', true);
+        toggleChartLoader('wARTotalSupply', true);
         
         const supplyData = await fetchSupplyHistory();
         if (!supplyData) throw new Error('Failed to fetch supply data');
         
-        // Process supply data
-        const allDates = [...new Set([
-            ...supplyData.qAR.map(d => d.date),
-            ...supplyData.wAR.map(d => d.date)
-        ])];
-        
-        // Sort dates chronologically
-        allDates.sort((a, b) => new Date(a) - new Date(b));
-        
-        // Create aligned data points
-        const processedData = allDates.map(date => {
-            const qAREntry = supplyData.qAR.find(d => d.date === date);
-            const wAREntry = supplyData.wAR.find(d => d.date === date);
-            
-            return {
-                timestamp: date,
-                qARSupply: qAREntry ? Number(qAREntry.totalSupply) / 1e12 : null,
-                wARSupply: wAREntry ? Number(wAREntry.totalSupply) / 1e12 : null
-            };
-        }).filter(entry => entry.qARSupply !== null && entry.wARSupply !== null);
+        // Process only wAR supply data
+        const processedData = supplyData.wAR.map(d => ({
+            timestamp: d.date,
+            wARSupply: Number(d.totalSupply) / 1e12
+        }));
         
         // Ensure timestamps are properly formatted as date strings
         const formattedData = processedData.map(entry => ({
@@ -437,21 +369,21 @@ async function updateSupplyChart() {
         }));
         
         // Update historical data
-        historicalData['qARwARTotalSupply'] = formattedData;
+        historicalData['wARTotalSupply'] = formattedData;
         
         // Update chart
-        const timeRange = getChartTimeRange('qARwARTotalSupply');
-        updateChartTimeRange('qARwARTotalSupply', timeRange);
+        const timeRange = getChartTimeRange('wARTotalSupply');
+        updateChartTimeRange('wARTotalSupply', timeRange);
         
-        toggleChartLoader('qARwARTotalSupply', false);
+        toggleChartLoader('wARTotalSupply', false);
     } catch (error) {
         console.error('Error updating supply chart:', error);
-        toggleChartLoader('qARwARTotalSupply', false);
+        toggleChartLoader('wARTotalSupply', false);
     }
 }
 
 /**
- * Updates the Stargrid with data 
+ * Updates the Stargrid chart with data 
  */
 export async function updateStargridChart() {
     try {
@@ -497,38 +429,6 @@ async function updateProcessData(processName, periods, currentHeight) {
     try {
         toggleChartLoader(processName, true);
         
-        // Special handling for weekly transfers
-        if (processName === 'qARweeklyTransfer') {
-            // Fetch data for both qAR and wAR weekly
-            const [qARData, wARData] = await Promise.all([
-                fetchProcessData('qARweeklyTransfer', periods, currentHeight),
-                fetchProcessData('wARweeklyTransfer', periods, currentHeight)
-            ]);
-            
-            // For first load or complete refresh
-            if (!historicalData['qARweeklyTransfer'] || historicalData['qARweeklyTransfer'].length === 0) {
-                historicalData['qARweeklyTransfer'] = qARData;
-                historicalData['wARweeklyTransfer'] = wARData;
-            } else {
-                // Merge with existing data, preserving the newest timestamps
-                mergeProcessData('qARweeklyTransfer', qARData, true);
-                mergeProcessData('wARweeklyTransfer', wARData, true);
-            }
-            
-            // Update the combined chart
-            const timeRange = getChartTimeRange('qARweeklyTransfer');
-            updateChartTimeRange('qARweeklyTransfer', timeRange);
-            
-            toggleChartLoader('qARweeklyTransfer', false);
-            return;
-        }
-        
-        // Skip processing for wAR weekly transfer since it's now part of the combined chart
-        if (processName === 'wARweeklyTransfer') {
-            toggleChartLoader(processName, false);
-            return;
-        }
-        
         // Fetch the data
         const periodData = await fetchProcessData(processName, periods, currentHeight);
         
@@ -537,7 +437,7 @@ async function updateProcessData(processName, periods, currentHeight) {
             historicalData[processName] = periodData;
         } else {
             // Merge with existing data, preserving the newest timestamps
-            mergeProcessData(processName, periodData);
+            mergeProcessData(processName, periodData, processName.includes('weekly'));
         }
         
         // Update the chart
@@ -638,7 +538,7 @@ async function fetchAllData() {
         
         // Add daily process data fetches
         Object.keys(PROCESSES).forEach(processName => {
-            if (!processName.includes('weekly') && processName !== 'qARwARTotalSupply') {
+            if (!processName.includes('weekly') && processName !== 'wARTotalSupply') {
                 // Use 1-week periods for standard charts that need less initial data
                 const periods = ['AOTransfer', 'permaswap', 'botega', 'llamaLand'].includes(processName) 
                     ? oneWeekPeriods 
@@ -735,90 +635,6 @@ async function updateCurrentWeekData(processName, periods, currentHeight) {
     try {
         toggleChartLoader(processName, true);
         
-        // Special handling for weekly transfers
-        if (processName === 'qARweeklyTransfer') {
-            // Fetch data for both qAR and wAR weekly
-            const [qARData, wARData] = await Promise.all([
-                fetchProcessData('qARweeklyTransfer', periods, currentHeight),
-                fetchProcessData('wARweeklyTransfer', periods, currentHeight)
-            ]);
-            
-            if (qARData.length > 0) {
-                // Update qAR data
-                const existingQARData = [...historicalData['qARweeklyTransfer']];
-                
-                // Find and update current week's entry if it exists
-                const currentWeekIndex = existingQARData.findIndex(item => 
-                    isSameWeek(item.timestamp, qARData[0].timestamp)
-                );
-                
-                if (currentWeekIndex !== -1) {
-                    // Compare timestamps as Date objects for accurate time comparison
-                    const existingTime = new Date(existingQARData[currentWeekIndex].timestamp).getTime();
-                    const newTime = new Date(qARData[0].timestamp).getTime();
-                    
-                    // Only update if the new data is more recent or has a different count
-                    if (newTime >= existingTime || existingQARData[currentWeekIndex].count !== qARData[0].count) {
-                        existingQARData[currentWeekIndex] = qARData[0];
-                    }
-                } else {
-                    existingQARData.push(qARData[0]);
-                }
-                
-                // Sort the data chronologically
-                const sortedQARData = existingQARData.sort((a, b) => 
-                    new Date(a.timestamp) - new Date(b.timestamp)
-                );
-                
-                // Update historical data
-                historicalData['qARweeklyTransfer'] = sortedQARData;
-            }
-            
-            if (wARData.length > 0) {
-                // Update wAR data
-                const existingWARData = [...historicalData['wARweeklyTransfer']];
-                
-                // Find and update current week's entry if it exists
-                const currentWeekIndex = existingWARData.findIndex(item => 
-                    isSameWeek(item.timestamp, wARData[0].timestamp)
-                );
-                
-                if (currentWeekIndex !== -1) {
-                    // Compare timestamps as Date objects for accurate time comparison
-                    const existingTime = new Date(existingWARData[currentWeekIndex].timestamp).getTime();
-                    const newTime = new Date(wARData[0].timestamp).getTime();
-                    
-                    // Only update if the new data is more recent or has a different count
-                    if (newTime >= existingTime || existingWARData[currentWeekIndex].count !== wARData[0].count) {
-                        existingWARData[currentWeekIndex] = wARData[0];
-                    }
-                } else {
-                    existingWARData.push(wARData[0]);
-                }
-                
-                // Sort the data chronologically
-                const sortedWARData = existingWARData.sort((a, b) => 
-                    new Date(a.timestamp) - new Date(b.timestamp)
-                );
-                
-                // Update historical data
-                historicalData['wARweeklyTransfer'] = sortedWARData;
-            }
-            
-            // Update the combined chart
-            const timeRange = getChartTimeRange('qARweeklyTransfer');
-            updateChartTimeRange('qARweeklyTransfer', timeRange);
-            
-            toggleChartLoader('qARweeklyTransfer', false);
-            return;
-        }
-        
-        // Skip processing for wAR weekly transfer since it's now part of the combined chart
-        if (processName === 'wARweeklyTransfer') {
-            toggleChartLoader(processName, false);
-            return;
-        }
-        
         // Fetch the data for the current week
         const weekData = await fetchProcessData(processName, periods, currentHeight);
         
@@ -864,6 +680,7 @@ async function updateCurrentWeekData(processName, periods, currentHeight) {
         toggleChartLoader(processName, false);
     }
 }
+
 /**
  * Helper function to format a date as YYYY-MM-DD for comparison
  * @param {Date|string} date - The date to format
@@ -900,7 +717,6 @@ function isSameWeek(date1, date2) {
  */
 async function initializeDashboard() {
     try {
-        
         // Initialize UI components first
         initializeUI();
         
@@ -909,7 +725,6 @@ async function initializeDashboard() {
         
         // Set up time range button handlers
         setupTimeRangeButtons(fetchChartData, fetchAdditionalWeeklyData);
-
         
         // First fetch critical data - network info and block history
         console.log("Fetching network info and block history...");
@@ -942,10 +757,10 @@ async function initializeDashboard() {
         const latestPeriod = dailyPeriods[dailyPeriods.length - 1];
         updateNetworkInfoDisplay(currentHeight, latestPeriod);
         
-        // Load a high-priority chart first (qAR/wAR transfers) and wait for it
+        // Load a high-priority chart first (wAR transfers) and wait for it
         // This ensures users see meaningful data before removing the main loader
         try {
-            await loadProcessChart('qARTransfer', dailyPeriods, currentHeight);
+            await loadProcessChart('wARTransfer', dailyPeriods, currentHeight);
         } catch (error) {
             console.error("Error loading primary chart:", error);
             // Continue even if primary chart fails - we'll still try to remove the loader
@@ -957,13 +772,12 @@ async function initializeDashboard() {
         // Start loading the supply chart
         loadSupplyChart().catch(error => {
             console.error("Error loading supply chart:", error);
-            toggleChartLoader('qARwARTotalSupply', false);
+            toggleChartLoader('wARTotalSupply', false);
         });
         
         // Load remaining standard daily process charts
         Object.keys(PROCESSES).forEach(processName => {
-            // Skip qARTransfer since it's already loaded
-            if (processName !== 'qARTransfer' && !processName.includes('weekly') && processName !== 'qARwARTotalSupply') {
+            if (!processName.includes('weekly') && processName !== 'wARTotalSupply' && processName !== 'wARTransfer') {
                 // Use appropriate periods based on chart type
                 const periods = ['AOTransfer', 'permaswap', 'botega', 'llamaLand'].includes(processName) 
                     ? oneWeekPeriods 
@@ -1034,45 +848,13 @@ async function loadStargridChart() {
  */
 async function loadProcessChart(processName, periods, currentHeight) {
     try {
-        // Skip if this is wARweeklyTransfer or wARTransfer (handled with qAR)
-        if (processName === 'wARweeklyTransfer' || processName === 'wARTransfer') return;
-        if (processName === 'USDATransfer') return; // Handled with wUSDC
+        // Skip if this is USDATransfer (handled with wUSDC)
+        if (processName === 'USDATransfer') return;
         
         toggleChartLoader(processName, true);
         
-        // Special handling for combined charts
-        if (processName === 'qARTransfer') {
-            // Fetch data for both qAR and wAR transfers
-            const qARPromise = fetchProcessData('qARTransfer', periods, currentHeight)
-                .catch(error => {
-                    console.error("Error fetching qARTransfer data:", error);
-                    return [];
-                });
-                
-            const wARPromise = fetchProcessData('wARTransfer', periods, currentHeight)
-                .catch(error => {
-                    console.error("Error fetching wARTransfer data:", error);
-                    return [];
-                });
-            
-            const [qARData, wARData] = await Promise.all([qARPromise, wARPromise]);
-        
-            
-            // Update historical data
-            if (qARData.length > 0) {
-                historicalData['qARTransfer'] = qARData;
-            }
-            
-            if (wARData.length > 0) {
-                historicalData['wARTransfer'] = wARData;
-            }
-            
-            // Update the chart
-            const timeRange = getChartTimeRange('qARTransfer');
-            updateCombinedChart('qARTransfer', 'wARTransfer', timeRange);
-            toggleChartLoader(processName, false); // Add this line
-            
-        } else if (processName === 'wUSDCTransfer') {
+        // Special handling for wUSDC/USDA combined chart
+        if (processName === 'wUSDCTransfer') {
             // Fetch data for both wUSDC and USDA transfers
             const wUSDCPromise = fetchProcessData('wUSDCTransfer', periods, currentHeight)
                 .catch(error => {
@@ -1102,36 +884,6 @@ async function loadProcessChart(processName, periods, currentHeight) {
             updateCombinedChart('wUSDCTransfer', 'USDATransfer', timeRange);
             toggleChartLoader(processName, false);
             
-        } else if (processName === 'qARweeklyTransfer') {
-            // Fetch data for both qAR and wAR weekly
-            const qARPromise = fetchProcessData('qARweeklyTransfer', periods, currentHeight)
-                .catch(error => {
-                    console.error("Error fetching qARweeklyTransfer data:", error);
-                    return [];
-                });
-                
-            const wARPromise = fetchProcessData('wARweeklyTransfer', periods, currentHeight)
-                .catch(error => {
-                    console.error("Error fetching wARweeklyTransfer data:", error);
-                    return [];
-                });
-            
-            const [qARData, wARData] = await Promise.all([qARPromise, wARPromise]);
-            
-            // Update historical data
-            if (qARData.length > 0) {
-                historicalData['qARweeklyTransfer'] = qARData;
-            }
-            
-            if (wARData.length > 0) {
-                historicalData['wARweeklyTransfer'] = wARData;
-            }
-            
-            // Update the chart
-            const timeRange = getChartTimeRange('qARweeklyTransfer');
-            updateCombinedChart('qARweeklyTransfer', 'wARweeklyTransfer', timeRange);
-            toggleChartLoader(processName, false);
-            
         } else {
             // Standard chart
             const data = await fetchProcessData(processName, periods, currentHeight);
@@ -1157,31 +909,16 @@ async function loadProcessChart(processName, periods, currentHeight) {
  */
 async function loadSupplyChart() {
     try {
-        toggleChartLoader('qARwARTotalSupply', true);
+        toggleChartLoader('wARTotalSupply', true);
         
         const supplyData = await fetchSupplyHistory();
         if (!supplyData) throw new Error('Failed to fetch supply data');
         
-        // Process supply data
-        const allDates = [...new Set([
-            ...supplyData.qAR.map(d => d.date),
-            ...supplyData.wAR.map(d => d.date)
-        ])];
-        
-        // Sort dates chronologically
-        allDates.sort((a, b) => new Date(a) - new Date(b));
-        
-        // Create aligned data points
-        const processedData = allDates.map(date => {
-            const qAREntry = supplyData.qAR.find(d => d.date === date);
-            const wAREntry = supplyData.wAR.find(d => d.date === date);
-            
-            return {
-                timestamp: date,
-                qARSupply: qAREntry ? Number(qAREntry.totalSupply) / 1e12 : null,
-                wARSupply: wAREntry ? Number(wAREntry.totalSupply) / 1e12 : null
-            };
-        }).filter(entry => entry.qARSupply !== null && entry.wARSupply !== null);
+        // Process only wAR supply data
+        const processedData = supplyData.wAR.map(d => ({
+            timestamp: d.date,
+            wARSupply: Number(d.totalSupply) / 1e12
+        }));
         
         // Ensure timestamps are properly formatted as date strings
         const formattedData = processedData.map(entry => ({
@@ -1190,16 +927,16 @@ async function loadSupplyChart() {
         }));
         
         // Update historical data
-        historicalData['qARwARTotalSupply'] = formattedData;
+        historicalData['wARTotalSupply'] = formattedData;
         
         // Update chart
-        const timeRange = getChartTimeRange('qARwARTotalSupply');
-        updateChartTimeRange('qARwARTotalSupply', timeRange);
+        const timeRange = getChartTimeRange('wARTotalSupply');
+        updateChartTimeRange('wARTotalSupply', timeRange);
     } catch (error) {
         console.error('Error updating supply chart:', error);
         throw error; // Rethrow to allow the caller to handle it
     } finally {
-        toggleChartLoader('qARwARTotalSupply', false);
+        toggleChartLoader('wARTotalSupply', false);
     }
 }
 
