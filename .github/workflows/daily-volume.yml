@@ -2,8 +2,8 @@ name: Calculate Daily Volume
 
 on:
   schedule:
-    # Runs at 00:05 UTC daily
-    - cron: '5 0 * * *'
+    # Runs at 2 minutes past every hour
+    - cron: '2 * * * *'
   workflow_dispatch: # Allows manual triggering for testing
 
 jobs:
