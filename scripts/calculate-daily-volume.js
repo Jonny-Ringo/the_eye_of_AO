@@ -21,7 +21,58 @@ function formatDate(date) {
   return date.toISOString().split('T')[0];
 }
 
-// Helper function to determine the day to attribute this run to
+// Function to wait until exactly X minutes past the hour
+async function waitUntilExactTime(targetMinutesPastHour) {
+  console.log(`Checking timing for scheduled run at ${targetMinutesPastHour} minutes past the hour...`);
+  
+  const now = new Date();
+  const currentMinutes = now.getMinutes();
+  
+  // Run immediately if between target minute and 40 minutes past the hour
+  if ((currentMinutes > targetMinutesPastHour) && (currentMinutes <= 40)) {
+    console.log(`Started at ${currentMinutes} minutes past the hour, within buffer window. Running immediately.`);
+    return; // Exit the function, allowing script to proceed
+  }
+  
+  // Original waiting logic for times outside the buffer window
+  console.log(`Outside buffer window, waiting for next ${targetMinutesPastHour} minutes past the hour...`);
+  
+  while (true) {
+    const now = new Date();
+    const currentMinutes = now.getMinutes();
+    const currentSeconds = now.getSeconds();
+    
+    // If we're at the target minute and 0-5 seconds into it
+    if (currentMinutes === targetMinutesPastHour && currentSeconds < 5) {
+      console.log(`✓ Target time reached: ${now.toISOString()}`);
+      break;
+    }
+    
+    // Calculate time remaining until target
+    let minutesToWait;
+    let secondsToWait;
+    
+    if (currentMinutes < targetMinutesPastHour) {
+      // Target is later in this hour
+      minutesToWait = targetMinutesPastHour - currentMinutes - 1;
+      secondsToWait = (minutesToWait * 60) + (60 - currentSeconds);
+    } else {
+      // Target is in the next hour
+      minutesToWait = 60 - currentMinutes + targetMinutesPastHour - 1;
+      secondsToWait = (minutesToWait * 60) + (60 - currentSeconds);
+    }
+    
+    // Choose appropriate wait interval
+    const waitInterval = secondsToWait > 60 ? 30000 : 1000; // 30 sec or 1 sec
+    
+    console.log(`Waiting ${Math.ceil(secondsToWait)} more seconds until ${targetMinutesPastHour} minutes past the hour...`);
+    
+    // Wait for the interval
+    await new Promise(resolve => setTimeout(resolve, waitInterval));
+  }
+}
+
+// Function to get attribution date
 function getAttributionDate() {
   const now = new Date();
   
@@ -36,31 +87,28 @@ function getAttributionDate() {
   return now;
 }
 
-// Extract volume from PowerShell output properly
+// Extract volume from PowerShell output
 function extractVolumeFromOutput(output) {
   console.log("Raw script output sample: " + output.substring(0, 500) + "...");
   
-  // Try to find "Final total: X" or similar at the end of the output
+  // Try to find "Final total: X" pattern
   const finalTotalMatch = output.match(/Final total: ([0-9,]+)/);
   if (finalTotalMatch && finalTotalMatch[1]) {
-    // Remove commas and convert to number
     const volume = parseFloat(finalTotalMatch[1].replace(/,/g, ''));
     console.log(`Found final total pattern: ${finalTotalMatch[1]} → ${volume}`);
     return volume;
   }
 
-  // Look for the last number in the output as fallback
+  // Look for last number in output as fallback
   const lines = output.trim().split('\n');
   for (let i = lines.length - 1; i >= 0; i--) {
     const line = lines[i].trim();
-    // Skip empty lines
     if (!line) continue;
     
-    // Try to find a number format at the end of a line
     const numberMatch = line.match(/[0-9,]+(\.[0-9]+)?$/);
     if (numberMatch) {
       const volume = parseFloat(numberMatch[0].replace(/,/g, ''));
-      console.log(`Found number at the end of line: "${line}" → ${volume}`);
+      console.log(`Found number at end of line: "${line}" → ${volume}`);
       return volume;
     }
   }
@@ -69,14 +117,12 @@ function extractVolumeFromOutput(output) {
   return null;
 }
 
-// Find the most recent entry before a given date
+// Find most recent entry before given date
 function findPreviousEntry(entries, dateStr) {
-  // Sort entries by date descending
   const sortedEntries = [...entries].sort((a, b) => {
     return new Date(b.date) - new Date(a.date);
   });
   
-  // Find the first entry that's before the given date
   return sortedEntries.find(entry => entry.date < dateStr);
 }
 
@@ -84,7 +130,10 @@ function findPreviousEntry(entries, dateStr) {
 async function calculateDailyVolume() {
   console.log('Starting daily volume calculation process...');
   console.log('Current time (UTC):', new Date().toISOString());
-  console.log('Current working directory:', process.cwd());
+  
+  // IMPORTANT: Wait until exactly 2 minutes past the hour
+  // This applies to both scheduled and manual runs
+  await waitUntilExactTime(2);
   
   try {
     // 1. Load existing data or create default structure
@@ -92,10 +141,8 @@ async function calculateDailyVolume() {
     if (fs.existsSync(DATA_FILE)) {
       console.log(`Loading existing data from ${DATA_FILE}`);
       volumeStats = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
-      console.log('Current blockHeights entries:', JSON.stringify(volumeStats.blockHeights));
     } else {
       console.log(`No existing data file found at ${DATA_FILE}, creating new structure`);
-      // Create directory if it doesn't exist
       fs.mkdirSync(path.dirname(DATA_FILE), { recursive: true });
     }
     
@@ -195,7 +242,6 @@ async function calculateDailyVolume() {
         // Construct the command with proper path resolution
         const scriptPath = path.resolve(__dirname, script);
         console.log(`Full script path: ${scriptPath}`);
-        console.log(`Checking if script exists: ${fs.existsSync(scriptPath)}`);
         
         if (!fs.existsSync(scriptPath)) {
           throw new Error(`Script ${scriptPath} does not exist!`);
@@ -247,9 +293,6 @@ async function calculateDailyVolume() {
         console.log(`Successfully processed ${script}: Volume = ${volume}`);
       } catch (scriptError) {
         console.error(`Error running ${script}:`, scriptError);
-        console.error('Error message:', scriptError.message);
-        if (scriptError.stdout) console.log('Error stdout:', scriptError.stdout);
-        if (scriptError.stderr) console.log('Error stderr:', scriptError.stderr);
         
         // Add placeholder with error flag if needed
         const tokenKey = script.replace('.ps1', '');
