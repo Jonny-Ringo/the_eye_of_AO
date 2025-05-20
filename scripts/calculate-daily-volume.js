@@ -21,6 +21,21 @@ function formatDate(date) {
   return date.toISOString().split('T')[0];
 }
 
+// Helper function to determine the day to attribute this run to
+function getAttributionDate() {
+  const now = new Date();
+  
+  // If time is between 00:00-00:05 UTC, attribute to previous day
+  if (now.getUTCHours() === 0 && now.getUTCMinutes() <= 5) {
+    const yesterday = new Date(now);
+    yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+    return yesterday;
+  }
+  
+  // Otherwise use current date
+  return now;
+}
+
 // Extract volume from PowerShell output properly
 function extractVolumeFromOutput(output) {
   console.log("Raw script output sample: " + output.substring(0, 500) + "...");
@@ -54,22 +69,22 @@ function extractVolumeFromOutput(output) {
   return null;
 }
 
-// Find the most recent entry before today
-function findPreviousEntry(entries, todayStr) {
+// Find the most recent entry before a given date
+function findPreviousEntry(entries, dateStr) {
   // Sort entries by date descending
   const sortedEntries = [...entries].sort((a, b) => {
     return new Date(b.date) - new Date(a.date);
   });
   
-  // Find the first entry that's before today
-  return sortedEntries.find(entry => entry.date < todayStr);
+  // Find the first entry that's before the given date
+  return sortedEntries.find(entry => entry.date < dateStr);
 }
 
 // Main function
 async function calculateDailyVolume() {
   console.log('Starting daily volume calculation process...');
+  console.log('Current time (UTC):', new Date().toISOString());
   console.log('Current working directory:', process.cwd());
-  console.log('Files in directory:', fs.readdirSync(process.cwd()).join(', '));
   
   try {
     // 1. Load existing data or create default structure
@@ -91,59 +106,85 @@ async function calculateDailyVolume() {
     const currentHeight = data.height;
     console.log(`Current Arweave block height: ${currentHeight}`);
     
-    // 3. Get today's date
-    const today = new Date();
-    const todayStr = formatDate(today);
-    console.log(`Today's date: ${todayStr}`);
+    // 3. Determine the date to attribute this run to
+    const attributionDate = getAttributionDate();
+    const attributionDateStr = formatDate(attributionDate);
+    console.log(`Attribution date: ${attributionDateStr} (UTC Hour: ${new Date().getUTCHours()}, UTC Minutes: ${new Date().getUTCMinutes()})`);
     
-    // 4. Determine start height from previous day's end height
+    // 4. Check if we already have an entry for this attribution date
+    const existingEntryIndex = volumeStats.blockHeights.findIndex(entry => 
+      entry.date === attributionDateStr
+    );
+    
     let startHeight;
-    let prevEntry = null;
     
-    // First check each token's volumeData to find the most recent previous entry
-    const allEntries = [
-      ...volumeStats.volumeData.wAR,
-      ...volumeStats.volumeData.AO,
-      ...volumeStats.volumeData.wUSDC
-    ];
-    
-    console.log('All existing entries:', JSON.stringify(allEntries));
-    
-    // Find previous entries before today (not today's entries)
-    prevEntry = findPreviousEntry(allEntries, todayStr);
-    
-    if (prevEntry) {
-      startHeight = prevEntry.endHeight;
-      console.log(`Found previous entry from ${prevEntry.date} with end height: ${startHeight}`);
+    if (existingEntryIndex >= 0) {
+      // Update existing entry for this attribution date
+      console.log(`Updating existing entry for ${attributionDateStr}`);
+      
+      // Get the start height from the existing entry
+      const existingVolumeEntries = Object.values(volumeStats.volumeData)
+        .flatMap(entries => entries)
+        .filter(entry => entry.date === attributionDateStr);
+      
+      if (existingVolumeEntries.length > 0) {
+        startHeight = existingVolumeEntries[0].startHeight;
+        console.log(`Using existing start height: ${startHeight}`);
+      } else {
+        // This shouldn't happen, but as a fallback find the most recent entry
+        console.log("No volume entries found for this date, finding previous entry");
+        const allEntries = Object.values(volumeStats.volumeData).flat();
+        const prevEntry = findPreviousEntry(allEntries, attributionDateStr);
+        
+        if (prevEntry) {
+          startHeight = prevEntry.endHeight;
+          console.log(`Using previous entry end height as start: ${startHeight}`);
+        } else {
+          console.log("No previous entry found, using default starting point");
+          startHeight = currentHeight - 800; // Approximate 1 day back
+        }
+      }
+      
+      // Update the end height for this entry
+      volumeStats.blockHeights[existingEntryIndex].endHeight = currentHeight;
     } else {
-      console.log("No previous entry found, using default starting point");
-      startHeight = currentHeight - 800; // Approximate 1 day back
-    }
-    
-    console.log(`FINAL HEIGHT VALUES - Start: ${startHeight}, End: ${currentHeight}`);
-    
-    // Skip processing if start and end heights are the same
-    if (startHeight === currentHeight) {
-      console.log(`Start height equals end height (${startHeight}). No blocks to process. Skipping scripts.`);
-      return;
-    }
-    
-    // 5. Update or add today's block height entry
-    const todayBlockHeightIndex = volumeStats.blockHeights.findIndex(entry => entry.date === todayStr);
-    if (todayBlockHeightIndex >= 0) {
-      console.log(`Updating existing block height entry for ${todayStr}`);
-      volumeStats.blockHeights[todayBlockHeightIndex].endHeight = currentHeight;
-    } else {
-      console.log(`Adding new block height entry for ${todayStr}`);
+      // Creating a new entry for this attribution date
+      console.log(`Creating new entry for ${attributionDateStr}`);
+      
+      // Find the most recent entry to get start height
+      const allEntries = Object.values(volumeStats.volumeData).flat();
+      const prevEntry = findPreviousEntry(allEntries, attributionDateStr);
+      
+      if (prevEntry) {
+        startHeight = prevEntry.endHeight;
+        console.log(`Found previous entry from ${prevEntry.date} with end height: ${startHeight}`);
+      } else {
+        console.log("No previous entry found, using default starting point");
+        startHeight = currentHeight - 800; // Approximate 1 day back
+      }
+      
+      // Add new block height entry
       volumeStats.blockHeights.push({
-        date: todayStr,
+        date: attributionDateStr,
         endHeight: currentHeight
       });
     }
     
-    console.log('Updated blockHeights array:', JSON.stringify(volumeStats.blockHeights));
+    // Skip processing if start and end heights are the same
+    if (startHeight === currentHeight) {
+      console.log(`Start height equals end height (${startHeight}). No blocks to process. Skipping scripts.`);
+      
+      // Still update lastUpdated timestamp
+      volumeStats.lastUpdated = new Date().toISOString();
+      fs.writeFileSync(DATA_FILE, JSON.stringify(volumeStats, null, 2));
+      
+      console.log('Updated lastUpdated timestamp and saved file.');
+      return;
+    }
     
-    // 6. Run each PowerShell script with the appropriate heights
+    console.log(`FINAL HEIGHT VALUES - Start: ${startHeight}, End: ${currentHeight}`);
+    
+    // 5. Run each PowerShell script with the appropriate heights
     const scripts = ['wAR.ps1', 'AO.ps1', 'wUSDC.ps1'];
     
     for (const script of scripts) {
@@ -151,10 +192,14 @@ async function calculateDailyVolume() {
       console.log(`Running ${script} with heights: ${startHeight} -> ${currentHeight}`);
       
       try {
-        // Construct the command with proper escaping
+        // Construct the command with proper path resolution
         const scriptPath = path.resolve(__dirname, script);
         console.log(`Full script path: ${scriptPath}`);
         console.log(`Checking if script exists: ${fs.existsSync(scriptPath)}`);
+        
+        if (!fs.existsSync(scriptPath)) {
+          throw new Error(`Script ${scriptPath} does not exist!`);
+        }
         
         const command = `powershell -Command "& '${scriptPath}' ${startHeight} ${currentHeight}"`;
         console.log(`Executing: ${command}`);
@@ -177,21 +222,24 @@ async function calculateDailyVolume() {
         const tokenKey = script.replace('.ps1', '');
         
         // Update or add volume data entry
-        const volumeEntryIndex = volumeStats.volumeData[tokenKey].findIndex(entry => entry.date === todayStr);
+        const volumeEntryIndex = volumeStats.volumeData[tokenKey].findIndex(entry => 
+          entry.date === attributionDateStr
+        );
+        
         if (volumeEntryIndex >= 0) {
-          console.log(`Updating existing ${tokenKey} volume entry for ${todayStr}`);
+          console.log(`Updating existing ${tokenKey} volume entry for ${attributionDateStr}`);
           volumeStats.volumeData[tokenKey][volumeEntryIndex] = {
-            date: todayStr,
+            date: attributionDateStr,
             startHeight: startHeight,
-            endHeight: currentHeight,  // IMPORTANT: Using the same currentHeight value consistently
+            endHeight: currentHeight,
             volume: volume
           };
         } else {
-          console.log(`Adding new ${tokenKey} volume entry for ${todayStr}`);
+          console.log(`Adding new ${tokenKey} volume entry for ${attributionDateStr}`);
           volumeStats.volumeData[tokenKey].push({
-            date: todayStr,
+            date: attributionDateStr,
             startHeight: startHeight,
-            endHeight: currentHeight,  // IMPORTANT: Using the same currentHeight value consistently
+            endHeight: currentHeight,
             volume: volume
           });
         }
@@ -205,14 +253,16 @@ async function calculateDailyVolume() {
         
         // Add placeholder with error flag if needed
         const tokenKey = script.replace('.ps1', '');
-        const volumeEntryIndex = volumeStats.volumeData[tokenKey].findIndex(entry => entry.date === todayStr);
+        const volumeEntryIndex = volumeStats.volumeData[tokenKey].findIndex(entry => 
+          entry.date === attributionDateStr
+        );
         
         if (volumeEntryIndex < 0) {
-          // Only add error entry if no entry exists for today
+          // Only add error entry if no entry exists for this attribution date
           volumeStats.volumeData[tokenKey].push({
-            date: todayStr,
+            date: attributionDateStr,
             startHeight: startHeight,
-            endHeight: currentHeight,  // IMPORTANT: Using the same currentHeight value consistently
+            endHeight: currentHeight,
             volume: null,
             error: true
           });
@@ -220,10 +270,10 @@ async function calculateDailyVolume() {
       }
     }
     
-    // 7. Update lastUpdated timestamp
+    // 6. Update lastUpdated timestamp
     volumeStats.lastUpdated = new Date().toISOString();
     
-    // 8. Write updated data back to file
+    // 7. Write updated data back to file
     console.log('Writing updated data to file...');
     fs.writeFileSync(DATA_FILE, JSON.stringify(volumeStats, null, 2));
     console.log('Volume calculation complete and saved to data/volume-stats.json');
