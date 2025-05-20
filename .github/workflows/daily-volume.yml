@@ -22,6 +22,12 @@ jobs:
         with:
           node-version: '18'
           
+      - name: List directory contents
+        run: |
+          dir
+          echo "Checking PowerShell version:"
+          powershell -Command "$PSVersionTable"
+      
       - name: Install dependencies
         run: npm install node-fetch@2
         
@@ -29,8 +35,19 @@ jobs:
         run: mkdir -p data
         shell: bash
         
+      - name: Test PowerShell script access
+        run: |
+          echo "Testing PowerShell script access:"
+          powershell -Command "Get-ChildItem -Path . -Filter *.ps1"
+          powershell -Command "Get-Content -Path wAR.ps1 -TotalCount 10"
+        
       - name: Run volume calculation script
         run: node scripts/calculate-daily-volume.js
+        
+      - name: Show updated data file
+        run: |
+          echo "Contents of volume-stats.json:"
+          powershell -Command "Get-Content -Path data/volume-stats.json"
         
       - name: Commit and push changes
         run: |
