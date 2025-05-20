@@ -152,7 +152,7 @@ async function calculateDailyVolume() {
       
       try {
         // Construct the command with proper escaping
-        const scriptPath = path.resolve(process.cwd(), script);
+        const scriptPath = path.resolve(__dirname, script);
         console.log(`Full script path: ${scriptPath}`);
         console.log(`Checking if script exists: ${fs.existsSync(scriptPath)}`);
         
