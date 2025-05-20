@@ -76,8 +76,8 @@ async function waitUntilExactTime(targetMinutesPastHour) {
 function getAttributionDate() {
   const now = new Date();
   
-  // If time is between 00:00-00:05 UTC, attribute to previous day
-  if (now.getUTCHours() === 0 && now.getUTCMinutes() <= 5) {
+  // If time is between 00:00-00:07 UTC, attribute to previous day
+  if (now.getUTCHours() === 0 && now.getUTCMinutes() <= 7) {
     const yesterday = new Date(now);
     yesterday.setUTCDate(yesterday.getUTCDate() - 1);
     return yesterday;
