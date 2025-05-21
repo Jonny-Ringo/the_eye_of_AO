@@ -4,6 +4,15 @@ const path = require('path');
 const { execSync } = require('child_process');
 const fetch = require('node-fetch');
 
+try {
+  console.log('🧼 Resetting repo to remote state (brutal mode)...');
+  execSync('git fetch origin main', { cwd: '/root/the_eye_of_AO', stdio: 'inherit' });
+  execSync('git reset --hard origin/main', { cwd: '/root/the_eye_of_AO', stdio: 'inherit' });
+  console.log('✅ Local repo now matches remote exactly.');
+} catch (err) {
+  console.error('❌ Git reset/pull failed:', err.message);
+}
+
 // Constants
 const DATA_FILE = path.join(__dirname, '../data/volume-stats.json');
 const DEFAULT_DATA = {
@@ -329,3 +338,18 @@ async function calculateDailyVolume() {
 
 // Run the process
 calculateDailyVolume();
+
+const exec = require('child_process').exec;
+
+exec(
+  'git add data/volume-stats.json && git commit -m "Auto update volume JSON" && git push origin main',
+  { cwd: '/root/the_eye_of_AO' },
+  (err, stdout, stderr) => {
+    if (err) {
+      console.error("Git Push Error:", stderr);
+    } else {
+      console.log("Git Push Success:", stdout);
+    }
+  }
+);
+
