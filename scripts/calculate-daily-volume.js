@@ -336,8 +336,6 @@ async function calculateDailyVolume() {
   }
 }
 
-// Run the process
-calculateDailyVolume();
 
 (async () => {
   await calculateDailyVolume();
