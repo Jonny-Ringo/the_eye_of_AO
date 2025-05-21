@@ -3,6 +3,18 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 const fetch = require('node-fetch');
+const LOCKFILE = '/tmp/volume-script.lock';
+
+if (fs.existsSync(LOCKFILE)) {
+  console.log("🔒 Script already running. Exiting.");
+  process.exit(0);
+}
+
+fs.writeFileSync(LOCKFILE, 'locked');
+process.on('exit', () => fs.unlinkSync(LOCKFILE));
+process.on('SIGINT', () => fs.unlinkSync(LOCKFILE));
+process.on('SIGTERM', () => fs.unlinkSync(LOCKFILE));
+
 
 try {
   console.log('🧼 Resetting repo to remote state (brutal mode)...');
