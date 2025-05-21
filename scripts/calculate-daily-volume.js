@@ -339,17 +339,19 @@ async function calculateDailyVolume() {
 // Run the process
 calculateDailyVolume();
 
-const exec = require('child_process').exec;
-
-exec(
-  'git add data/volume-stats.json && git commit -m "Auto update volume JSON" && git push origin main',
-  { cwd: '/root/the_eye_of_AO' },
-  (err, stdout, stderr) => {
-    if (err) {
-      console.error("Git Push Error:", stderr);
-    } else {
-      console.log("Git Push Success:", stdout);
-    }
+try {
+  console.log("📤 Committing and pushing changes...");
+  execSync(
+    'git add data/volume-stats.json && git commit -m "Auto update volume JSON" && git push origin main',
+    { cwd: '/root/the_eye_of_AO', stdio: 'inherit' }
+  );
+  console.log("✅ Git push complete.");
+} catch (err) {
+  if (err.message.includes("nothing to commit")) {
+    console.log("ℹ️ No changes to commit.");
+  } else {
+    console.error("❌ Git Push Error:", err.message);
   }
-);
+}
+
 
