@@ -343,7 +343,7 @@ async function calculateDailyVolume() {
   try {
     console.log("📤 Committing and pushing changes...");
     execSync(
-      'git add data/volume-stats.json && git commit -m "Auto update volume JSON" && git push origin main',
+      'git add data/volume-stats.json && git commit -m "Hourly Volume Update" && git push origin main',
       { cwd: '/root/the_eye_of_AO', stdio: 'inherit' }
     );
     console.log("✅ Git push complete.");
