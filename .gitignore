@@ -1,0 +1,6 @@
+# Ignore everything
+*
+
+# But allow the stats file
+!data/
+!data/volume-stats.json
