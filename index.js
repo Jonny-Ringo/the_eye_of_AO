@@ -6,14 +6,15 @@ import {
     fetchProcessData, 
     fetchSupplyHistory,
     fetchStargridStats,
-    clearCache
+    fetchVolumeData
 } from './api.js';
 import { 
     initializeCharts, 
     historicalData, 
     updateChartTimeRange,
     updateCombinedChart,
-    fetchChartData
+    fetchChartData,
+    charts
 } from './charts.js';
 import { 
     initializeUI, 
@@ -28,7 +29,9 @@ import {
     getWeeklyPeriods,
     getLastDailyCheckpoint,
     getLastSundayCheckpoint,
-    findBlockNearDate
+    findBlockNearDate,
+    filterDataByTimeRange,
+    formatDate
 } from './utils.js';
 
 /**
@@ -347,39 +350,42 @@ function generateExtendedDailyPeriods(currentHeight, blockData, days) {
 
 
 /**
- * Updates the supply chart with data from the wAR processes
+ * Updates the supply chart with wAR supply data
+ * @param {Array} supplyData - Array of supply data points
+ * @param {string} timeRange - The selected time range
  */
-async function updateSupplyChart() {
-    try {
-        toggleChartLoader('wARTotalSupply', true);
-        
-        const supplyData = await fetchSupplyHistory();
-        if (!supplyData) throw new Error('Failed to fetch supply data');
-        
-        // Process only wAR supply data
-        const processedData = supplyData.wAR.map(d => ({
-            timestamp: d.date,
-            wARSupply: Number(d.totalSupply) / 1e12
-        }));
-        
-        // Ensure timestamps are properly formatted as date strings
-        const formattedData = processedData.map(entry => ({
-            ...entry,
-            timestamp: new Date(entry.timestamp).toISOString()
-        }));
-        
-        // Update historical data
-        historicalData['wARTotalSupply'] = formattedData;
-        
-        // Update chart
-        const timeRange = getChartTimeRange('wARTotalSupply');
-        updateChartTimeRange('wARTotalSupply', timeRange);
-        
-        toggleChartLoader('wARTotalSupply', false);
-    } catch (error) {
-        console.error('Error updating supply chart:', error);
-        toggleChartLoader('wARTotalSupply', false);
+export function updateSupplyChart(supplyData, timeRange) {
+    console.log(`Updating supply chart with time range: ${timeRange}`);
+    const chart = charts['wARTotalSupply'];
+    if (!chart) {
+        console.error('No supply chart found');
+        return;
     }
+    
+    if (!supplyData || supplyData.length === 0) {
+        console.warn('No supply data available');
+        return;
+    }
+    
+    // Filter by time range
+    const filteredData = filterDataByTimeRange(supplyData, timeRange);
+    
+    // Sort data by timestamp to ensure chronological order
+    const sortedData = [...filteredData].sort((a, b) => {
+        return new Date(a.timestamp) - new Date(b.timestamp);
+    });
+    
+    // Create labels and datasets (just wAR now)
+    const labels = sortedData.map(d => formatDate(new Date(d.timestamp)));
+    const wARSupply = sortedData.map(d => d.wARSupply);
+    
+    // Update chart with only wAR data
+    chart.data.labels = labels;
+    chart.data.datasets[0].data = wARSupply;
+    chart.data.datasets[0].label = 'wAR Total Supply';
+    
+    // Update the chart
+    chart.update('none');
 }
 
 /**
@@ -409,6 +415,42 @@ export async function updateStargridChart() {
     } catch (error) {
         console.error('Error updating Stargrid chart:', error);
         toggleChartLoader('stargrid', false);
+    }
+}
+
+/**
+ * Updates volume charts with data from cache
+ * @param {string} processName - The chart to update ('AOVolume', 'wARVolume', or 'wUSDCVolume')
+ * @returns {Promise<Object>} The volume data
+ */
+export async function updateVolumeChart(processName) {
+    try {
+        // Get all volume data
+        const volumeData = await fetchVolumeData();
+        
+        // Map process names to their data keys
+        const tokenType = processName.replace('Volume', '');
+        
+        if (!volumeData[tokenType]) {
+            throw new Error(`No data found for ${tokenType}`);
+        }
+        
+        console.log(`Full ${tokenType} dataset:`, volumeData[tokenType].length, 'entries');
+        
+        // Format the data
+        const formattedData = volumeData[tokenType].map(entry => ({
+            timestamp: new Date(entry.timestamp).toISOString(),
+            value: entry.value
+        }));
+
+        // Store complete dataset in historicalData
+        historicalData[processName] = formattedData;
+        
+        return volumeData;
+
+    } catch (error) {
+        console.error(`Error updating ${processName} chart:`, error);
+        throw error;
     }
 }
 
@@ -806,6 +848,21 @@ async function initializeDashboard() {
             toggleChartLoader('stargrid', false);
         });
 
+        loadVolumeChart('AOVolume').catch(error => {
+            console.error("Error loading AO Volume chart:", error);
+            toggleChartLoader('AOVolume', false);
+        });
+
+        loadVolumeChart('wARVolume').catch(error => {
+            console.error("Error loading wAR Volume chart:", error);
+            toggleChartLoader('wARVolume', false);
+        });
+
+        loadVolumeChart('wUSDCVolume').catch(error => {
+            console.error("Error loading wUSDC Volume chart:", error);
+            toggleChartLoader('wUSDCVolume', false);
+        });
+
     } catch (error) {
         console.error('Error initializing dashboard:', error);
         toggleMainLoader(false); // Ensure loader is removed even if there's an error
@@ -837,7 +894,50 @@ async function loadStargridChart() {
     } finally {
       toggleChartLoader('stargrid', false);
     }
-  }
+}
+
+
+/**
+ * Loads volume charts (AO, wAR, wUSDC) with data from the API
+ * @param {string} processName - The chart to load ('AOVolume', 'wARVolume', or 'wUSDCVolume')
+ * @returns {Promise<void>} Resolves when chart is loaded
+ */
+async function loadVolumeChart(processName) {
+    try {
+        console.log(`Loading ${processName} chart...`);
+        toggleChartLoader(processName, true);
+        
+        const volumeData = await fetchVolumeData();
+               
+        // Map process names to their data keys
+        const dataKeys = {
+            'AOVolume': 'AO',
+            'wARVolume': 'wAR',
+            'wUSDCVolume': 'wUSDC'
+        };
+        
+        const dataKey = dataKeys[processName];
+        if (!dataKey || !volumeData[dataKey]) {
+            throw new Error(`No data found for ${processName}`);
+        }
+        const chartData = volumeData[dataKey];
+        
+        // Update historical data
+        if (chartData.length > 0) {
+            historicalData[processName] = chartData;
+            
+            // Update the chart
+            const timeRange = getChartTimeRange(processName);
+            console.log(`Time range for ${processName}:`, timeRange);
+            updateChartTimeRange(processName, timeRange);
+        }
+    } catch (error) {
+        console.error(`Error loading ${processName} chart:`, error);
+    } finally {
+        toggleChartLoader(processName, false);
+    }
+}
+
 
 /**
  * Loads a process chart, handling both standard and combined charts

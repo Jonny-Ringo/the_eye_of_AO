@@ -4,6 +4,7 @@
 import { DEFAULT_TIME_RANGE } from './config.js';
 import { formatDate, debounce } from './utils.js';
 import { updateChartTimeRange } from './charts.js';
+import { updateVolumeChart } from './index.js';
 
 // Store time range state for each chart
 const chartTimeRanges = {};
@@ -91,7 +92,8 @@ export function setupTimeRangeButtons(fetchDataCallback, fetchWeeklyCallback) {
     const processNames = [
          'wARTransfer', 'wUSDCTransfer', 'USDATransfer', 
         'AOTransfer', 'permaswap', 'botega', 'llamaLand',
-         'wARweeklyTransfer', 'wARTotalSupply', 'stargrid'
+         'wARweeklyTransfer', 'wARTotalSupply', 'stargrid',
+         'AOVolume', 'wARVolume', 'wUSDCVolume'
     ];
     
     processNames.forEach(processName => {
@@ -169,7 +171,7 @@ export function setupTimeRangeButtons(fetchDataCallback, fetchWeeklyCallback) {
                         }
                     }
                     // Check if we need more data for longer time ranges for specific charts
-                    else if (['AOTransfer', 'permaswap', 'botega', 'llamaLand', 'stargrid'].includes(processName) &&
+                    else if (['AOVolume', 'wARVolume', 'wUSDCVolume','AOTransfer', 'permaswap', 'botega', 'llamaLand', 'stargrid'].includes(processName) &&
                         (timeRange === '1M' || timeRange === '3M')) {
                         
                         await fetchDataCallback(processName, timeRange);

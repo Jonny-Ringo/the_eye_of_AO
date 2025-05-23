@@ -1,15 +1,15 @@
 /**
  * Chart creation and management for the Eye of AO dashboard
  */
-import { CHART_COLORS, CHART_DEFAULTS, TIME_FORMAT } from './config.js';
+import { CHART_COLORS, CHART_DEFAULTS, TIME_FORMAT, UTC_TIMESTAMP_PROCESSES, NON_UTC_TIMESTAMP_PROCESSES } from './config.js';
 import { formatDate, formatDateUTCWithLocalTime, filterDataByTimeRange } from './utils.js';
 import { getProcessDisplayName } from './processes.js';
 import { setupTimeRangeButtons, toggleChartLoader, getChartTimeRange } from './ui.js';
-import { fetchStargridStats } from './api.js'
-import { fetchAdditionalData } from './index.js'
+import { fetchStargridStats, fetchVolumeData } from './api.js'
+import { fetchAdditionalData, updateVolumeChart, updateSupplyChart } from './index.js'
 
 // Store all chart instances
-const charts = {};
+export const charts = {};
 
 // Historical data for each chart
 export const historicalData = {};
@@ -77,20 +77,44 @@ function createStandardTooltipCallbacks(processName) {
     return {
         label: function(context) {
             const dataIndex = context.dataIndex;
-            // Ensure we have data for this index
             if (!historicalData[processName] || !historicalData[processName][dataIndex]) {
-                return `Count: ${context.raw}`;
+                return `Value: ${context.raw}`;
             }
             
             const dataPoint = historicalData[processName][dataIndex];
-            const count = dataPoint.count;
             
-            if (dataIndex === historicalData[processName].length - 1) {
-                const currentTime = formatDate(new Date());
-                return `Count: ${count} (Current data as of ${currentTime})`;
+            // For volume charts, handle the value differently
+            if (['AOVolume', 'wARVolume', 'wUSDCVolume'].includes(processName)) {
+                // Ensure we have a numeric value
+                const rawValue = Number(dataPoint.value || dataPoint.count || context.raw || 0);
+                
+                if (isNaN(rawValue)) {
+                    console.warn(`Invalid value for ${processName}:`, dataPoint);
+                    return 'Invalid value';
+                }
+
+                // Format based on token type
+                if (['AOVolume', 'wARVolume'].includes(processName)) {
+                    const value = Math.floor(rawValue / Math.pow(10, 12));
+                    const tokenName = processName.replace('Volume', '');
+                    return `Volume: ${value.toLocaleString()} ${tokenName}`;
+                } else {
+                    const value = Math.floor(rawValue / Math.pow(10, 6));
+                    return `Volume: ${value.toLocaleString()} wUSDC`;
+                }
             }
             
-            return `Count: ${count}`;
+            // For non-volume charts, use count
+            const count = dataPoint.count || 0;
+            const formattedValue = `Count: ${count.toLocaleString()}`;
+
+            // Add current time for latest entry
+            if (dataIndex === historicalData[processName].length - 1) {
+                const currentTime = formatDate(new Date());
+                return `${formattedValue} (Current data as of ${currentTime})`;
+            }
+
+            return formattedValue;
         },
         title: function(context) {
             const dataIndex = context[0].dataIndex;
@@ -101,10 +125,17 @@ function createStandardTooltipCallbacks(processName) {
             const dataPoint = historicalData[processName][dataIndex];
             if (!dataPoint) return context[0].label;
             
+            // Then use it in the tooltip callback
             const date = new Date(dataPoint.timestamp);
-            return processName === 'stargrid'
-            ? formatDateUTCWithLocalTime(date)
-            : formatDate(date, TIME_FORMAT.tooltip);
+            if (NON_UTC_TIMESTAMP_PROCESSES.includes(processName)) {
+                // Add one day for non-UTC processes
+                const adjustedDate = new Date(date.getTime());
+                return formatDate(adjustedDate, TIME_FORMAT.tooltip);
+            } else if (UTC_TIMESTAMP_PROCESSES.includes(processName)) {
+                return formatDateUTCWithLocalTime(date);
+            } else {
+                return formatDate(date, TIME_FORMAT.tooltip);
+            }
         }
     };
 }
@@ -349,38 +380,48 @@ function createSupplyChart() {
     });
 }
 
+
 export async function fetchChartData(processName, timeRange) {
-    if (processName === 'stargrid') {
-        // For Stargrid, use your new function
-        await updateStargridChart();
+    if (['stargrid', 'AOVolume', 'wARVolume', 'wUSDCVolume'].includes(processName)) {
+        await updateChartWithStats(processName);
     } else {
         console.log(`Using fetchAdditionalData for ${processName}`);
         await fetchAdditionalData(processName, timeRange);
     }
 }
 
-
-export async function updateStargridChart() {
+export async function updateChartWithStats(processName) {
     try {
-        toggleChartLoader('stargrid', true);
+        toggleChartLoader(processName, true);
 
-        const stargridData = await fetchStargridStats();
-        if (!stargridData) throw new Error('Failed to fetch stargrid data');
+        let data;
+        if (processName === 'stargrid') {
+            data = await fetchStargridStats();
+        } else if (['AOVolume', 'wARVolume', 'wUSDCVolume'].includes(processName)) {
+            const volumeData = await updateVolumeChart(processName);
+            const tokenType = processName.replace('Volume', '');
+            // Use the full dataset
+            data = volumeData[tokenType].map(entry => ({
+                timestamp: entry.timestamp,
+                count: entry.value
+            }));
+            console.log(`Processing ${data.length} entries for ${processName}`);
+        }
 
-        const formatted = stargridData.map(entry => ({
-            ...entry,
-            timestamp: new Date(entry.timestamp).toISOString()
-        }));
+        if (!data) throw new Error(`Failed to fetch ${processName} data`);
 
-        historicalData['stargrid'] = formatted;
+        // Store the complete dataset
+        historicalData[processName] = data;
 
-        const timeRange = getChartTimeRange('stargrid');
-        updateChartTimeRange('stargrid', timeRange);
+        // Get and apply time range
+        const timeRange = getChartTimeRange(processName);
+        console.log(`Updating ${processName} with time range: ${timeRange}`);
+        updateChartTimeRange(processName, timeRange || '1M');
 
-        toggleChartLoader('stargrid', false);
+        toggleChartLoader(processName, false);
     } catch (error) {
-        console.error('Error updating Stargrid chart:', error);
-        toggleChartLoader('stargrid', false);
+        console.error(`Error updating ${processName} chart:`, error);
+        toggleChartLoader(processName, false);
     }
 }
 
@@ -403,7 +444,7 @@ export function initializeCharts() {
     charts['wARTotalSupply'] = createSupplyChart();
     
     // Standard charts for remaining processes
-    ['wARweeklyTransfer', 'wARTransfer', 'AOTransfer', 'permaswap', 'botega', 'llamaLand', 'stargrid'].forEach(processName => {
+    ['wUSDCVolume', 'wARweeklyTransfer', 'wARTransfer', 'wARVolume', 'AOTransfer','AOVolume', 'permaswap', 'botega', 'llamaLand', 'stargrid'].forEach(processName => {
         charts[processName] = createStandardChart(processName);
     });
 
@@ -418,6 +459,7 @@ export function initializeCharts() {
  * @param {Array} dataPoints - Array of data points
  */
 export function updateStandardChart(processName, dataPoints) {
+    console.log(`Updating chart for ${processName} with`, dataPoints);
     const chart = charts[processName];
     if (!chart) {
         console.error(`No chart found for process: ${processName}`);
@@ -435,11 +477,23 @@ export function updateStandardChart(processName, dataPoints) {
     // Create labels from timestamps
     const labels = sortedData.map(d => {
         const date = new Date(d.timestamp);
-        return processName === 'stargrid' ? formatDateUTCWithLocalTime(date) : formatDate(date);
+        return ['stargrid', 'wARVolume', 'AOVolume', 'wUSDCVolume'].includes(processName) 
+        ? formatDateUTCWithLocalTime(date) 
+        : formatDate(date);
     });
     
-    // Get the data values
-    const values = sortedData.map(d => d.count);
+    // Get the data values with proper decimal formatting
+    const values = sortedData.map(d => {
+        const rawValue = d.count || d.value || 0;
+        
+        // Format based on token type
+        if (['AOVolume', 'wARVolume'].includes(processName)) {
+            return rawValue / 1000000000000; // Remove 12 zeros for AO and wAR
+        } else if (processName === 'wUSDCVolume') {
+            return rawValue / 1000000; // Remove 6 zeros for wUSDC
+        }
+        return rawValue;
+    });
     
     // Update chart
     chart.data.labels = labels;
@@ -593,44 +647,6 @@ function createCombinedTooltipCallbacks(primaryProcess, secondaryProcess) {
             return context[0].label;
         }
     };
-}
-
-/**
- * Updates the supply chart with wAR supply data
- * @param {Array} supplyData - Array of supply data points
- * @param {string} timeRange - The selected time range
- */
-export function updateSupplyChart(supplyData, timeRange) {
-    const chart = charts['wARTotalSupply'];
-    if (!chart) {
-        console.error('No supply chart found');
-        return;
-    }
-    
-    if (!supplyData || supplyData.length === 0) {
-        console.warn('No supply data available');
-        return;
-    }
-    
-    // Filter by time range
-    const filteredData = filterDataByTimeRange(supplyData, timeRange);
-    
-    // Sort data by timestamp to ensure chronological order
-    const sortedData = [...filteredData].sort((a, b) => {
-        return new Date(a.timestamp) - new Date(b.timestamp);
-    });
-    
-    // Create labels and datasets (just wAR now)
-    const labels = sortedData.map(d => formatDate(new Date(d.timestamp)));
-    const wARSupply = sortedData.map(d => d.wARSupply);
-    
-    // Update chart with only wAR data
-    chart.data.labels = labels;
-    chart.data.datasets[0].data = wARSupply;
-    chart.data.datasets[0].label = 'wAR Total Supply';
-    
-    // Update the chart
-    chart.update('none');
 }
 
 /**

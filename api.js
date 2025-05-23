@@ -246,6 +246,67 @@ export async function fetchProcessData(processName, periods, currentHeight) {
     }
 }
 
+
+
+/**
+ * Fetches transaction counts for a specific process type over multiple time periods
+ * @param {string} processName - The name of the process
+ * @param {Array} periods - Array of time periods with start/end heights
+ * @returns {Promise<Array>} Array of transaction counts for each period
+ */
+export async function fetchVolumeData() {
+    try {
+        // Create a unique cache key for this request
+        const cacheKey = `volume-stats`;
+        
+        // Check if we have cached data that's less than 30min old
+        if (responseCache.has(cacheKey)) {
+            const { data, timestamp } = responseCache.get(cacheKey);
+            if (Date.now() - timestamp < 30 * 60 * 1000) {
+                return data;
+            }
+        }
+
+        const response = await fetch ('https://raw.githubusercontent.com/Jonny-Ringo/the_eye_of_AO/main/data/volume-stats.json');
+        if (!response.ok) {
+            throw new Error(`Network error: ${response.status} ${response.statusText}`);
+        
+        }
+        // Cache the result
+        const rawData = await response.json();
+
+        const volumeData = rawData.volumeData;
+
+        // Transform the data into the required format
+        const processedData = {
+            AO: volumeData.AO.map(entry => ({
+                timestamp: new Date(entry.date).getTime(),
+                value: entry.volume
+            })),
+            wAR: volumeData.wAR.map(entry => ({
+                timestamp: new Date(entry.date).getTime(),
+                value: entry.volume
+            })),
+            wUSDC: volumeData.wUSDC.map(entry => ({
+                timestamp: new Date(entry.date).getTime(),
+                value: entry.volume
+            }))
+        };
+
+        responseCache.set(cacheKey, {
+            data: processedData,
+            timestamp: Date.now()
+        });
+        console.log('Processed volume data:', processedData);
+        return processedData;
+    } catch (error) {
+        console.error("Error fetching volume data:", error);
+        throw error;
+    }
+}
+
+
+
 /**
  * Fetches daily player stats for Stargrid Battle Tactics
  * @returns {Promise<Array>} Array of daily player count data

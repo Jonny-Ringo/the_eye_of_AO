@@ -110,8 +110,50 @@
                 <h1>AO Network Stats</h1>
             </div>
 
-
             <div class="dashboard-grid">
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">AO Daily Transaction Count</h3>
+                    </div>
+                    <div class="chart-body">
+                        <div id="AOTransferLoader" class="chart-loader">
+                            <div class="loader"></div>
+                            <div class="loader-text">Fetching Transaction History...</div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="AOTransferChart"></canvas>
+                        </div>
+                        <div class="chart-actions">
+                            <button class="chart-action-btn">1W</button>
+                            <button class="chart-action-btn">1M</button>
+                            <button class="chart-action-btn">3M</button>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">AO Daily Volume</h3>
+                    </div>
+                    <div class="chart-body">
+                        <div id="AOVolumeLoader" class="chart-loader">
+                            <div class="loader"></div>
+                            <div class="loader-text">Fetching Transaction History...</div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="AOVolumeChart"></canvas>
+                        </div>
+                        <div class="chart-actions">
+                            <button class="chart-action-btn">1W</button>
+                            <button class="chart-action-btn">1M</button>
+                            <button class="chart-action-btn">3M</button>
+                        </div>
+                    </div>
+                </div>
+
+
                 <div class="chart-card">
                     <div class="chart-header">
                         <h3 class="chart-title">wUSDC/USDA Daily Transaction Count</h3>
@@ -134,15 +176,15 @@
 
                 <div class="chart-card">
                     <div class="chart-header">
-                        <h3 class="chart-title">AO Daily Transaction Count</h3>
+                        <h3 class="chart-title">wUSDC Daily Volume</h3>
                     </div>
                     <div class="chart-body">
-                        <div id="AOTransferLoader" class="chart-loader">
+                        <div id="wUSDCVolumeLoader" class="chart-loader">
                             <div class="loader"></div>
                             <div class="loader-text">Fetching Transaction History...</div>
                         </div>
                         <div class="chart-container">
-                            <canvas id="AOTransferChart"></canvas>
+                            <canvas id="wUSDCVolumeChart"></canvas>
                         </div>
                         <div class="chart-actions">
                             <button class="chart-action-btn">1W</button>
@@ -151,6 +193,8 @@
                         </div>
                     </div>
                 </div>
+
+
 
                 <div class="chart-card">
                     <div class="chart-header">
@@ -171,6 +215,29 @@
                         </div>
                     </div>
                 </div>
+
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">wAR Daily Volume</h3>
+                    </div>
+                    <div class="chart-body">
+                        <div id="wARVolumeLoader" class="chart-loader">
+                            <div class="loader"></div>
+                            <div class="loader-text">Fetching Transaction History...</div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="wARVolumeChart"></canvas>
+                        </div>
+                        <div class="chart-actions">
+                            <button class="chart-action-btn">1W</button>
+                            <button class="chart-action-btn">1M</button>
+                            <button class="chart-action-btn">3M</button>
+                        </div>
+                    </div>
+                </div>
+
+
 
                 <div class="chart-card">
                     <div class="chart-header">
