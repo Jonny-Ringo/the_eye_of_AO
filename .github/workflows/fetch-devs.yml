@@ -16,7 +16,7 @@ jobs:
       - name: Create output folder
         shell: pwsh
         run: |
-          mkdir output -Force
+          mkdir data -Force
 
       - name: Run dev.ps1 to fetch dev addresses
         shell: pwsh
@@ -27,6 +27,6 @@ jobs:
         run: |
           git config user.name "ao-stats-bot"
           git config user.email "bot@ao-volume.ai"
-          git add output/dev-addresses.csv
+          git add data/dev-addresses.csv
           git commit -m "📥 Updated developer address list" || echo "No changes to commit"
           git push
