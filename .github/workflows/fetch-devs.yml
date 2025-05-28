@@ -21,7 +21,7 @@ jobs:
       - name: Run dev.ps1 to fetch dev addresses
         shell: pwsh
         run: |
-          ./dev.ps1
+          ./scripts/dev.ps1
 
       - name: Commit and push CSV if changed
         run: |
