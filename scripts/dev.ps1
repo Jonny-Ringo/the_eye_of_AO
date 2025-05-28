@@ -1,5 +1,5 @@
-# Create output folder
-New-Item -ItemType Directory -Path "output" -Force | Out-Null
+# Create data folder
+New-Item -ItemType Directory -Path "data" -Force | Out-Null
 
 # Arweave block info endpoint
 $arweaveInfoUrl = "https://arweave.net/info"
@@ -126,7 +126,8 @@ $uniqueCount = $uniqueAddresses.Keys.Count
 Write-Host "Processed $pageCount pages"
 Write-Host "Final total: $uniqueCount"
 
-$csvPath = "output/dev-addresses.csv"
+$csvPath = "data/dev-addresses.csv"
 $uniqueAddresses.Keys | Sort-Object | Set-Content -Path $csvPath
 
 Write-Host "Saved to: $csvPath"
+
