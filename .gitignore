@@ -4,3 +4,4 @@
 # But allow the stats file
 !data/
 !data/volume-stats.json
+!data/dev-addresses.csv
