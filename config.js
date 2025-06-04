@@ -11,11 +11,14 @@ export const CHART_COLORS = {
     wARweeklyTransfer: 'rgb(255, 159, 64)',
     llamaLand: 'rgb(255, 205, 86)',
     stargrid: 'rgb(131, 86, 255)',
+    stargridRanked: 'rgb(45, 142, 142)',
+    stargridTotal: 'rgb(75, 48, 150)',
     AOTransfer: 'rgb(47, 243, 8)',
     AOVolume: 'rgb(47, 243, 8)',
     wUSDCTransfer: 'rgb(19, 62, 252)',
     wUSDCVolume: 'rgb(19, 62, 252)',
-    USDATransfer: 'rgb(51, 139, 0)'
+    USDATransfer: 'rgb(51, 139, 0)',
+    bazarAADaily:'rgb(249, 110, 70)',
 };
 
 // Time range values in milliseconds
@@ -23,11 +26,13 @@ export const TIME_RANGES = {
     '1D': 24 * 60 * 60 * 1000,         // 1 day in milliseconds
     '1W': 7 * 24 * 60 * 60 * 1000,     // 1 week in milliseconds
     '1M': 30 * 24 * 60 * 60 * 1000,    // 1 month in milliseconds
-    '3M': 90 * 24 * 60 * 60 * 1000     // 3 months in milliseconds
+    '3M': 90 * 24 * 60 * 60 * 1000,    // 3 months in milliseconds
+    '6M': 180 * 24 * 60 * 60 * 1000    // 6 months in milliseconds
 };
 
 export const UTC_TIMESTAMP_PROCESSES = [
     'stargrid',
+    'stargridMatches',
     'wARVolume',
     'AOVolume',
     'wUSDCVolume'
@@ -54,6 +59,21 @@ export const DATA_REFRESH_INTERVAL = 20 * 60 * 1000;
 
 // Time format settings for consistent date formatting across the app
 export const TIME_FORMAT = {
+    dateOnly: {
+        month: 'short',
+        day: 'numeric'
+    },
+    dateYear: {
+        year: 'numeric',
+        month: 'short',
+        weekday: 'short',
+        day: 'numeric'
+    },
+    dateOnlyUTC: {
+        timeZone: 'UTC',
+        month: 'short',
+        day: 'numeric'
+    },
     short: {
         month: 'short',
         day: 'numeric',
@@ -69,7 +89,14 @@ export const TIME_FORMAT = {
         minute: 'numeric',
         hour12: true,
         weekday: 'short'
-    }
+    },
+    dateUTC: {
+        timeZone: 'UTC',
+        weekday: 'short',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    },
 };
 
 // Default line chart settings

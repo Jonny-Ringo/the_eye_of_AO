@@ -525,6 +525,35 @@
     align-items: center;
     gap: 0.25rem;
   }
+
+  .stat-link {
+    text-align: right;
+    font-size: 0.8rem;
+    margin-top: 4px;
+  }
+
+  .stat-link a {
+    color: var(--text-secondary);
+    text-decoration: none; /* Remove default underline */
+    position: relative;
+    display: inline-block;
+  }
+
+  /* Create a custom underline that spans both text and image */
+  .stat-link a::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background-color: var(--text-secondary);
+  }
+
+  .stat-link img {
+    width: 16px;
+    vertical-align: baseline;
+  }
   
   .trend-up {
     color: var(--success);

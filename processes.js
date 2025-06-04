@@ -9,6 +9,7 @@ export const PROCESSES = {
         protocol: "ao",
         action: "Order-Notice",
         spawnerProcess: "5G5_ftQT6f2OsmJ8EZ4-84eRcIMNEmUyH9aQSD85f9I",
+        displayName: "Permaswap Swaps",
         defaultAddresses: [
             "xZwIYa2DapmKmOpqOn9iMN0YQnYV4hgtwKadiKBpbt8",
             "SMKH5JnFE7c0MjsURMVRZn7kUerg1yMwcnVbWJJBEDU",
@@ -25,7 +26,7 @@ export const PROCESSES = {
         protocol: "ao",
         action: "Order-Confirmation",
         spawnerProcess: "3XBGLrygs11K63F_7mldWz4veNx6Llg6hI2yZs8LKHo",
-        defaultAddresses: []
+        displayName: "Botega Swaps"
     },
     wARTransfer: {
         description: "wAR Token Transfer",
@@ -68,6 +69,13 @@ export const PROCESSES = {
         action: "Login-Info",
         message: "No Reward",
         displayName: "LlamaLand"
+    },
+    bazarAADaily: {
+        description: "Atomic Asset Creation Tracking",
+        displayName: "Atomic Assets Creation Daily",
+        ticker: "ATOMIC",
+        action: "Bootloader-Ticker",
+        displayName: "Atomic Assets"
     }
 };
 
@@ -278,6 +286,18 @@ export async function generateQuery(processType, startHeight, endHeight, current
                         { name: "Message", values: "${process.message}" },
                     ],
                     sort: HEIGHT_DESC
+                ) {
+                    count
+                }
+            }`;
+
+        case 'bazarAADaily':
+            return `query {
+                transactions(
+                    ${blockRange}
+                    tags: [
+                        { name: "${process.action}", values: ["${process.ticker}"] }
+                    ]
                 ) {
                     count
                 }
