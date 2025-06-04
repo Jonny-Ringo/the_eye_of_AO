@@ -93,7 +93,8 @@ export function setupTimeRangeButtons(fetchDataCallback, fetchWeeklyCallback) {
          'wARTransfer', 'wUSDCTransfer', 'USDATransfer', 
         'AOTransfer', 'permaswap', 'botega', 'llamaLand',
          'wARweeklyTransfer', 'wARTotalSupply', 'stargrid',
-         'AOVolume', 'wARVolume', 'wUSDCVolume'
+         'AOVolume', 'wARVolume', 'wUSDCVolume', 'bazarAADaily',
+         'stargridMatches'
     ];
     
     processNames.forEach(processName => {
@@ -171,7 +172,7 @@ export function setupTimeRangeButtons(fetchDataCallback, fetchWeeklyCallback) {
                         }
                     }
                     // Check if we need more data for longer time ranges for specific charts
-                    else if (['AOVolume', 'wARVolume', 'wUSDCVolume','AOTransfer', 'permaswap', 'botega', 'llamaLand', 'stargrid'].includes(processName) &&
+                    else if (['AOVolume', 'wARVolume', 'wUSDCVolume','AOTransfer', 'permaswap', 'botega', 'llamaLand', 'stargrid', 'bazarAADaily'].includes(processName) &&
                         (timeRange === '1M' || timeRange === '3M')) {
                         
                         await fetchDataCallback(processName, timeRange);

@@ -177,7 +177,7 @@ export async function fetchProcessData(processName, periods, currentHeight) {
         }
         
         // Process all periods in chunks (5 at a time) to avoid overwhelming the server
-        const CHUNK_SIZE = 5;
+        const CHUNK_SIZE = 10;
         const results = [];
         
         for (let i = 0; i < periods.length; i += CHUNK_SIZE) {
@@ -338,6 +338,8 @@ export async function fetchStargridStats() {
         const raw = JSON.parse(statsTag.value);
         let data = Object.entries(raw).map(([ts, d]) => ({
             timestamp: new Date(Number(ts)).toISOString(),
+            casual: d.MatchesPlayedPerType?.Casual,
+            ranked: d.MatchesPlayedPerType?.Ranked,
             count: d.ActiveUsersCount
         }));
 
@@ -346,6 +348,8 @@ export async function fetchStargridStats() {
             const todayData = JSON.parse(todayTag.value);
             data.push({
                 timestamp: new Date(todayData.Date).toISOString(),
+                casual: todayData.MatchesPlayedPerType?.Casual || 0,
+                ranked: todayData.MatchesPlayedPerType?.Ranked || 0,
                 count: todayData.ActiveUsersCount
             });
         }

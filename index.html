@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>👁️ The Eye of AO</title>
+        <title>The Eye of AO</title>
         <meta name="description" content="👁️ The Eye of AO is a data dashboard for monitoring the AO Compute Network.">
         <meta name="keywords" content="Arweave, AO, data, dashboard, blockchain, graphs, charts, analytics, monitoring, HyperBEAM">
         <meta name="robots" content="index, follow">
@@ -15,7 +15,7 @@
         <!-- Open Graph / Facebook -->
         <meta property="og:type" content="website">
         <meta property="og:url" content="https://eye-of-ao.arweave.net/">
-        <meta property="og:title" content="👁️ The Eye of AO">
+        <meta property="og:title" content="The Eye of AO">
         <meta property="og:description" content="Data dashboard for monitoring the AO Compute Network">
         <meta property="og:image" content="images/preview.png">
         <meta property="og:image:width" content="1200">
@@ -25,9 +25,9 @@
         <!-- Twitter -->
         <meta name="twitter:card" content="summary_large_image">
         <meta name="twitter:url" content="https://eye-of-ao.arweave.net/">
-        <meta name="twitter:title" content="👁️ The Eye of AO">
+        <meta name="twitter:title" content="The Eye of AO">
         <meta name="twitter:description" content="Data dashboard for monitoring the AO Compute Network">
-        <meta name="twitter:image" content="preview.png">
+        <meta name="twitter:image" content="images/preview.png">
         <meta name="twitter:creator" content="Jonny Ringo">
         
         <!-- Fonts -->
@@ -46,7 +46,7 @@
         <div class="container header-content">
             <div class="logo">
                 <div>
-                    <h1>👁️ The Eye of AO</h1>
+                    <h1>The Eye of AO</h1>
                 </div>
             </div>
             <div class="header-info">
@@ -79,6 +79,7 @@
                 <div class="nav-dropdown">
                     <a href="hyperbeam/hyperbeam-uptime.html" class="nav-item dropdown-toggle">HyperBEAM Uptime ▾</a>
                     <div class="dropdown-menu">
+                        <a href="hyperbeam/3D-Globe/globe.html" class="nav-item">🌏3D Hyperbeam Network</a>
                         <a href="hyperbeam/hyperbeam-uptime.html#hbMainnetNodes" class="nav-item">HyperBEAM Nodes</a>
                         <a href="hyperbeam/hyperbeam-uptime.html#hbCustomNodes" class="nav-item">Custom Node Dashboard</a>
                     </div>
@@ -102,6 +103,7 @@
         <div class="loader-text">Syncing with AO Network...</div>
     </div>
 
+
     <div class="container">
 
 
@@ -109,6 +111,30 @@
             <div class="page-header">
                 <h1>AO Network Stats</h1>
             </div>
+
+        <div class="stats-row">
+            <div class="stat-card" title="Number of active developer addresses on the Arweave/AO networks">
+                <div class="stat-title">Active Developer Addresses</div>
+                <div class="stat-value" id="activeDevCount">--</div>
+                <div class="stat-link">
+                    <a href="#" onclick="downloadDevCSV()"><img src="images/eyecon2.png" > Download CSV</a>
+                </div>
+
+            </div>
+
+
+            <div class="stat-card" title="Total number of AO Mainnet nodes currently listed">
+                <div class="stat-title">HyperBEAM Mainnet Nodes</div>
+                <div class="stat-value" id="nodeCount">--</div>
+            </div>
+
+            <div class="stat-card" title="Reserved for upcoming network metric">
+                <div class="stat-title">Coming Soon</div>
+                <div class="stat-value">--</div>
+            </div>
+        </div>
+
+
 
             <div class="dashboard-grid">
 
@@ -275,6 +301,7 @@
                             <button class="chart-action-btn">1W</button>
                             <button class="chart-action-btn">1M</button>
                             <button class="chart-action-btn">3M</button>
+                            <button class="chart-action-btn">6M</button>
                         </div>
                     </div>
                 </div>
@@ -318,6 +345,26 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Atomic Asset Daily Creation Tracking(Bazar)</h3>
+                    </div>
+                    <div class="chart-body">
+                        <div id="bazarAADailyLoader" class="chart-loader">
+                            <div class="loader"></div>
+                            <div class="loader-text">Fetching Transaction History...</div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="bazarAADailyChart"></canvas>
+                        </div>
+                        <div class="chart-actions">
+                            <button class="chart-action-btn">1W</button>
+                            <button class="chart-action-btn">1M</button>
+                            <button class="chart-action-btn">3M</button>
+                        </div>
+                    </div>
+                </div>
         </section>
 
 
@@ -329,25 +376,6 @@
             </div>
 
             <div class="dashboard-grid">
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <h3 class="chart-title">Llama Land Daily Player Count</h3>
-                    </div>
-                    <div class="chart-body">
-                        <div id="llamaLandLoader" class="chart-loader">
-                            <div class="loader"></div>
-                            <div class="loader-text">Fetching Player History...</div>
-                        </div>
-                        <div class="chart-container">
-                            <canvas id="llamaLandChart"></canvas>
-                        </div>
-                        <div class="chart-actions">
-                            <button class="chart-action-btn">1W</button>
-                            <button class="chart-action-btn">1M</button>
-                            <button class="chart-action-btn">3M</button>
-                        </div>
-                    </div>
-                </div>
 
                 <div class="chart-card">
                     <div class="chart-header">
@@ -368,6 +396,46 @@
                         </div>
                     </div>
                 </div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Stargrid Battle Tactics - Player Matches</h3>
+                    </div>
+                    <div class="chart-body">
+                        <div id="stargridMatchesLoader" class="chart-loader">
+                            <div class="loader"></div>
+                            <div class="loader-text">Fetching Match History...</div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="stargridMatchesChart"></canvas>
+                        </div>
+                        <div class="chart-actions">
+                            <button class="chart-action-btn">1W</button>
+                            <button class="chart-action-btn">1M</button>
+                            <button class="chart-action-btn">3M</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Llama Land Daily Player Count</h3>
+                    </div>
+                    <div class="chart-body">
+                        <div id="llamaLandLoader" class="chart-loader">
+                            <div class="loader"></div>
+                            <div class="loader-text">Fetching Player History...</div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="llamaLandChart"></canvas>
+                        </div>
+                        <div class="chart-actions">
+                            <button class="chart-action-btn">1W</button>
+                            <button class="chart-action-btn">1M</button>
+                            <button class="chart-action-btn">3M</button>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </section>
     </div>
@@ -382,5 +450,29 @@
     <!-- Load application using ES modules -->
     <script type="module" src="index.js"></script>
     <script src="nav.js"></script>
+    <script>
+        function downloadDevCSV() {
+            const fileUrl = "https://raw.githubusercontent.com/Jonny-Ringo/the_eye_of_AO/main/data/dev-addresses.csv";
+            const fileName = "dev-addresses.csv";
+
+            fetch(fileUrl)
+            .then(response => response.blob())
+            .then(blob => {
+                const blobUrl = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = blobUrl;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(blobUrl);
+            })
+            .catch(err => {
+                console.error("Failed to fetch CSV:", err);
+                alert("Error downloading the CSV file.");
+            });
+        }
+    </script>
+
 </body>
 </html>

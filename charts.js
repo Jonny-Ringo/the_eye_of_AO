@@ -93,15 +93,24 @@ function createStandardTooltipCallbacks(processName) {
                     return 'Invalid value';
                 }
 
+                let formattedValue;
                 // Format based on token type
                 if (['AOVolume', 'wARVolume'].includes(processName)) {
                     const value = Math.floor(rawValue / Math.pow(10, 12));
                     const tokenName = processName.replace('Volume', '');
-                    return `Volume: ${value.toLocaleString()} ${tokenName}`;
+                    formattedValue = `Volume: ${value.toLocaleString()} ${tokenName}`;
                 } else {
                     const value = Math.floor(rawValue / Math.pow(10, 6));
-                    return `Volume: ${value.toLocaleString()} wUSDC`;
+                    formattedValue = `Volume: ${value.toLocaleString()} wUSDC`;
                 }
+
+                if (dataIndex === historicalData[processName].length - 1) {
+                    const currentTime = formatDate(new Date());
+                    return `${formattedValue} (Current data as of ${currentTime})`;
+                }
+
+                return formattedValue;
+                
             }
             
             // For non-volume charts, use count
@@ -130,11 +139,11 @@ function createStandardTooltipCallbacks(processName) {
             if (NON_UTC_TIMESTAMP_PROCESSES.includes(processName)) {
                 // Add one day for non-UTC processes
                 const adjustedDate = new Date(date.getTime());
-                return formatDate(adjustedDate, TIME_FORMAT.tooltip);
+                return formatDate(adjustedDate, TIME_FORMAT.dateYear);
             } else if (UTC_TIMESTAMP_PROCESSES.includes(processName)) {
                 return formatDateUTCWithLocalTime(date);
             } else {
-                return formatDate(date, TIME_FORMAT.tooltip);
+                return formatDate(date, TIME_FORMAT.dateYear);
             }
         }
     };
@@ -203,7 +212,7 @@ function createAxesConfig() {
                 minRotation: 45,
                 callback: function(value, index, ticks) {
                     const date = new Date(this.getLabelForValue(value));
-                    return formatDate(date);
+                    return formatDate(date, TIME_FORMAT.dateOnly);
                 }
             }
         }
@@ -320,6 +329,62 @@ function createCombinedChart(primaryProcess, secondaryProcess) {
 }
 
 /**
+ * Creates a combined chart for Stargrid match types
+ * @returns {Object} Chart instance
+ */
+function createStargridMatchesChart() {
+    const canvasId = 'stargridMatchesChart';
+    const ctx = document.getElementById(canvasId)?.getContext('2d');
+    
+    if (!ctx) {
+        console.error(`Cannot create chart: Canvas element ${canvasId} not found`);
+        return null;
+    }
+
+    return new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [
+                {
+                    label: 'Casual Matches',
+                    data: [], // Will be populated with data.casual
+                    borderColor: getProcessColor('stargrid'),
+                    tension: CHART_DEFAULTS.tension,
+                    pointRadius: CHART_DEFAULTS.pointRadius
+                },
+                {
+                    label: 'Ranked Matches',
+                    data: [], // Will be populated with data.ranked
+                    borderColor: getProcessColor('stargridRanked'),
+                    tension: CHART_DEFAULTS.tension,
+                    pointRadius: CHART_DEFAULTS.pointRadius
+                },
+                {
+                    label: 'Total Matches',
+                    data: [],
+                    borderColor: getProcessColor('stargridTotal'),
+                    tension: CHART_DEFAULTS.tension,
+                    pointRadius: CHART_DEFAULTS.pointRadius
+                }
+            ]
+        },
+        options: {
+            responsive: CHART_DEFAULTS.responsive,
+            maintainAspectRatio: CHART_DEFAULTS.maintainAspectRatio,
+            scales: createAxesConfig(),
+            plugins: {
+                legend: createLegendConfig(),
+                tooltip: {
+                    callbacks: createStargridMatchesTooltipCallbacks()
+                }
+            }
+        }
+    });
+}
+
+
+/**
  * Creates a supply chart for wAR
  * @returns {Object} Chart instance
  */
@@ -371,7 +436,7 @@ function createSupplyChart() {
                         minRotation: 45,
                         callback: function(value, index, ticks) {
                             const date = new Date(this.getLabelForValue(value));
-                            return formatDate(date);
+                            return formatDate(date, TIME_FORMAT.dateOnly);
                         }
                     }
                 }
@@ -384,6 +449,8 @@ function createSupplyChart() {
 export async function fetchChartData(processName, timeRange) {
     if (['stargrid', 'AOVolume', 'wARVolume', 'wUSDCVolume'].includes(processName)) {
         await updateChartWithStats(processName);
+    } else if (['stargridMatches'].includes(processName)) {
+        await updateStargridMatchesChart(processName);
     } else {
         console.log(`Using fetchAdditionalData for ${processName}`);
         await fetchAdditionalData(processName, timeRange);
@@ -427,6 +494,78 @@ export async function updateChartWithStats(processName) {
 
 
 /**
+ * Updates the Stargrid matches chart
+ * @param {string} processName - The process name (stargridMatches)
+ * @param {Array} preFilteredData - Optional pre-filtered data to use instead of fetching fresh
+ */
+export async function updateStargridMatchesChart(processName, preFilteredData = null) {
+    try {
+        toggleChartLoader(processName, true);
+
+        let dataToUse;
+        
+        if (preFilteredData) {
+            // Use the pre-filtered data passed to us
+            dataToUse = preFilteredData;
+            console.log(`Using pre-filtered data for ${processName}:`, preFilteredData.length, 'entries');
+        } else {
+            // Fetch fresh data (for initial load)
+            const data = await fetchStargridStats();
+            if (!data) throw new Error('Failed to fetch Stargrid stats');
+
+            // Format data for matches chart
+            const formattedData = data.map(entry => ({
+                timestamp: entry.timestamp,
+                casual: entry.casual || 0,
+                ranked: entry.ranked || 0
+            }));
+
+            // Store the complete dataset
+            historicalData[processName] = formattedData;
+
+            // Get and apply time range
+            const timeRange = getChartTimeRange(processName);
+            console.log(`Updating ${processName} with time range: ${timeRange}`);
+
+            // Filter by time range
+            dataToUse = filterDataByTimeRange(formattedData, timeRange || '1M');
+        }
+
+        // Update the chart
+        const chart = charts[processName];
+        if (!chart) throw new Error(`No chart found for process: ${processName}`);
+
+        // Sort chronologically
+        const sortedData = [...dataToUse].sort((a, b) => 
+            new Date(a.timestamp) - new Date(b.timestamp)
+        );
+
+        // IMPORTANT: Store the filtered data for tooltip access
+        // Use a special key to store the currently displayed data
+        historicalData[`${processName}_displayed`] = sortedData;
+
+        console.log(`Final data for chart update:`, {
+            processName,
+            totalEntries: sortedData.length,
+            firstEntry: sortedData[0]?.timestamp,
+            lastEntry: sortedData[sortedData.length - 1]?.timestamp
+        });
+
+        // Update chart data
+        chart.data.labels = sortedData.map(d => formatDateUTCWithLocalTime(new Date(d.timestamp)));
+        chart.data.datasets[0].data = sortedData.map(d => d.casual || 0);
+        chart.data.datasets[1].data = sortedData.map(d => d.ranked || 0);
+        chart.data.datasets[2].data = sortedData.map(d => (d.casual || 0) + (d.ranked || 0));
+
+        chart.update('none');
+        toggleChartLoader(processName, false);
+    } catch (error) {
+        console.error(`Error updating ${processName} chart:`, error);
+        toggleChartLoader(processName, false);
+    }
+}
+
+/**
  * Initialize all charts based on process definitions
  */
 export function initializeCharts() {
@@ -442,9 +581,12 @@ export function initializeCharts() {
     
     // Special case: wAR total supply chart
     charts['wARTotalSupply'] = createSupplyChart();
+
+    // Add Stargrid matches chart
+    charts['stargridMatches'] = createStargridMatchesChart();
     
     // Standard charts for remaining processes
-    ['wUSDCVolume', 'wARweeklyTransfer', 'wARTransfer', 'wARVolume', 'AOTransfer','AOVolume', 'permaswap', 'botega', 'llamaLand', 'stargrid'].forEach(processName => {
+    ['wUSDCVolume', 'wARweeklyTransfer', 'wARTransfer', 'wARVolume', 'AOTransfer','AOVolume', 'permaswap', 'botega', 'llamaLand', 'stargrid', 'bazarAADaily'].forEach(processName => {
         charts[processName] = createStandardChart(processName);
     });
 
@@ -649,6 +791,47 @@ function createCombinedTooltipCallbacks(primaryProcess, secondaryProcess) {
     };
 }
 
+
+function createStargridMatchesTooltipCallbacks() {
+    return {
+        label: function(context) {
+            const datasetLabel = context.dataset.label || '';
+            const value = context.parsed.y;
+            const dataIndex = context.dataIndex;
+            const currentDataLength = context.chart.data.labels.length;
+
+            // Check if this is the latest entry
+            if (dataIndex === currentDataLength - 1) {
+                const currentTime = formatDate(new Date());
+                return `${datasetLabel}: ${value.toLocaleString()} (Current data as of ${currentTime})`;
+            }
+
+            return `${datasetLabel}: ${value.toLocaleString()}`;
+        },
+        title: function(context) {
+            const dataIndex = context[0].dataIndex;
+            
+            // Use the displayed data instead of the complete dataset
+            const displayedData = historicalData['stargridMatches_displayed'] || historicalData['stargridMatches'];
+            const dataPoint = displayedData[dataIndex];
+            
+            if (!dataPoint) return '';
+            
+            // Create date directly from timestamp and format it
+            const date = new Date(dataPoint.timestamp);
+            
+            // Check if this is the latest entry in the displayed data
+            if (dataIndex === displayedData.length - 1) {
+                const currentTime = formatDate(new Date());
+                return `${formatDateUTCWithLocalTime(date)}`;
+            }
+            
+            return formatDateUTCWithLocalTime(date);
+        }
+    };
+}
+
+
 /**
  * Gets a chart instance by process name
  * @param {string} processName - The process name
@@ -680,10 +863,11 @@ export function updateChartTimeRange(processName, timeRange) {
     if (processName === 'wUSDCTransfer') {
         updateCombinedChart('wUSDCTransfer', 'USDATransfer', timeRange);
     } else if (processName === 'wARTotalSupply') {
-        // Call the specialized function for supply chart
         updateSupplyChart(historicalData[processName], timeRange);
+    } else if (processName === 'stargridMatches') {
+        const filteredByTimeRange = filterDataByTimeRange(filteredData, timeRange);
+        updateStargridMatchesChart(processName, filteredByTimeRange);
     } else {
-        // Standard single-line charts
         const filteredByTimeRange = filterDataByTimeRange(filteredData, timeRange);
         updateStandardChart(processName, filteredByTimeRange);
     }

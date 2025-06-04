@@ -13,6 +13,22 @@ export function formatDate(date, options = TIME_FORMAT.short) {
     return date.toLocaleString('en-US', options);
 }
 
+export function getLatestUTCDateLabel() {
+    // Create a UTC-based "today" date based on current system time
+    const nowUTC = new Date();
+    const utcYear = nowUTC.getUTCFullYear();
+    const utcMonth = nowUTC.getUTCMonth();
+    const utcDay = nowUTC.getUTCDate();
+
+    const flooredUTC = new Date(Date.UTC(utcYear, utcMonth, utcDay));
+
+    return flooredUTC.toLocaleDateString('en-US', {
+        timeZone: 'UTC',
+        month: 'long',
+        day: 'numeric'
+    });
+}
+
 
 /**
  * Special functions for the stargrid data/time conversions that do not conform to TIME_FORMAT
@@ -34,7 +50,7 @@ export function formatDateUTCWithLocalTime(date) {
         hour12: true
     });
 
-    return `${utcDate}, ${localTime}`;
+    return `${utcDate}`;
 }
 
 

@@ -1,4 +1,16 @@
+// mainnet-node-list.js with locations
+// Generated: 2025-06-02T17:58:35.355Z
+
 const mainnetNodes = [
+    {
+        "hb": "https://tee-1.forward.computer/",
+        "cu": "--",
+        "proxy": false,
+        "lat": 42.0048,
+        "lng": -87.9954,
+        "location": "Elk Grove Village, Illinois, United States",
+        "country": "US"
+    },
     {
         "hb": "https://tee-2.forward.computer/",
         "cu": "--",

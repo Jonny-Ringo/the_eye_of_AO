@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>The Eye of AO</title>
+        <meta name="description" content="The Eye of AO is a data dashboard for monitoring the AO Compute Network.">
+        <meta name="keywords" content="Arweave, AO, data, dashboard, blockchain, graphs, charts, analytics, monitoring, HyperBEAM">
+        <meta name="robots" content="index, follow">
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <meta name="language" content="English">
+        <meta name="author" content="Jonny Ringo">
+        <link rel="icon" href="images/eyecon.png">
+        
+        <!-- Open Graph / Facebook -->
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="https://eye-of-ao.arweave.net/">
+        <meta property="og:title" content="The Eye of AO">
+        <meta property="og:description" content="Data dashboard for monitoring the AO Compute Network">
+        <meta property="og:image" content="images/preview.png">
+        <meta property="og:image:width" content="1200">
+        <meta property="og:image:height" content="630">
+        <meta property="og:site_name" content="The Eye of AO">
+        
+        <!-- Twitter -->
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:url" content="https://eye-of-ao.arweave.net/">
+        <meta name="twitter:title" content="The Eye of AO">
+        <meta name="twitter:description" content="Data dashboard for monitoring the AO Compute Network">
+        <meta name="twitter:image" content="preview.png">
+        <meta name="twitter:creator" content="Jonny Ringo">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom styles -->
+    <link rel="stylesheet" href="../dash.css">
+    <link rel="stylesheet" href="globe.css">
+
+</head>
+<body>
+
+            <div class="globe-header" id="header">
+                <div class="globe-title">🌍 HyperBEAM Global Network</div>
+                <div class="globe-controls">
+                    <button class="control-btn" onclick="toggleAutoRotate()">Stop Auto Rotate</button>
+                    <button class="control-btn" onclick="toggleLabels()">Hide Node Labels</button>
+                    <button class="control-btn" onclick="resetView()">Reset View</button>
+                </div>
+            <button class="back-btn" onclick="goBack()" id="backBtn">
+                ← Back to Dashboard
+            </button>
+            </div>
+
+    <div id="globe-container">
+        <div class="globe-ui">
+            <div class="loading" id="loading">
+                <div class="loader-spinner"></div>
+                <div>Loading Earth and HyperBEAM nodes...</div>
+                <div style="font-size: 0.9rem; opacity: 0.8; margin-top: 10px;">Fetching real-time node status</div>
+            </div>
+            
+            
+
+            
+            <div class="stats-panel" style="display: none;" id="statsPanel">
+                <h3 style="margin-top: 0;">Network Status</h3>
+                <div class="stat-item">
+                    <span>Total Nodes:</span>
+                    <span id="totalNodes">-</span>
+                </div>
+                <div class="stat-item">
+                    <span>Online:</span>
+                    <span id="onlineNodes" style="color: #10b981;">-</span>
+                </div>
+                <div class="stat-item">
+                    <span>Busy:</span>
+                    <span id="busyNodes" style="color: #f59e0b;">-</span>
+                </div>
+                <div class="stat-item">
+                    <span>Offline:</span>
+                    <span id="offlineNodes" style="color: #ef4444;">-</span>
+                </div>
+            </div>
+            
+            <div class="legend" style="display: none;" id="legend">
+                <div class="legend-item">
+                    <div class="legend-color status-online"></div>
+                    <span>Online</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color status-busy"></div>
+                    <span>Busy</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color status-offline"></div>
+                    <span>Offline</span>
+                </div>
+            </div>
+            
+            <div class="node-info-panel" id="nodeInfo">
+                <div class="node-info-header">
+                    <h3 style="margin: 0;">Node Details</h3>
+                    <button onclick="hideNodeInfo()">✕</button>
+                </div>
+                <div id="nodeDetails">
+                    <!-- Node details will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Globe.gl Library -->
+    <script src="https://unpkg.com/globe.gl"></script>
+    
+    <script src="globe.js" ></script>
+</body>
+</html>

@@ -1,5 +1,6 @@
 import { DATA_REFRESH_INTERVAL} from './config.js';
 import { PROCESSES } from './processes.js';
+import { mainnetNodes } from './hyperbeam/mainnet-node-list.js';
 import { 
     fetchNetworkInfo, 
     fetchBlockHistory, 
@@ -188,6 +189,7 @@ function generateWeeklyPeriods(currentHeight, blockData, weeks = 12) {
     // Sort periods chronologically
     return periods.sort((a, b) => a.startTime - b.startTime);
 }
+
 /**
  * Fetches additional historical data for a specific process when a longer time range is selected
  * @param {string} processName - The process name
@@ -455,283 +457,6 @@ export async function updateVolumeChart(processName) {
 }
 
 
-/**
- * Fetches and updates data for a specific process
- * @param {string} processName - The process name
- * @param {Array} periods - Array of time periods
- * @param {number} currentHeight - Current block height
- */
-/**
- * Fetches and updates data for a specific process
- * @param {string} processName - The process name
- * @param {Array} periods - Array of time periods
- * @param {number} currentHeight - Current block height
- */
-async function updateProcessData(processName, periods, currentHeight) {
-    try {
-        toggleChartLoader(processName, true);
-        
-        // Fetch the data
-        const periodData = await fetchProcessData(processName, periods, currentHeight);
-        
-        // For first load or complete refresh
-        if (!historicalData[processName] || historicalData[processName].length === 0) {
-            historicalData[processName] = periodData;
-        } else {
-            // Merge with existing data, preserving the newest timestamps
-            mergeProcessData(processName, periodData, processName.includes('weekly'));
-        }
-        
-        // Update the chart
-        const timeRange = getChartTimeRange(processName);
-        updateChartTimeRange(processName, timeRange);
-        
-        toggleChartLoader(processName, false);
-    } catch (error) {
-        console.error(`Error updating ${processName} data:`, error);
-        toggleChartLoader(processName, false);
-    }
-}
-
-/**
- * Merges new process data with existing data, preserving the newest timestamps
- * @param {string} processName - The process name
- * @param {Array} newData - The new data to merge
- * @param {boolean} isWeekly - Whether this is weekly data
- */
-function mergeProcessData(processName, newData, isWeekly = false) {
-    if (!newData || newData.length === 0) return;
-    
-    // Get existing data
-    const existingData = [...(historicalData[processName] || [])];
-    
-    // Helper function to determine if two dates are the same day/week
-    const areSamePeriod = (date1, date2) => {
-        if (isWeekly) {
-            return isSameWeek(date1, date2);
-        } else {
-            return formatDateForComparison(date1) === formatDateForComparison(date2);
-        }
-    };
-    
-    // Merge new data with existing data
-    newData.forEach(newItem => {
-        // Find if we have an entry for this date/week
-        const existingIndex = existingData.findIndex(item => 
-            areSamePeriod(item.timestamp, newItem.timestamp)
-        );
-        
-        if (existingIndex >= 0) {
-            // Compare timestamps to keep the most recent
-            const existingTime = new Date(existingData[existingIndex].timestamp).getTime();
-            const newTime = new Date(newItem.timestamp).getTime();
-            
-            // Update if the new item has a newer timestamp or different count
-            if (newTime > existingTime || existingData[existingIndex].count !== newItem.count) {
-                existingData[existingIndex] = newItem;
-            }
-        } else {
-            // Add new entry if we don't have data for this period yet
-            existingData.push(newItem);
-        }
-    });
-    
-    // Sort the data chronologically
-    const sortedData = existingData.sort((a, b) => 
-        new Date(a.timestamp) - new Date(b.timestamp)
-    );
-    
-    // Update historical data
-    historicalData[processName] = sortedData;
-}
-
-/**
- * Fetches data for all processes
- */
-async function fetchAllData() {
-    try {
-        // Fetch network info and block history - this part was working
-        const [networkInfo, blockData] = await Promise.all([
-            fetchNetworkInfo(),
-            fetchBlockHistory()
-        ]);
-        
-        // Store globally for reuse in fetchAdditionalData
-        window.currentNetworkInfo = networkInfo;
-        window.currentBlockData = blockData;
-        
-        const currentHeight = networkInfo.height;
-        console.log(`Current network height: ${currentHeight}`);
-        
-        // Generate daily and weekly periods
-        const dailyPeriods = getDailyPeriods(currentHeight, blockData);
-        const oneWeekPeriods = generateExtendedDailyPeriods(currentHeight, blockData, 7);
-        const weeklyPeriods = generateWeeklyPeriods(currentHeight, blockData, 12);
-        
-        // Update network info display
-        const latestPeriod = dailyPeriods[dailyPeriods.length - 1];
-        updateNetworkInfoDisplay(currentHeight, latestPeriod);
-        
-        // Update supply chart
-        await updateSupplyChart();
-        
-        // Process all daily and weekly data in parallel
-        const processPromises = [];
-        
-        // Add daily process data fetches
-        Object.keys(PROCESSES).forEach(processName => {
-            if (!processName.includes('weekly') && processName !== 'wARTotalSupply') {
-                // Use 1-week periods for standard charts that need less initial data
-                const periods = ['AOTransfer', 'permaswap', 'botega', 'llamaLand'].includes(processName) 
-                    ? oneWeekPeriods 
-                    : dailyPeriods;
-                    
-                processPromises.push(updateProcessData(processName, periods, currentHeight));
-            }
-        });
-        
-        // Add weekly process data fetches
-        Object.keys(PROCESSES).forEach(processName => {
-            if (processName.includes('weekly')) {
-                processPromises.push(updateProcessData(processName, weeklyPeriods, currentHeight));
-            }
-        });
-
-        // Wait for all processes to update
-        await Promise.allSettled(processPromises);
-        
-        // Hide main loader after first data fetch
-        toggleMainLoader(false);
-        
-    } catch (error) {
-        console.error('Error fetching data:', error);
-        toggleMainLoader(false);
-    }
-}
-
-/**
- * Updates only today's data for a specific process
- * @param {string} processName - The process name
- * @param {Array} periods - Array with only today's period
- * @param {number} currentHeight - Current block height
- */
-async function updateTodayProcessData(processName, periods, currentHeight) {
-    try {
-        toggleChartLoader(processName, true);
-        
-        // Fetch the data for today
-        const todayData = await fetchProcessData(processName, periods, currentHeight);
-        
-        if (todayData.length > 0) {
-            const today = formatDateForComparison(new Date());
-            
-            // Get existing data
-            const existingData = [...historicalData[processName]];
-            
-            // Find and update today's entry if it exists
-            const todayIndex = existingData.findIndex(item => 
-                formatDateForComparison(item.timestamp) === today
-            );
-            
-            if (todayIndex !== -1) {
-                // Compare timestamps as Date objects for accurate time comparison
-                const existingTime = new Date(existingData[todayIndex].timestamp).getTime();
-                const newTime = new Date(todayData[0].timestamp).getTime();
-                
-                // Only update if the new data is more recent or has a different count
-                if (newTime >= existingTime || existingData[todayIndex].count !== todayData[0].count) {
-                    existingData[todayIndex] = todayData[0];
-                }
-            } else {
-                // Add today's entry if it doesn't exist
-                existingData.push(todayData[0]);
-            }
-            
-            // Sort the data chronologically
-            const sortedData = existingData.sort((a, b) => 
-                new Date(a.timestamp) - new Date(b.timestamp)
-            );
-            
-            // Update historical data
-            historicalData[processName] = sortedData;
-        }
-        
-        // Update the chart with current time range
-        const timeRange = getChartTimeRange(processName);
-        updateChartTimeRange(processName, timeRange);
-        
-        toggleChartLoader(processName, false);
-    } catch (error) {
-        console.error(`Error updating today's data for ${processName}:`, error);
-        toggleChartLoader(processName, false);
-    }
-}
-
-/**
- * Updates only the current week's data for a weekly process
- * @param {string} processName - The process name
- * @param {Array} periods - Array with only the current week's period
- * @param {number} currentHeight - Current block height
- */
-async function updateCurrentWeekData(processName, periods, currentHeight) {
-    try {
-        toggleChartLoader(processName, true);
-        
-        // Fetch the data for the current week
-        const weekData = await fetchProcessData(processName, periods, currentHeight);
-        
-        if (weekData.length > 0) {
-            // Get existing data
-            const existingData = [...historicalData[processName]];
-            
-            // Find and update current week's entry if it exists
-            const currentWeekIndex = existingData.findIndex(item => 
-                isSameWeek(item.timestamp, weekData[0].timestamp)
-            );
-            
-            if (currentWeekIndex !== -1) {
-                // Compare timestamps as Date objects for accurate time comparison
-                const existingTime = new Date(existingData[currentWeekIndex].timestamp).getTime();
-                const newTime = new Date(weekData[0].timestamp).getTime();
-                
-                // Only update if the new data is more recent or has a different count
-                if (newTime >= existingTime || existingData[currentWeekIndex].count !== weekData[0].count) {
-                    existingData[currentWeekIndex] = weekData[0];
-                }
-            } else {
-                // Add current week's entry if it doesn't exist
-                existingData.push(weekData[0]);
-            }
-            
-            // Sort the data chronologically
-            const sortedData = existingData.sort((a, b) => 
-                new Date(a.timestamp) - new Date(b.timestamp)
-            );
-            
-            // Update historical data
-            historicalData[processName] = sortedData;
-        }
-        
-        // Update the chart
-        const timeRange = getChartTimeRange(processName);
-        updateChartTimeRange(processName, timeRange);
-        
-        toggleChartLoader(processName, false);
-    } catch (error) {
-        console.error(`Error updating current week's data for ${processName}:`, error);
-        toggleChartLoader(processName, false);
-    }
-}
-
-/**
- * Helper function to format a date as YYYY-MM-DD for comparison
- * @param {Date|string} date - The date to format
- * @returns {string} Formatted date string
- */
-function formatDateForComparison(date) {
-    const d = new Date(date);
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
 
 /**
  * Checks if two dates are in the same week
@@ -821,7 +546,7 @@ async function initializeDashboard() {
         Object.keys(PROCESSES).forEach(processName => {
             if (!processName.includes('weekly') && processName !== 'wARTotalSupply' && processName !== 'wARTransfer') {
                 // Use appropriate periods based on chart type
-                const periods = ['AOTransfer', 'permaswap', 'botega', 'llamaLand'].includes(processName) 
+                const periods = ['AOTransfer', 'permaswap', 'botega', 'llamaLand','bazarAADaily'].includes(processName) 
                     ? oneWeekPeriods 
                     : dailyPeriods;
                 
@@ -842,10 +567,19 @@ async function initializeDashboard() {
                 });
             }
         });
+
+        // 1. Populate mainnet node count
+        document.getElementById('nodeCount').textContent = mainnetNodes.length;
+        loadDevAddressCount();
         
         loadStargridChart().catch(error => {
             console.error("Error loading Stargrid chart:", error);
             toggleChartLoader('stargrid', false);
+        });
+
+        loadStargridMatchesChart().catch(error => {
+            console.error("Error loading Stargrid matches chart:", error);
+            toggleChartLoader('stargridMatches', false);
         });
 
         loadVolumeChart('AOVolume').catch(error => {
@@ -867,6 +601,20 @@ async function initializeDashboard() {
         console.error('Error initializing dashboard:', error);
         toggleMainLoader(false); // Ensure loader is removed even if there's an error
     }
+}
+
+async function loadDevAddressCount() {
+  const url = "https://raw.githubusercontent.com/Jonny-Ringo/the_eye_of_AO/main/data/dev-addresses.csv";
+  try {
+    const response = await fetch(url);
+    const text = await response.text();
+    const addresses = text.trim().split(/\r?\n/).filter(line => line.length > 0);
+    const count = addresses.length;
+    document.getElementById('activeDevCount').textContent = count.toLocaleString();
+  } catch (err) {
+    console.error("Failed to load dev address count:", err);
+    document.getElementById('activeDevCount').textContent = "N/A";
+  }
 }
 
 /**
@@ -893,6 +641,33 @@ async function loadStargridChart() {
       console.error("Error loading Stargrid chart:", error);
     } finally {
       toggleChartLoader('stargrid', false);
+    }
+}
+
+/**
+ * Loads the Stargrid match types chart showing casual vs ranked matches
+ * @returns {Promise<void>} Resolves when chart is loaded
+ */
+async function loadStargridMatchesChart() {
+    try {
+        console.log("Loading Stargrid matches chart...");
+        toggleChartLoader('stargridMatches', true);
+        
+        const stargridData = await fetchStargridStats();
+        console.log(`Loaded Stargrid matches data: ${stargridData.length} points`);
+        
+        // Update historical data
+        if (stargridData.length > 0) {
+            historicalData['stargridMatches'] = stargridData;
+            
+            // Update the chart
+            const timeRange = getChartTimeRange('stargridMatches');
+            updateChartTimeRange('stargridMatches', timeRange);
+        }
+    } catch (error) {
+        console.error("Error loading Stargrid matches chart:", error);
+    } finally {
+        toggleChartLoader('stargridMatches', false);
     }
 }
 
@@ -1044,4 +819,4 @@ async function loadSupplyChart() {
 document.addEventListener('DOMContentLoaded', initializeDashboard);
 
 // Export for potential future use
-export { initializeDashboard, fetchAllData };
+export { initializeDashboard };
