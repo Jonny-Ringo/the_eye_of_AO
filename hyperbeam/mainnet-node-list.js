@@ -691,6 +691,15 @@ const mainnetNodes = [
         "lng": 8.1851,
         "location": "Lauterbourg, Grand Est, France",
         "country": "FR"
+    },
+    {
+        "hb": "http://194.233.86.27:10000/",
+        "cu": "--",
+        "proxy": true,
+        "lat": 1.2821,
+        "lng": 103.851,
+        "location": "Singapore, Central Singapore, Singapore",
+        "country": "SG"
     }
 ];
 

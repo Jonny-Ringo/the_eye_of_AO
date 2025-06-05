@@ -257,7 +257,7 @@
                         })
                         .pointResolution(10)
                         .pointLabel(d => this.createTooltip(d))
-                        .onPointClick(this.handlePointClick.bind(this))
+                        .onPointClick(null)
                         .onPointHover((node, prevNode) => {
                             // Clear any existing timeout
                             if (this.hoverTimeout) {
@@ -404,9 +404,6 @@
                 }
             }
 
-            handlePointClick(nodeData) {
-                this.showNodeInfo(nodeData);
-            }
 
             showNodeInfo(nodeData) {
                 const panel = document.getElementById('nodeInfo');
@@ -414,45 +411,26 @@
                 
                 const cuInfo = nodeData.cu && nodeData.cu !== "--" 
                     ? `<div style="margin-bottom: 8px;">
-                         <strong>CU Endpoint:</strong> 
-                         <a href="${nodeData.cu}" target="_blank" style="color: #60a5fa;">${nodeData.cu}</a>
-                       </div>`
+                        <strong>CU Endpoint:</strong> ${nodeData.cu}
+                    </div>`
                     : '';
                 
-                details.innerHTML = `
-                    <div style="margin-bottom: 15px;">
-                        <span class="node-status-indicator status-${nodeData.status}"></span>
-                        <strong>${nodeData.url}</strong>
-                    </div>
-                    <div style="margin-bottom: 8px;">
-                        <strong>Location:</strong> ${nodeData.location}
-                    </div>
-                    <div style="margin-bottom: 8px;">
-                        <strong>Status:</strong> ${nodeData.status.charAt(0).toUpperCase() + nodeData.status.slice(1)}
-                    </div>
-                    <div style="margin-bottom: 8px;">
-                        <strong>Coordinates:</strong> ${nodeData.lat.toFixed(4)}, ${nodeData.lng.toFixed(4)}
-                    </div>
-                    ${protocolInfo}
-                    ${cuInfo}
-                    <div style="margin-top: 15px; display: flex; gap: 8px; flex-wrap: wrap;">
-                        <button onclick="window.open('${nodeData.fullUrl}', '_blank')" 
-                                style="background: #6366f1; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 12px;">
-                            Visit HyperBEAM
-                        </button>
-                        ${nodeData.cu && nodeData.cu !== "--" 
-                            ? `<button onclick="window.open('${nodeData.cu}', '_blank')" 
-                                       style="background: #059669; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 12px;">
-                                Visit CU
-                               </button>`
-                            : ''
-                        }
-                        <button onclick="window.open('${nodeData.fullUrl}~meta@1.0/info', '_blank')" 
-                                style="background: #7c3aed; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 12px;">
-                            Node Info
-                        </button>
-                    </div>
-                `;
+                    details.innerHTML = `
+                        <div style="margin-bottom: 15px;">
+                            <span class="node-status-indicator status-${nodeData.status}"></span>
+                            <strong>${nodeData.url}</strong>
+                        </div>
+                        <div style="margin-bottom: 8px;">
+                            <strong>Location:</strong> ${nodeData.location}
+                        </div>
+                        <div style="margin-bottom: 8px;">
+                            <strong>Status:</strong> ${nodeData.status.charAt(0).toUpperCase() + nodeData.status.slice(1)}
+                        </div>
+                        <div style="margin-bottom: 8px;">
+                            <strong>Coordinates:</strong> ${nodeData.lat.toFixed(4)}, ${nodeData.lng.toFixed(4)}
+                        </div>
+                        ${cuInfo}
+                    `;
                 
                 panel.classList.add('visible');
             }
