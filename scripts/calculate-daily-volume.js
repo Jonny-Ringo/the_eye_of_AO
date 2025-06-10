@@ -142,7 +142,7 @@ async function calculateDailyVolume() {
   
   // IMPORTANT: Wait until exactly 2 minutes past the hour
   // This applies to both scheduled and manual runs
-  // await waitUntilExactTime(2);
+  await waitUntilExactTime(2);
   
   try {
     // 1. Load existing data or create default structure
