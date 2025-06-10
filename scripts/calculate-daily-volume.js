@@ -157,7 +157,7 @@ async function calculateDailyVolume() {
     
     // 2. Get current Arweave block height
     console.log('Fetching current Arweave block height...');
-    const response = await fetch('https://arweave.net/info');
+    const response = await fetch('https://arweave.net');
     const data = await response.json();
     const currentHeight = data.height;
     console.log(`Current Arweave block height: ${currentHeight}`);
