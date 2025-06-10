@@ -41,6 +41,26 @@ function insertHistoricalBlock(blockHeight, timestamp, isWeekly)
     end
 end
 
+-- Function to update existing block height by date
+function updateBlockHeightByDate(date, newBlockHeight)
+    local result = dbAdmin:apply([[
+        UPDATE DailyBlocks 
+        SET blockHeight = ? 
+        WHERE date = ?;
+    ]], {newBlockHeight, date})
+    
+    print(string.format("Updated block height for %s to %d", date, newBlockHeight))
+    
+    -- Sync state after update
+    local dailyBlocks = dbAdmin:select([[SELECT * FROM DailyBlocks ORDER BY timestamp DESC;]], {})
+    Send({ 
+      device = 'patch@1.0', 
+      cache = { 
+        dailyBlocks = dailyBlocks
+      } 
+    })
+end
+
 -- Sync state on spawn
 InitialSync = InitialSync or 'INCOMPLETE'
 if InitialSync == 'INCOMPLETE' then
