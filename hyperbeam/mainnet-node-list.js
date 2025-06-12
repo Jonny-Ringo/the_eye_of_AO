@@ -72,6 +72,15 @@ const mainnetNodes = [
         "country": "FI"
     },
     {
+        "hb": "https://hb.arnode.asia/",
+        "cu": " https://cu.arnode.asia/",
+        "proxy": false,
+        "lat": 19.0748,
+        "lng": 72.8856,
+        "location": "Mumbai, Maharashtra, India",
+        "country": "IN"
+    },
+    {
         "hb": "http://girls.onthewifi.com/",
         "cu": "--",
         "proxy": true,
@@ -97,15 +106,6 @@ const mainnetNodes = [
         "lng": 12.3649,
         "location": "Falkenstein, Saxony, Germany",
         "country": "DE"
-    },
-    {
-        "hb": "https://dai-gnostics.com/",
-        "cu": "http://dai-gnostics.com:6363/",
-        "proxy": true,
-        "lat": 37.7823,
-        "lng": -122.391,
-        "location": "San Francisco, California, United States",
-        "country": "US"
     },
     {
         "hb": "https://hb.arweave.asia/",
@@ -142,6 +142,15 @@ const mainnetNodes = [
         "lng": 4.40994,
         "location": "Rotterdam, South Holland, The Netherlands",
         "country": "NL"
+    },
+    {
+        "hb": "https://guez.dev/",
+        "cu": "--",
+        "proxy": false,
+        "lat": 51.1864,
+        "lng": 6.8624,
+        "location": "Düsseldorf, North Rhine-Westphalia, Germany",
+        "country": "DE"
     },
     {
         "hb": "https://vixanator-hb.ngrok.io/",
@@ -205,15 +214,6 @@ const mainnetNodes = [
         "lng": 12.3649,
         "location": "Falkenstein, Saxony, Germany",
         "country": "DE"
-    },
-    {
-        "hb": "http://94.136.191.183:10000/",
-        "cu": "--",
-        "proxy": true,
-        "lat": 19.0748,
-        "lng": 72.8856,
-        "location": "Mumbai, Maharashtra, India",
-        "country": "IN"
     },
     {
         "hb": "http://173.249.55.161/",

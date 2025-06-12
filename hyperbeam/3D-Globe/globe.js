@@ -256,7 +256,7 @@
                             return 0.1;
                         })
                         .pointResolution(10)
-                        .pointLabel(d => this.createTooltip(d))
+                        .pointLabel('')
                         .onPointClick(null)
                         .onPointHover((node, prevNode) => {
                             // Clear any existing timeout
@@ -271,14 +271,21 @@
                                 if (this.wasAutoRotating && this.globe && this.globe.controls()) {
                                     this.globe.controls().autoRotate = false;
                                 }
+                                this.showCustomTooltip(node);
                             }
-                            // When leaving a node hover - add delay
-                            else if (!node && prevNode && this.wasAutoRotating) {
+                            // When leaving a node hover - check tooltip hover before hiding
+                            else if (!node && prevNode) {
                                 this.hoverTimeout = setTimeout(() => {
-                                    if (this.globe && this.globe.controls()) {
-                                        this.globe.controls().autoRotate = true;
+                                    // Only hide if not hovering over tooltip
+                                    const tooltip = document.getElementById('custom-globe-tooltip');
+                                    if (!tooltip || !tooltip.matches(':hover')) {
+                                        this.hideCustomTooltip();
+                                        // Only restore auto-rotate if it was previously on
+                                        if (this.wasAutoRotating && this.globe && this.globe.controls()) {
+                                            this.globe.controls().autoRotate = true;
+                                        }
                                     }
-                                }, 100); // 200ms delay before resuming rotation
+                                }, 100);
                             }
                         })
 
@@ -404,6 +411,122 @@
                 }
             }
 
+showCustomTooltip(nodeData) {
+    // Remove any existing tooltip
+    this.hideCustomTooltip();
+    
+    // Get screen coordinates for the node
+    const coords = this.globe.getScreenCoords(nodeData.lat, nodeData.lng, nodeData.isCluster ? 0.02 : 0.05);
+    if (!coords) return;
+    
+    // Create tooltip element
+    const tooltip = document.createElement('div');
+    tooltip.id = 'custom-globe-tooltip';
+    tooltip.className = 'custom-globe-tooltip';
+    
+    const statusColor = this.getStatusColor(nodeData.status);
+    
+    let content;
+    if (nodeData.isCluster) {
+        // Cluster tooltip with clickable links
+        const { online, busy, offline } = nodeData.clusterStats;
+        
+        let nodeList = nodeData.allNodes.map(node => {
+            const nodeStatusColor = this.getStatusColor(node.status);
+            const hbUrl = node.fullUrl;
+            const cuUrl = node.cu !== '--' ? node.cu : null;
+            
+            return `
+                <div style="margin: 4px 0;">
+                    <div style="display: flex; align-items: center;">
+                        <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: ${nodeStatusColor}; margin-right: 6px;"></span>
+                        <a href="${hbUrl}" target="_blank" style="color: #60a5fa; text-decoration: none; font-size: 12px;">${node.url}</a>
+                        <span style="font-size: 11px; opacity: 0.7; margin-left: 4px;">(${node.status})</span>
+                    </div>
+                    ${cuUrl ? `<div style="margin-left: 20px; margin-top: 2px;">
+                        <a href="${cuUrl}" target="_blank" style="color: #a78bfa; text-decoration: none; font-size: 11px;">CU: ${cuUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')}</a>
+                    </div>` : ''}
+                </div>
+            `;
+        }).join('');
+        
+        content = `
+            <div style="font-weight: bold; margin-bottom: 8px;">
+                <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: ${statusColor}; margin-right: 8px;"></span>
+                ${nodeData.clusterSize} nodes in ${nodeData.location}
+            </div>
+            <div style="margin-bottom: 8px;">
+                <strong>Status Summary:</strong> ${online} online, ${busy} busy, ${offline} offline
+            </div>
+            <div style="max-height: 150px; overflow-y: auto; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 8px;">
+                ${nodeList}
+            </div>
+        `;
+    } else {
+        // Single node tooltip with clickable links
+        const hbUrl = nodeData.fullUrl;
+        const cuUrl = nodeData.cu !== '--' ? nodeData.cu : null;
+        
+        content = `
+            <div style="font-weight: bold; margin-bottom: 8px;">
+                <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: ${statusColor}; margin-right: 8px;"></span>
+                <a href="${hbUrl}" target="_blank" style="color: #60a5fa; text-decoration: none;">${nodeData.url}</a>
+            </div>
+            <div style="margin-bottom: 4px;"><strong>Location:</strong> ${nodeData.location}</div>
+            <div style="margin-bottom: 4px;"><strong>Status:</strong> ${nodeData.status.charAt(0).toUpperCase() + nodeData.status.slice(1)}</div>
+            ${cuUrl ? `<div style="margin-left: 16px; margin-top: 4px;">
+                <a href="${cuUrl}" target="_blank" style="color: #a78bfa; text-decoration: none;">CU: ${cuUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')}</a>
+            </div>` : '<div style="margin-left: 16px; color: #9ca3af;">CU: Not Available</div>'}
+        `;
+    }
+    
+    tooltip.innerHTML = content;
+    
+    // Position tooltip
+    tooltip.style.position = 'absolute';
+    tooltip.style.left = `${coords.x + 15}px`;
+    tooltip.style.top = `${coords.y - 10}px`;
+    tooltip.style.zIndex = '1000';
+    
+    // Add hover handlers to keep tooltip visible
+    let isHoveringTooltip = false;
+    let isHoveringNode = true;
+    
+    tooltip.addEventListener('mouseenter', () => {
+        isHoveringTooltip = true;
+    });
+    
+    tooltip.addEventListener('mouseleave', () => {
+        isHoveringTooltip = false;
+        setTimeout(() => {
+            // Double-check that we're still not hovering
+            const tooltipElement = document.getElementById('custom-globe-tooltip');
+            if (tooltipElement && !tooltipElement.matches(':hover')) {
+                this.hideCustomTooltip();
+                // Restore auto-rotate if it was on
+                if (this.wasAutoRotating && this.globe && this.globe.controls()) {
+                    this.globe.controls().autoRotate = true;
+                }
+            }
+        }, 100);
+    });
+    
+    // Store hover state
+    this.currentTooltipData = { isHoveringTooltip, isHoveringNode };
+    
+    document.body.appendChild(tooltip);
+}
+
+hideCustomTooltip() {
+    const existing = document.getElementById('custom-globe-tooltip');
+    if (existing) {
+        existing.remove();
+    }
+    if (this.currentTooltipData) {
+        this.currentTooltipData.isHoveringNode = false;
+    }
+}
+
 
             showNodeInfo(nodeData) {
                 const panel = document.getElementById('nodeInfo');
@@ -447,16 +570,33 @@
                 }
             }
 
-            updateStats() {
-                const online = this.nodeData.filter(n => n.status === 'online').length;
-                const busy = this.nodeData.filter(n => n.status === 'busy').length;
-                const offline = this.nodeData.filter(n => n.status === 'offline').length;
-                
-                document.getElementById('totalNodes').textContent = this.nodeData.length;
-                document.getElementById('onlineNodes').textContent = online;
-                document.getElementById('busyNodes').textContent = busy;
-                document.getElementById('offlineNodes').textContent = offline;
-            }
+updateStats() {
+    let totalNodes = 0;
+    let online = 0;
+    let busy = 0;
+    let offline = 0;
+    
+    this.nodeData.forEach(n => {
+        if (n.isCluster) {
+            // For clusters, count all nodes in the cluster
+            totalNodes += n.clusterSize;
+            online += n.clusterStats.online;
+            busy += n.clusterStats.busy;
+            offline += n.clusterStats.offline;
+        } else {
+            // For individual nodes, count as 1
+            totalNodes += 1;
+            if (n.status === 'online') online++;
+            else if (n.status === 'busy') busy++;
+            else if (n.status === 'offline') offline++;
+        }
+    });
+    
+    document.getElementById('totalNodes').textContent = totalNodes;
+    document.getElementById('onlineNodes').textContent = online;
+    document.getElementById('busyNodes').textContent = busy;
+    document.getElementById('offlineNodes').textContent = offline;
+}
 
             hideLoading() {
 
@@ -494,23 +634,19 @@
             }
         }
 
-        function toggleLabels() {
-            if (globe && globe.globe) {
-                try {
-                    globe.showLabels = !globe.showLabels;
-                    // Toggle label visibility by updating point labels
-                    if (globe.showLabels) {
-                        globe.globe.pointLabel(d => globe.createTooltip(d));
-                    } else {
-                        globe.globe.pointLabel('');
-                    }
-                    event.target.textContent = globe.showLabels ? 'Hide Node Labels' : 'Show Node Labels';
-                    event.target.classList.toggle('active', !globe.showLabels);
-                } catch (error) {
-                    console.warn('Error toggling labels:', error);
-                }
-            }
+function toggleLabels() {
+    if (globe && globe.globe) {
+        try {
+            globe.showLabels = !globe.showLabels;
+            // For custom tooltips, we just toggle a flag
+            // The actual show/hide is handled by hover events
+            event.target.textContent = globe.showLabels ? 'Hide Node Labels' : 'Show Node Labels';
+            event.target.classList.toggle('active', !globe.showLabels);
+        } catch (error) {
+            console.warn('Error toggling labels:', error);
         }
+    }
+}
 
         function toggleClouds() {
             if (globe && globe.globe) {

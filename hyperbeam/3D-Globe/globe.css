@@ -109,7 +109,7 @@
 
         .stats-panel {
             position: absolute;
-            top: 20px;
+            bottom: 20px;
             right: 20px;
             background: rgba(0, 0, 0, 0.8);
             backdrop-filter: blur(10px);
@@ -118,37 +118,29 @@
             color: white;
             min-width: 200px;
             pointer-events: auto;
+            z-index: 1000;
         }
 
         .stat-item {
             display: flex;
-            justify-content: space-between;
+            align-items: center;
             margin-bottom: 10px;
         }
 
-        .legend {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(10px);
-            border-radius: 12px;
-            padding: 15px;
-            color: white;
-            pointer-events: auto;
+        .stat-item .legend-color {
+            margin-right: 8px;
         }
 
-        .legend-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 8px;
+        .stat-item span:last-child {
+            margin-left: auto;
         }
+
 
         .legend-color {
             width: 12px;
             height: 12px;
             border-radius: 50%;
-            margin-right: 10px;
+            margin: 0px;
         }
 
         .back-btn {
@@ -199,15 +191,35 @@
 
         /* Custom tooltip styling */
         .globe-tooltip {
-            background: rgba(0, 0, 0, 0.9) !important;
-            color: white !important;
-            padding: 10px !important;
-            border-radius: 8px !important;
-            font-family: 'Inter', sans-serif !important;
-            font-size: 14px !important;
-            border: 1px solid rgba(255, 255, 255, 0.2) !important;
-            backdrop-filter: blur(10px) !important;
+        background: rgba(0, 0, 0, 0.95);
+        color: white;
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid rgba(255,255,255,0.2);
+        font-family: 'Inter', sans-serif;
+        font-size: 13px;
+        pointer-events: auto;
+        max-width: 300px;
+        backdrop-filter: blur(8px);
         }
+
+        .custom-globe-tooltip {
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            max-width: 300px;
+            pointer-events: auto;
+        }
+
+        .custom-globe-tooltip a:hover {
+            text-decoration: underline;
+        }
+
 
         @media (max-width: 768px) {
             .globe-header {
