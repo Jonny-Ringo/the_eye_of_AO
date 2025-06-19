@@ -2,11 +2,13 @@
 import { mainnetNodes } from './mainnet-node-list.js';
 import { updateSummary } from './hyperbeam-uptime.js';
 
+const proxyURL = "https://hyperbeam-uptime.xyz/?url=";
+
 // Configuration
 const config = {
     checkTimeout: 10000, // Timeout for each check (ms)
     busyTimeout: 2000,   // Time to mark as busy (ms)
-    autoRefreshInterval: 1200000 // Auto-refresh every 20 minutes
+    autoRefreshInterval: 300000   // Auto-refresh every 5 minutes
 };
 
 // State
@@ -52,10 +54,6 @@ function updateLastCheckedTime() {
 
 function checkAllMainnetNodes() {
     const mainnetStatusContainer = document.getElementById('mainnetStatusContainer');
-    if (!mainnetStatusContainer) {
-        console.warn("Mainnet status container not found. Cannot check mainnet nodes.");
-        return;
-    }
     
     console.log("Starting mainnet node check...");
     
@@ -73,24 +71,21 @@ function checkAllMainnetNodes() {
     cuNodesTotal = mainnetNodes.filter(node => node.cu && node.cu !== "--").length;
     cuNodesOnline = 0; // Will be incremented as nodes are checked
     
-    let checkedHBcount = 0;
-    let checkedCUcount = 0;
-    
-    console.log(`Checking ${mainnetNodes.length} mainnet nodes with ${cuNodesTotal} CU nodes...`);
-    
-    // Check all mainnet nodes and their corresponding CUs
-    mainnetNodes.forEach((node, index) => {
-        const hbNodeUrl = node.proxy
-            ? `https://node-checker-test.ravensnestx16r.workers.dev/?url=${node.hb}`
-            : node.hb;
+        let checkedHBcount = 0;
+        let checkedCUcount = 0;
+        let totalChecked = 0;
+        const totalNodes = mainnetNodes.length;
+
+        console.log(`Checking ${mainnetNodes.length} mainnet nodes with ${cuNodesTotal} CU nodes...`);
+
+        // Check all mainnet nodes and their corresponding CUs
+        mainnetNodes.forEach((node, index) => {
+        const hbNodeUrl = `${proxyURL}${node.hb}`;
     
         const cuNodeUrl = node.cu && node.cu !== "--"
-            ? (node.proxy
-                ? `https://node-checker-test.ravensnestx16r.workers.dev/?url=${node.cu}`
-                : node.cu)
+            ? `${proxyURL}${node.cu}`
             : "--";
-    
-        console.log(`Checking node pair: ${hbNodeUrl} and ${cuNodeUrl}`);
+
     
         checkMainnetNodePair(
             hbNodeUrl,
@@ -99,15 +94,22 @@ function checkAllMainnetNodes() {
             node.cu,
             mainnetStatusContainer,
             (hbOnline, cuOnline) => {
-          
+            
             checkedHBcount++;
             if (hbOnline) mainnetNodesOnline++;
-    
+
             if (node.cu !== "--") {
                 checkedCUcount++;
                 if (cuOnline) cuNodesOnline++;
             }
-    
+
+            totalChecked++;
+            
+            // Sort when all nodes are checked
+            if (totalChecked === totalNodes) {
+                setTimeout(() => sortNodeCards(mainnetStatusContainer), 100);
+            }
+
             updateSummary();
         });
     });
@@ -186,7 +188,7 @@ function checkMainnetNodePair(hbNodeUrl, cuNodeUrl, hbDisplayName, cuDisplayName
 }
 
 function unwrapProxiedUrl(url) {
-    if (url.includes("node-checker-test.ravensnestx16r.workers.dev/?url=")) {
+    if (url.includes(proxyURL)) {
         return decodeURIComponent(url.split("url=")[1]);
     }
     return url;
@@ -196,7 +198,6 @@ function unwrapProxiedUrl(url) {
 
 // Function to check HyperBEAM nodes
 function checkHyperBeamNodeStatus(nodeUrl, nodeCard, callback) {
-    const isProxied = nodeUrl.includes("node-checker");
     const busyTimeout = config.busyTimeout;
     const offlineTimeout = config.checkTimeout;
     const startTime = performance.now();
@@ -220,54 +221,49 @@ function checkHyperBeamNodeStatus(nodeUrl, nodeCard, callback) {
         if (callback) callback(false);
     }, offlineTimeout);
 
-    const fetchOptions = {
-        method: isProxied ? 'GET' : 'HEAD',
+    fetch(nodeUrl, {
+        method: 'GET',
         signal: controller.signal,
-        mode: isProxied ? 'cors' : 'no-cors',
+        mode: 'cors',
         credentials: 'omit'
-    };
+    })
+    .then(res => res.json())
+    .then(data => {
+        clearTimeout(busyTimeoutId);
+        clearTimeout(offlineTimeoutId);
+        const endTime = performance.now();
+        const responseTime = (endTime - startTime).toFixed(0);
 
-    fetch(nodeUrl, fetchOptions)
-        .then(res => isProxied ? res.json() : res)
-        .then(data => {
-            clearTimeout(busyTimeoutId);
-            clearTimeout(offlineTimeoutId);
-            const endTime = performance.now();
-            const responseTime = (endTime - startTime).toFixed(0);
+        const isOnline = data.online === true;
+        const serverResponseTime = data.responseTime || responseTime;
+        const status = parseInt(serverResponseTime) > busyTimeout ? 'busy' : 'online';
 
-            const isOnline = isProxied ? data.online === true : true;
-            const status = parseInt(responseTime) > busyTimeout ? 'busy' : 'online';
-
-            if (isOnline) {
-                statusIndicator.className = `status-indicator ${status}`;
-                statusText.textContent = status === 'online' ? 'Online' : 'Busy';
-                responseTimeEl.textContent = `Response time: ${responseTime}ms`;
-                if (callback) callback(true);
-            } else {
-                statusIndicator.className = 'status-indicator unavailable';
-                statusText.textContent = 'Unavailable';
-                responseTimeEl.textContent = 'Offline';
-                if (callback) callback(false);
-            }
-        })
-        .catch(error => {
-            clearTimeout(busyTimeoutId);
-            clearTimeout(offlineTimeoutId);
-            console.error(`Error checking HB node ${nodeUrl}:`, error.message);
+        if (isOnline) {
+            statusIndicator.className = `status-indicator ${status}`;
+            statusText.textContent = status === 'online' ? 'Online' : 'Busy';
+            responseTimeEl.textContent = `Response time: ${serverResponseTime}ms`;
+            if (callback) callback(true);
+        } else {
             statusIndicator.className = 'status-indicator unavailable';
             statusText.textContent = 'Unavailable';
-            responseTimeEl.textContent = 'Error';
+            responseTimeEl.textContent = 'Offline';
             if (callback) callback(false);
-        });
+        }
+    })
+    .catch(error => {
+        clearTimeout(busyTimeoutId);
+        clearTimeout(offlineTimeoutId);
+        console.error(`❌ Error checking HB node ${nodeUrl}:`, error.message);
+        statusIndicator.className = 'status-indicator unavailable';
+        statusText.textContent = 'Unavailable';
+        responseTimeEl.textContent = 'Error';
+        if (callback) callback(false);
+    });
 }
 
 
 function checkCuNodeStatus(nodeUrl, nodeCard, callback) {
-    if (nodeUrl.includes("node-checker")) {
-        checkCuViaWorker(nodeUrl, nodeCard, callback);
-    } else {
-        checkCuDirectHttps(nodeUrl, nodeCard, callback);
-    }
+    checkCuViaWorker(nodeUrl, nodeCard, callback);
 }
 
 function checkCuViaWorker(nodeUrl, nodeCard, callback) {
@@ -292,8 +288,16 @@ function checkCuViaWorker(nodeUrl, nodeCard, callback) {
             return markCuOffline();
         }
 
-        const isOnline = data.online === true && data.status >= 200 && data.status < 500;
-        updateCuDisplay(isOnline, responseTime, nodeCard, callback);
+        // Handle cached response format from your server
+        if (data.cached) {
+            // Use server's cached result
+            const isOnline = data.online === true;
+            const serverResponseTime = data.responseTime || 'Unknown';
+            updateCuDisplay(isOnline, serverResponseTime, nodeCard, callback);
+        } else {
+            // Fallback to old format (shouldn't happen with new server)
+            console.warn(`⚠️ CU Proxy response not cached for ${nodeUrl}`);
+        }
     })
     .catch(err => {
         console.error(`[CU Proxy ERROR] ${nodeUrl}`, err.message);
@@ -305,38 +309,41 @@ function checkCuViaWorker(nodeUrl, nodeCard, callback) {
     }
 }
 
-
+/*
 function checkCuDirectHttps(nodeUrl, nodeCard, callback) {
     const startTime = performance.now();
     const controller = new AbortController();
 
+    // Try normal fetch first to get real status codes
     fetch(nodeUrl, {
         method: 'HEAD',
         signal: controller.signal,
-        mode: 'no-cors',
         credentials: 'omit'
+        // No mode specified = normal fetch
     })
-    .then(() => {
+    .then(response => {
         const endTime = performance.now();
         const responseTime = (endTime - startTime).toFixed(0);
-
-        updateCuDisplay(true, responseTime, nodeCard, callback);
+        
+        // Now we can read actual status codes!
+        const isOnline = response.status >= 200 && response.status < 400;
+        updateCuDisplay(isOnline, responseTime, nodeCard, callback);
     })
     .catch(err => {
         const endTime = performance.now();
         const responseTime = (endTime - startTime).toFixed(0);
 
-        // Treat opaque failures (CORS) as online
-        const isCorsRelated = [
-            'Failed to fetch',
-            'NotSameOrigin',
-            'CORS'
-        ].some(msg => err.message.includes(msg));
-
-        updateCuDisplay(isCorsRelated, responseTime, nodeCard, callback);
+        // Check if it's just a CORS issue (server is up but blocking)
+        if (err.message.includes('CORS') || err.message.includes('NetworkError')) {
+            console.log(`⚠️ CORS blocked ${nodeUrl}, assuming online`);
+            updateCuDisplay(true, responseTime, nodeCard, callback);
+        } else {
+            console.log(`✗ Failed ${nodeUrl}: ${err.message}`);
+            updateCuDisplay(false, responseTime, nodeCard, callback);
+        }
     });
 }
-
+*/
 
 function updateCuDisplay(isOnline, responseTime, nodeCard, callback) {
     const statusIndicator = nodeCard.querySelector('.cu-status-container .status-indicator');
@@ -356,6 +363,41 @@ function updateCuDisplay(isOnline, responseTime, nodeCard, callback) {
     }
 }
 
+function sortNodeCards(container) {
+    const cards = Array.from(container.children);
+    
+    cards.sort((a, b) => {
+        // Get status from the cards
+        const getStatus = (card) => {
+            const statusEl = card.querySelector('.status-indicator');
+            if (statusEl.classList.contains('online')) return 1;
+            if (statusEl.classList.contains('busy')) return 2;
+            if (statusEl.classList.contains('unavailable')) return 3;
+            return 4; // loading/unknown
+        };
+        
+        // Get protocol (HTTPS=1, HTTP=2)
+        const getProtocol = (card) => {
+            const nodeName = card.querySelector('.node-name').textContent;
+            // Check if it's an IP or contains port (usually HTTP)
+            return /\d+\.\d+\.\d+\.\d+|:\d+/.test(nodeName) ? 2 : 1;
+        };
+        
+        const statusA = getStatus(a);
+        const statusB = getStatus(b);
+        
+        // Primary sort: status (online first)
+        if (statusA !== statusB) {
+            return statusA - statusB;
+        }
+        
+        // Secondary sort: protocol (HTTPS first)
+        return getProtocol(a) - getProtocol(b);
+    });
+    
+    // Re-append in sorted order
+    cards.forEach(card => container.appendChild(card));
+}
 
 
 
