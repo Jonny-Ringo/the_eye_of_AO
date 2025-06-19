@@ -125,8 +125,6 @@ function initializeApp() {
     const mainnetStatusContainer = document.getElementById('mainnetStatusContainer');
     
     if (mainnetContent) {
-        console.log("Mainnet content found:", mainnetContent);
-        console.log("Mainnet status container:", mainnetStatusContainer);
         
         if (!mainnetStatusContainer) {
             console.warn("Mainnet status container is missing! Creating it...");

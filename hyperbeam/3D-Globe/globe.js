@@ -3,11 +3,13 @@
        // Globe application using globe.gl
         class HyperBEAMGlobe {
             constructor() {
+                this.proxyURL = "https://hyperbeam-uptime.xyz/?url=";
                 this.globe = null;
                 this.nodeData = [];
                 this.showLabels = true;
                 this.showClouds = false;
                 this.autoRotate = true;
+                this.refreshTimer = null;
                 this.init();
             }
 
@@ -149,74 +151,44 @@
                 }
             }
 
-            async checkNodeStatus(nodeUrl, isProxy = false) {
-                try {
-                    const busyTimeout = 2000;
-                    const offlineTimeout = 10000;
-                    const startTime = performance.now();
-                    const controller = new AbortController();
+async checkNodeStatus(nodeUrl, isProxy = false) {
+    try {
+        const busyTimeout = 2000;
+        const offlineTimeout = 10000;
+        const controller = new AbortController();
 
-                    // Use proxy worker for HTTP nodes or when proxy flag is true
-                    const shouldUseProxy = isProxy || nodeUrl.startsWith('http://');
-                    const urlToCheck = shouldUseProxy 
-                        ? `https://node-checker-test.ravensnestx16r.workers.dev/?url=${nodeUrl}`
-                        : nodeUrl;
+        // Always use proxy now
+        const urlToCheck = `${this.proxyURL}${nodeUrl}`;
 
-                    const fetchOptions = {
-                        method: shouldUseProxy ? 'GET' : 'HEAD',
-                        signal: controller.signal,
-                        mode: shouldUseProxy ? 'cors' : 'no-cors',
-                        credentials: 'omit'
-                    };
+        const timeoutId = setTimeout(() => controller.abort(), offlineTimeout);
 
-                    const timeoutId = setTimeout(() => controller.abort(), offlineTimeout);
+        const response = await fetch(urlToCheck, {
+            method: 'GET',
+            signal: controller.signal,
+            mode: 'cors',
+            credentials: 'omit'
+        });
+        clearTimeout(timeoutId);
 
-                    const response = await fetch(urlToCheck, fetchOptions);
-                    clearTimeout(timeoutId);
-                    
-                    const endTime = performance.now();
-                    const responseTime = (endTime - startTime).toFixed(0);
+        // Handle proxy response (JSON)
+        const data = await response.json();
+        const isOnline = data.online === true;
 
-                    if (shouldUseProxy) {
-                        // Handle proxy response (JSON)
-                        const data = await response.json();
-                        const isOnline = data.online === true;
-                        if (isOnline) {
-                            return parseInt(responseTime) > busyTimeout ? 'busy' : 'online';
-                        } else {
-                            return 'offline';
-                        }
-                    } else {
-                        // Handle direct response
-                        return parseInt(responseTime) > busyTimeout ? 'busy' : 'online';
-                    }
+        if (isOnline) {
+            // Use the actual node response time from proxy data
+            return parseInt(data.responseTime) > busyTimeout ? 'busy' : 'online';
+        } else {
+            return 'offline';
+        }
 
-                    } catch (error) {
-                        if (error.name === 'AbortError') {
-                            return 'busy'; // Timeout suggests slow/busy
-                        }
-                        
-                        // Check for certificate errors - these should be offline
-                        if (error.message.includes('ERR_CERT') || 
-                            error.message.includes('certificate') ||
-                            error.message.includes('SSL') ||
-                            error.message.includes('TLS')) {
-                            return 'offline';
-                        }
-                        
-                        // For CORS errors on direct requests, assume online (server responded but blocked)
-                        if (error.message.includes('CORS')) {
-                            return 'online';
-                        }
-                        
-                        // Generic "Failed to fetch" could be either CORS or network - be conservative
-                        if (error.message.includes('Failed to fetch')) {
-                            return 'offline'; // Changed this to be more conservative
-                        }
-                        
-                        return 'offline';
-                    }
-            }
+    } catch (error) {
+        if (error.name === 'AbortError') {
+            return 'busy'; // Timeout suggests slow/busy
+        }
+        console.warn(`Error checking node ${nodeUrl}:`, error.message);
+        return 'offline';
+    }
+}
 
             createGlobe() {
                 try {
@@ -599,6 +571,17 @@ updateStats() {
 }
 
             hideLoading() {
+                // Start 5-minute refresh timer
+                this.refreshTimer = setInterval(() => {
+                    console.log('🔄 Refreshing nodes...');
+                    this.loadNodeData().then(() => {
+                        // Update the globe visualization with new data
+                        this.globe.pointsData(this.nodeData);
+                        this.globe.ringsData(this.nodeData);
+                    });
+                }, 5 * 60 * 1000); // 5 minutes
+                
+                console.log('⏰ Auto-refresh timer started (5 minutes)');
 
                 const autoRotateBtn = document.querySelector('.control-btn');
                 if (autoRotateBtn && this.autoRotate) {
