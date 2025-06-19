@@ -48,7 +48,7 @@ export const PROCESSES = {
     },
     USDATransfer: {
         description: "USDA Token Transfer",
-        fromProcess: ["o2eqRo_mwJrvToPyeZf7igiJOJz-efODYq3m6ufb4HM"],
+        fromProcess: ["FBt9A5GA_KXMMSxA2DJ0xZbAq8sLLU2ak-YJe9zDvg8"],
         action: "Credit-Notice",
         displayName: "USDA Transfers"
     },

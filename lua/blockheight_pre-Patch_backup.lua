@@ -41,74 +41,6 @@ function insertHistoricalBlock(blockHeight, timestamp, isWeekly)
     end
 end
 
--- Function to update existing block height by date
-function updateBlockHeightByDate(date, newBlockHeight)
-    local result = dbAdmin:apply([[
-        UPDATE DailyBlocks 
-        SET blockHeight = ? 
-        WHERE date = ?;
-    ]], {newBlockHeight, date})
-    
-    print(string.format("Updated block height for %s to %d", date, newBlockHeight))
-    
-    -- Sync state after update
-    local dailyBlocks = dbAdmin:select([[SELECT * FROM DailyBlocks ORDER BY timestamp DESC;]], {})
-    Send({ 
-      device = 'patch@1.0', 
-      cache = { 
-        dailyBlocks = dailyBlocks
-      } 
-    })
-end
-
--- Sync state on spawn
-InitialSync = InitialSync or 'INCOMPLETE'
-if InitialSync == 'INCOMPLETE' then
-  -- Get current blocks data
-  local recentBlocks = dbAdmin:select([[SELECT * FROM RecentBlocks ORDER BY timestamp DESC;]], {})
-  local dailyBlocks = dbAdmin:select([[SELECT * FROM DailyBlocks ORDER BY timestamp DESC;]], {})
-  local weeklyBlocks = dbAdmin:select([[SELECT * FROM WeeklyBlocks ORDER BY timestamp DESC;]], {})
-  
-  -- Create the cache data structure
-  local cacheData = { 
-    recentBlocks = recentBlocks,
-    dailyBlocks = dailyBlocks,
-    weeklyBlocks = weeklyBlocks
-  }
-  
-  -- Send initial state with JSON encoding
-  Send({ 
-    device = 'patch@1.0', 
-    cache = json.encode(cacheData)  -- Encode the entire structure as a JSON string
-  })
-  
-  InitialSync = 'COMPLETE'
-  print("Initial state sync complete")
-end
-
--- Function to sync all block data
-function syncAllBlockData()
-  -- Get current blocks data
-  local recentBlocks = dbAdmin:select([[SELECT * FROM RecentBlocks ORDER BY timestamp DESC;]], {})
-  local dailyBlocks = dbAdmin:select([[SELECT * FROM DailyBlocks ORDER BY timestamp DESC;]], {})
-  local weeklyBlocks = dbAdmin:select([[SELECT * FROM WeeklyBlocks ORDER BY timestamp DESC;]], {})
-  
-  -- Create the cache data structure
-  local cacheData = { 
-    recentBlocks = recentBlocks,
-    dailyBlocks = dailyBlocks,
-    weeklyBlocks = weeklyBlocks
-  }
-  
-  -- Send state with JSON encoding
-  Send({ 
-    device = 'patch@1.0', 
-    cache = json.encode(cacheData)  -- Encode the entire structure as a JSON string
-  })
-  
-  print("Block data sync complete")
-end
-
 -- Function to print current blocks data
 function printBlocks()
     local dailyBlocks = dbAdmin:select([[
@@ -166,7 +98,6 @@ local function findClosestToMidnight(blocks, targetTimestamp)
     return closestBlock
 end
 
--- Process Cron messages
 -- Process Cron messages
 Handlers.add('cron',
     function(m) return m.Action == "Cron" end,
@@ -237,18 +168,12 @@ Handlers.add('cron',
             print(string.format("Inserted daily block %d for date %s", adjustedBlockHeight, nextDate))
             
             -- Sync state only after successfully inserting a daily block
-            -- Sync state only after successfully inserting a daily block
             local dailyBlocks = dbAdmin:select([[SELECT * FROM DailyBlocks ORDER BY timestamp DESC;]], {})
-
-            -- Create the cache data structure
-            local cacheData = { 
-                dailyBlocks = dailyBlocks
-            }
-
-            -- Send the updated state with JSON encoding
             Send({ 
-                device = 'patch@1.0', 
-                cache = json.encode(cacheData)  -- Encode the entire structure as a JSON string
+              device = 'patch@1.0', 
+              cache = { 
+                dailyBlocks = dailyBlocks
+              } 
             })
         else
             print("No suitable block found for the target date.")

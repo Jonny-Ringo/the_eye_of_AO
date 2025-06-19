@@ -54,6 +54,29 @@
             </button>
             </div>
 
+            <div class="stats-panel" id="statsPanel">
+                <h3 style="margin-top: 0;">Network Status</h3>
+                <div class="stat-item">
+                    <span>Total Nodes:</span>
+                    <span id="totalNodes">-</span>
+                </div>
+                <div class="stat-item">
+                    <div class="legend-color status-online"></div>
+                    <span>Online:</span>
+                    <span id="onlineNodes" style="color: #10b981;">-</span>
+                </div>
+                <div class="stat-item">
+                    <div class="legend-color status-busy"></div>
+                    <span>Busy:</span>
+                    <span id="busyNodes" style="color: #f59e0b;">-</span>
+                </div>
+                <div class="stat-item">
+                    <div class="legend-color status-offline"></div>
+                    <span>Offline:</span>
+                    <span id="offlineNodes" style="color: #ef4444;">-</span>
+                </div>
+            </div>
+
     <div id="globe-container">
         <div class="globe-ui">
             <div class="loading" id="loading">
@@ -62,43 +85,7 @@
                 <div style="font-size: 0.9rem; opacity: 0.8; margin-top: 10px;">Fetching real-time node status</div>
             </div>
             
-            
 
-            
-            <div class="stats-panel" style="display: none;" id="statsPanel">
-                <h3 style="margin-top: 0;">Network Status</h3>
-                <div class="stat-item">
-                    <span>Total Nodes:</span>
-                    <span id="totalNodes">-</span>
-                </div>
-                <div class="stat-item">
-                    <span>Online:</span>
-                    <span id="onlineNodes" style="color: #10b981;">-</span>
-                </div>
-                <div class="stat-item">
-                    <span>Busy:</span>
-                    <span id="busyNodes" style="color: #f59e0b;">-</span>
-                </div>
-                <div class="stat-item">
-                    <span>Offline:</span>
-                    <span id="offlineNodes" style="color: #ef4444;">-</span>
-                </div>
-            </div>
-            
-            <div class="legend" style="display: none;" id="legend">
-                <div class="legend-item">
-                    <div class="legend-color status-online"></div>
-                    <span>Online</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color status-busy"></div>
-                    <span>Busy</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color status-offline"></div>
-                    <span>Offline</span>
-                </div>
-            </div>
             
             <div class="node-info-panel" id="nodeInfo">
                 <div class="node-info-header">
