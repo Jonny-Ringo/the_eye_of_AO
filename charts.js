@@ -4,7 +4,7 @@
 import { CHART_COLORS, CHART_DEFAULTS, TIME_FORMAT, UTC_TIMESTAMP_PROCESSES, NON_UTC_TIMESTAMP_PROCESSES } from './config.js';
 import { formatDate, formatDateUTCWithLocalTime, filterDataByTimeRange } from './utils.js';
 import { getProcessDisplayName } from './processes.js';
-import { setupTimeRangeButtons, toggleChartLoader, getChartTimeRange } from './ui.js';
+import { setupTimeRangeButtons, toggleChartLoader, getChartTimeRange, toggleModalLoader, chartTimeRanges } from './ui.js';
 import { fetchStargridStats, fetchVolumeData } from './api.js'
 import { fetchAdditionalData, updateVolumeChart, updateSupplyChart } from './index.js'
 
@@ -967,3 +967,140 @@ function removeDuplicateDates(data, isWeekly = false) {
     
     return sortedResult;
 }
+
+// Chart Modal Functionality
+let modalChart = null;
+let originalChart = null;
+
+export function openChartModal(processName) {
+    const originalCanvas = document.getElementById(`${processName}Chart`);
+    const originalChart = charts[processName];
+    
+    if (!originalChart || !originalCanvas) {
+        console.error(`Chart not found: ${processName}`);
+        return;
+    }
+    
+    // Show modal
+    const modal = document.getElementById('chartModal');
+    const modalTitle = document.getElementById('chartModalTitle');
+    const modalCanvas = document.getElementById('chartModalCanvas');
+    const modalActions = document.getElementById('chartModalActions');
+    
+    modalTitle.textContent = originalChart.data.datasets[0]?.label || processName;
+    
+    // Clone chart action buttons
+    const originalChartCard = originalCanvas.closest('.chart-card');
+    const originalActions = originalChartCard?.querySelector('.chart-actions');
+    
+    if (originalActions) {
+        // Clear existing modal actions
+        modalActions.innerHTML = '';
+        
+        // Clone each button
+        const buttons = originalActions.querySelectorAll('.chart-action-btn');
+        buttons.forEach((button, index) => {
+            const clonedButton = button.cloneNode(true);
+            
+            // Simple click handler that triggers the original button
+            clonedButton.addEventListener('click', async () => {
+                toggleModalLoader(true);
+
+                // Update button state
+                modalActions.querySelectorAll('.chart-action-btn').forEach(btn =>
+                    btn.classList.remove('active')
+                );
+                clonedButton.classList.add('active');
+
+                // Determine selected time range
+                const timeRange = clonedButton.textContent.trim();
+                chartTimeRanges[processName] = timeRange;
+
+                try {
+                    // Fetch data just like in dashboard
+                    if (['1M', '3M'].includes(timeRange)) {
+                        await fetchChartData(processName, timeRange);
+                    } else {
+                        await updateChartTimeRange(processName, timeRange);
+                    }
+
+                    // Update modal chart
+                    if (modalChart) modalChart.destroy();
+                    const ctx = modalCanvas.getContext('2d');
+                    const config = {
+                        type: originalChart.config.type,
+                        data: JSON.parse(JSON.stringify(originalChart.data)),
+                        options: JSON.parse(JSON.stringify(originalChart.options))
+                    };
+                    modalChart = new Chart(ctx, config);
+                } catch (e) {
+                    console.error(`Error updating modal chart for ${processName}:`, e);
+                } finally {
+                    toggleModalLoader(false);
+                }
+            });
+
+            
+            modalActions.appendChild(clonedButton);
+        });
+        
+        // Set active button in modal to match original
+        const activeButton = originalActions.querySelector('.chart-action-btn.active');
+        if (activeButton) {
+            const activeIndex = Array.from(buttons).indexOf(activeButton);
+            const modalButtons = modalActions.querySelectorAll('.chart-action-btn');
+            if (modalButtons[activeIndex]) {
+                modalButtons[activeIndex].classList.add('active');
+            }
+        }
+    }
+    
+    modal.classList.add('active');
+    
+    // Create new chart instance in modal
+    const ctx = modalCanvas.getContext('2d');
+    
+    // Clone the chart configuration
+    const config = {
+        type: originalChart.config.type,
+        data: JSON.parse(JSON.stringify(originalChart.data)),
+        options: JSON.parse(JSON.stringify(originalChart.options))
+    };
+    
+    modalChart = new Chart(ctx, config);
+    
+    // Prevent body scrolling
+    document.body.style.overflow = 'hidden';
+}
+
+export function closeChartModal() {
+    const modal = document.getElementById('chartModal');
+    modal.classList.remove('active');
+    
+    // Destroy modal chart
+    if (modalChart) {
+        modalChart.destroy();
+        modalChart = null;
+    }
+    
+    // Restore body scrolling
+    document.body.style.overflow = '';
+}
+
+// Add to global scope for onclick handlers
+window.openChartModal = openChartModal;
+window.closeChartModal = closeChartModal;
+
+// Handle escape key
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && document.getElementById('chartModal').classList.contains('active')) {
+        closeChartModal();
+    }
+});
+
+// Handle modal backdrop click
+document.getElementById('chartModal')?.addEventListener('click', (e) => {
+    if (e.target.classList.contains('chart-modal')) {
+        closeChartModal();
+    }
+});
