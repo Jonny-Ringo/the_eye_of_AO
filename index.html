@@ -150,6 +150,7 @@
                         <div class="chart-container">
                             <canvas id="AOTransferChart"></canvas>
                         </div>
+                        <a href="#" class="chart-fullscreen-link" onclick="openChartModal('AOTransfer'); return false;">Fullscreen view</a>
                         <div class="chart-actions">
                             <button class="chart-action-btn">1W</button>
                             <button class="chart-action-btn">1M</button>
@@ -171,6 +172,7 @@
                         <div class="chart-container">
                             <canvas id="AOVolumeChart"></canvas>
                         </div>
+                        <a href="#" class="chart-fullscreen-link" onclick="openChartModal('AOVolume'); return false;">Fullscreen view</a>
                         <div class="chart-actions">
                             <button class="chart-action-btn">1W</button>
                             <button class="chart-action-btn">1M</button>
@@ -192,6 +194,7 @@
                         <div class="chart-container">
                             <canvas id="wUSDCTransferChart"></canvas>
                         </div>
+                        <a href="#" class="chart-fullscreen-link" onclick="openChartModal('wUSDCTransfer'); return false;">Fullscreen view</a>
                         <div class="chart-actions">
                             <button class="chart-action-btn">1W</button>
                             <button class="chart-action-btn">1M</button>
@@ -212,6 +215,7 @@
                         <div class="chart-container">
                             <canvas id="wUSDCVolumeChart"></canvas>
                         </div>
+                        <a href="#" class="chart-fullscreen-link" onclick="openChartModal('wUSDCVolume'); return false;">Fullscreen view</a>
                         <div class="chart-actions">
                             <button class="chart-action-btn">1W</button>
                             <button class="chart-action-btn">1M</button>
@@ -234,6 +238,7 @@
                         <div class="chart-container">
                             <canvas id="wARTransferChart"></canvas>
                         </div>
+                        <a href="#" class="chart-fullscreen-link" onclick="openChartModal('wARTransfer'); return false;">Fullscreen view</a>
                         <div class="chart-actions">
                             <button class="chart-action-btn">1W</button>
                             <button class="chart-action-btn">1M</button>
@@ -255,6 +260,7 @@
                         <div class="chart-container">
                             <canvas id="wARVolumeChart"></canvas>
                         </div>
+                        <a href="#" class="chart-fullscreen-link" onclick="openChartModal('wARVolume'); return false;">Fullscreen view</a>
                         <div class="chart-actions">
                             <button class="chart-action-btn">1W</button>
                             <button class="chart-action-btn">1M</button>
@@ -277,6 +283,7 @@
                         <div class="chart-container">
                             <canvas id="wARweeklyTransferChart"></canvas>
                         </div>
+                        <a href="#" class="chart-fullscreen-link" onclick="openChartModal('wARweeklyTransfer'); return false;">Fullscreen view</a>
                         <div class="chart-actions">
                             <button class="chart-action-btn">1W</button>
                             <button class="chart-action-btn">1M</button>
@@ -297,6 +304,7 @@
                         <div class="chart-container">
                             <canvas id="wARTotalSupplyChart"></canvas>
                         </div>
+                        <a href="#" class="chart-fullscreen-link" onclick="openChartModal('wARTotalSupply'); return false;">Fullscreen view</a>
                         <div class="chart-actions">
                             <button class="chart-action-btn">1W</button>
                             <button class="chart-action-btn">1M</button>
@@ -318,6 +326,7 @@
                         <div class="chart-container">
                             <canvas id="permaswapChart"></canvas>
                         </div>
+                        <a href="#" class="chart-fullscreen-link" onclick="openChartModal('permaswap'); return false;">Fullscreen view</a>
                         <div class="chart-actions">
                             <button class="chart-action-btn">1W</button>
                             <button class="chart-action-btn">1M</button>
@@ -338,6 +347,7 @@
                         <div class="chart-container">
                             <canvas id="botegaChart"></canvas>
                         </div>
+                        <a href="#" class="chart-fullscreen-link" onclick="openChartModal('botega'); return false;">Fullscreen view</a>
                         <div class="chart-actions">
                             <button class="chart-action-btn">1W</button>
                             <button class="chart-action-btn">1M</button>
@@ -358,6 +368,7 @@
                         <div class="chart-container">
                             <canvas id="bazarAADailyChart"></canvas>
                         </div>
+                        <a href="#" class="chart-fullscreen-link" onclick="openChartModal('bazarAADaily'); return false;">Fullscreen view</a>
                         <div class="chart-actions">
                             <button class="chart-action-btn">1W</button>
                             <button class="chart-action-btn">1M</button>
@@ -389,6 +400,7 @@
                         <div class="chart-container">
                             <canvas id="stargridChart"></canvas>
                         </div>
+                        <a href="#" class="chart-fullscreen-link" onclick="openChartModal('stargrid'); return false;">Fullscreen view</a>
                         <div class="chart-actions">
                             <button class="chart-action-btn">1W</button>
                             <button class="chart-action-btn">1M</button>
@@ -408,6 +420,7 @@
                         <div class="chart-container">
                             <canvas id="stargridMatchesChart"></canvas>
                         </div>
+                        <a href="#" class="chart-fullscreen-link" onclick="openChartModal('stargridMatches'); return false;">Fullscreen view</a>
                         <div class="chart-actions">
                             <button class="chart-action-btn">1W</button>
                             <button class="chart-action-btn">1M</button>
@@ -428,6 +441,7 @@
                         <div class="chart-container">
                             <canvas id="llamaLandChart"></canvas>
                         </div>
+                        <a href="#" class="chart-fullscreen-link" onclick="openChartModal('llamaLand'); return false;">Fullscreen view</a>
                         <div class="chart-actions">
                             <button class="chart-action-btn">1W</button>
                             <button class="chart-action-btn">1M</button>
@@ -440,10 +454,26 @@
         </section>
     </div>
 
+    <!-- Chart Modal -->
+    <div id="chartModal" class="chart-modal">
+        <div class="chart-modal-content">
+            <div class="chart-modal-header">
+                <h3 id="chartModalTitle" class="chart-modal-title">Chart</h3>
+                <button id="chartModalClose" class="chart-modal-close" onclick="closeChartModal()">✕</button>
+            </div>
+            <div class="chart-modal-body">
+                <canvas id="chartModalCanvas" class="chart-modal-canvas"></canvas>
+            </div>
+            <div id="chartModalActions" class="chart-actions">
+                <!-- Buttons will be cloned here -->
+            </div>
+        </div>
+    </div>
+
+
     <footer>
         <div class="container footer-content">
             <div class="footer-text">2025 The Eye of AO</div>
-            <div class="footer-text">Data refreshes automatically every 20 minutes</div>
         </div>
     </footer>
 

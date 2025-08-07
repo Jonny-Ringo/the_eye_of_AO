@@ -7,7 +7,7 @@ import { updateChartTimeRange } from './charts.js';
 import { updateVolumeChart } from './index.js';
 
 // Store time range state for each chart
-const chartTimeRanges = {};
+export const chartTimeRanges = {};
 
 /**
  * Updates the network info display in the header
@@ -40,11 +40,50 @@ export function toggleChartLoader(processName, show = true) {
         loaderId = `${processName}Loader`;
     }
     
-    const loaderElement = document.getElementById(loaderId);
-    if (loaderElement) {
-        loaderElement.style.display = show ? 'flex' : 'none';
+    // Check if modal is open
+    const modalOpen = document.getElementById('chartModal').classList.contains('active');
+    
+    if (modalOpen) {
+        // Show/hide modal loader instead
+        toggleModalLoader(show);
     } else {
-        console.warn(`Loader element not found: ${loaderId} for process ${processName}`);
+        // Show/hide regular chart loader
+        const loaderElement = document.getElementById(loaderId);
+        if (loaderElement) {
+            loaderElement.style.display = show ? 'flex' : 'none';
+        } else {
+            console.warn(`Loader element not found: ${loaderId} for process ${processName}`);
+        }
+    }
+}
+
+// Add this new function to ui.js
+export function toggleModalLoader(show = true) {
+    let modalLoader = document.getElementById('modalLoader');
+    
+    if (show && !modalLoader) {
+        // Create modal loader
+        modalLoader = document.createElement('div');
+        modalLoader.id = 'modalLoader';
+        modalLoader.className = 'loader-container';
+        modalLoader.style.zIndex = '10001'; // Higher than modal
+        modalLoader.innerHTML = `
+            <div class="loader"></div>
+            <div class="loader-text">Loading chart data...</div>
+        `;
+        document.body.appendChild(modalLoader);
+    }
+    
+    if (modalLoader) {
+        modalLoader.style.display = show ? 'flex' : 'none';
+        if (!show) {
+            // Clean up when hiding
+            setTimeout(() => {
+                if (modalLoader && modalLoader.style.display === 'none') {
+                    modalLoader.remove();
+                }
+            }, 100);
+        }
     }
 }
 
@@ -210,6 +249,50 @@ export function setupTimeRangeButtons(fetchDataCallback, fetchWeeklyCallback) {
             // Fallback to first button if default not found
             buttons[0].classList.add('active');
         }
+    });
+}
+
+export function setupModalTimeRangeButtons(processName) {
+    const modal = document.getElementById('chartModal');
+    const buttons = modal?.querySelectorAll('.chart-action-btn');
+
+    if (!buttons || buttons.length === 0) return;
+
+    // Remove existing listeners by cloning the buttons
+    buttons.forEach(button => {
+        const newBtn = button.cloneNode(true);
+        button.replaceWith(newBtn);
+    });
+
+    // Now reselect them (after cloning)
+    const freshButtons = modal.querySelectorAll('.chart-action-btn');
+
+    freshButtons.forEach(button => {
+        button.addEventListener('click', async () => {
+            const selectedRange = button.textContent.trim();
+
+            if (selectedRange === chartTimeRanges[processName]) return;
+
+            // Update active style
+            freshButtons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            chartTimeRanges[processName] = selectedRange;
+
+            // Show modal-aware loader
+            toggleChartLoader(processName, true);
+
+            try {
+                if (['1M', '3M'].includes(selectedRange)) {
+                    await fetchChartData(processName, selectedRange);
+                } else {
+                    updateChartTimeRange(processName, selectedRange);
+                }
+            } catch (err) {
+                console.error(`Modal chart update error for ${processName}:`, err);
+            } finally {
+                toggleChartLoader(processName, false);
+            }
+        });
     });
 }
 

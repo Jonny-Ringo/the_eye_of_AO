@@ -367,6 +367,51 @@ const mainnetNodes = [
         "lng": 8.1851,
         "location": "Lauterbourg, Grand Est, France",
         "country": "FR"
+    },
+    {
+        "hb": "http://167.86.81.65:8734/",
+        "cu": "--",
+        "proxy": true,
+        "lat": 49.405,
+        "lng": 11.1617,
+        "location": "Nuremberg, Bavaria, Germany",
+        "country": "DE"
+    },
+    {
+        "hb": "http://einstein.it.com:10000/",
+        "cu": "http://einstein.it.com:6363/",
+        "proxy": true,
+        "lat": -27.4683,
+        "lng": 153.0322,
+        "location": "Brisbane, Queensland, Australia",
+        "country": "AU"
+    },
+    {
+        "hb": "http://node.arweaveoasis.com:8734/",
+        "cu": "--",
+        "proxy": false,
+        "lat": 1.28009,
+        "lng": 103.851,
+        "location": "Singapore, Central Singapore, Singapore",
+        "country": "SG"
+    },
+    {
+        "hb": "https://0.hb.ao.p10node.onl/",
+        "cu": "--",
+        "proxy": true,
+        "lat": 50.1109,
+        "lng": 8.68213,
+        "location": "Frankfurt am Main, Hesse, Germany",
+        "country": "DE"
+    },
+    {
+        "hb": "http://194.233.86.27:8734/ ",
+        "cu": "--",
+        "proxy": true,
+        "lat": 1.2821,
+        "lng": 103.851,
+        "location": "Singapore, Central Singapore, Singapore",
+        "country": "SG"
     }
 ];
 
