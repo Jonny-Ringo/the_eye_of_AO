@@ -4,6 +4,91 @@ import { updateSummary } from './hyperbeam-uptime.js';
 
 const proxyURL = "https://hyperbeam-uptime.xyz/?url=";
 
+// Use the worker's aggregated snapshot (authorized for eye-of-ao.* and hyperbeam-uptime.xyz)
+const STATUS_ENDPOINT = "https://hyperbeam-uptime.xyz/status";
+
+// Normalize for stable map lookups (worker stores exact URLs, but some lists have trailing /)
+function normalizeUrl(u) {
+  try {
+    const url = new URL(u);
+    // drop trailing slash for comparison symmetry
+    url.pathname = url.pathname.replace(/\/+$/, '');
+    return url.toString();
+  } catch {
+    return (u || '').replace(/\/+$/, '');
+  }
+}
+
+// Fetch the single JSON + build a Map by URL
+async function fetchAggregatedStatus() {
+  const res = await fetch(`${STATUS_ENDPOINT}?t=${Date.now()}`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`Status fetch failed: ${res.status}`);
+  const { statuses = [] } = await res.json();
+  const map = new Map();
+  for (const s of statuses) {
+    map.set(normalizeUrl(s.url), s);
+  }
+  return map; // Map<normalizedUrl, { url, online, status, responseTime, lastChecked }>
+}
+
+// Quick renderer for HB (top row) using a status object
+function applyHBFromStatus(nodeCard, statusObj, busyMs) {
+  const statusIndicator = nodeCard.querySelector('.status-indicator');
+  const statusText = nodeCard.querySelector('.status span:last-child');
+  const responseTimeEl = nodeCard.querySelector('.response-time');
+
+  if (!statusObj) {
+    statusIndicator.className = 'status-indicator unavailable';
+    statusText.textContent = 'Unavailable';
+    responseTimeEl.textContent = 'Unknown';
+    return false;
+  }
+
+  const isOnline = !!statusObj.online;
+  if (!isOnline) {
+    statusIndicator.className = 'status-indicator unavailable';
+    statusText.textContent = 'Unavailable';
+    responseTimeEl.textContent = 'Offline';
+    return false;
+  }
+
+  const rt = Number(statusObj.responseTime ?? 0);
+  const isBusy = rt > busyMs;
+  statusIndicator.className = `status-indicator ${isBusy ? 'busy' : 'online'}`;
+  statusText.textContent = isBusy ? 'Busy' : 'Online';
+  responseTimeEl.textContent = `Response time: ${rt || '—'}ms`;
+  return true;
+}
+
+// Quick renderer for CU (bottom row) using a status object
+function applyCUFromStatus(nodeCard, statusObj) {
+  const statusIndicator = nodeCard.querySelector('.cu-status-container .status-indicator');
+  const statusText = nodeCard.querySelector('.cu-status-container .status span:last-child');
+  const responseTimeEl = nodeCard.querySelector('.cu-status-container .response-time');
+
+  if (!statusObj) {
+    statusIndicator.className = 'status-indicator unavailable';
+    statusText.textContent = 'CU Unavailable';
+    responseTimeEl.textContent = 'Unknown';
+    return false;
+  }
+
+  const isOnline = !!statusObj.online;
+  if (!isOnline) {
+    statusIndicator.className = 'status-indicator unavailable';
+    statusText.textContent = 'CU Unavailable';
+    responseTimeEl.textContent = 'Offline';
+    return false;
+  }
+
+  const rt = Number(statusObj.responseTime ?? 0);
+  statusIndicator.className = 'status-indicator online';
+  statusText.textContent = 'Online';
+  responseTimeEl.textContent = `Response time: ${rt || '—'}ms`;
+  return true;
+}
+
+
 // Configuration
 const config = {
     checkTimeout: 10000, // Timeout for each check (ms)
@@ -52,140 +137,134 @@ function updateLastCheckedTime() {
     }
 }
 
-function checkAllMainnetNodes() {
-    const mainnetStatusContainer = document.getElementById('mainnetStatusContainer');
-    
-    console.log("Starting mainnet node check...");
-    
-    // Clear the container
-    mainnetStatusContainer.innerHTML = '';
-    
-    // Update last checked time
-    updateLastCheckedTime();
-    
-    // Set the total count - mainnet nodes plus CU nodes that are not "--"
-    mainnetNodesTotal = mainnetNodes.length;
-    mainnetNodesOnline = 0; // Will be incremented as nodes are checked
-    
-    // Update the global cuNodesTotal variable, not just create a local one
-    cuNodesTotal = mainnetNodes.filter(node => node.cu && node.cu !== "--").length;
-    cuNodesOnline = 0; // Will be incremented as nodes are checked
-    
-        let checkedHBcount = 0;
-        let checkedCUcount = 0;
-        let totalChecked = 0;
-        const totalNodes = mainnetNodes.length;
+async function checkAllMainnetNodes() {
+  const mainnetStatusContainer = document.getElementById('mainnetStatusContainer');
+  console.log("Starting mainnet node check...");
 
-        console.log(`Checking ${mainnetNodes.length} mainnet nodes with ${cuNodesTotal} CU nodes...`);
+  // Clear the container
+  mainnetStatusContainer.innerHTML = '';
 
-        // Check all mainnet nodes and their corresponding CUs
-        mainnetNodes.forEach((node, index) => {
-        const hbNodeUrl = `${proxyURL}${node.hb}`;
-    
-        const cuNodeUrl = node.cu && node.cu !== "--"
-            ? `${proxyURL}${node.cu}`
-            : "--";
+  // Update last checked time
+  updateLastCheckedTime();
 
-    
-        checkMainnetNodePair(
-            hbNodeUrl,
-            cuNodeUrl,
-            node.hb,
-            node.cu,
-            mainnetStatusContainer,
-            (hbOnline, cuOnline) => {
-            
-            checkedHBcount++;
-            if (hbOnline) mainnetNodesOnline++;
+  // Totals
+  mainnetNodesTotal = mainnetNodes.length;
+  mainnetNodesOnline = 0;
+  cuNodesTotal = mainnetNodes.filter(node => node.cu && node.cu !== "--").length;
+  cuNodesOnline = 0;
 
-            if (node.cu !== "--") {
-                checkedCUcount++;
-                if (cuOnline) cuNodesOnline++;
-            }
+  let checkedHBcount = 0;
+  let checkedCUcount = 0;
+  let totalChecked = 0;
+  const totalNodes = mainnetNodes.length;
 
-            totalChecked++;
-            
-            // Sort when all nodes are checked
-            if (totalChecked === totalNodes) {
-                setTimeout(() => sortNodeCards(mainnetStatusContainer), 100);
-            }
-
-            updateSummary();
-        });
+  // 🔴 Single network request here
+  let statusMap;
+  try {
+    statusMap = await fetchAggregatedStatus();
+  } catch (e) {
+    console.error('Failed to load aggregated status:', e);
+    // Render cards in "Unavailable" state so UI doesn't look empty
+    mainnetNodes.forEach(node => {
+      checkMainnetNodePair(null, null, node.hb, node.cu, mainnetStatusContainer, () => {});
     });
-}
+    updateSummary();
+    return;
+  }
 
-function checkMainnetNodePair(hbNodeUrl, cuNodeUrl, hbDisplayName, cuDisplayName, container, callback) {
-    // Create a card for this node pair
-    const nodeId = `mainnet-${hbNodeUrl.replace(/https?:\/\//, '').replace(/\./g, '-').replace(/\//g, '')}`;
-    // Remove both protocol prefix and trailing slash from display names
-    const hbNodeName = hbDisplayName.replace(/^https?:\/\//, '').replace(/\/$/, '');
-    
-    // Get CU display name - also remove trailing slash
-    const cuNodeName = cuDisplayName && cuDisplayName !== "--"
-        ? cuDisplayName.replace(/^https?:\/\//, '').replace(/\/$/, '')
-        : "--";
-  
-    
-    // Create the node card
-    const nodeCard = document.createElement('div');
-    nodeCard.id = nodeId;
-    nodeCard.className = 'node-card';
-    
-    // Add to container
-    container.appendChild(nodeCard);
-    
-    // Update card UI to loading state
-    nodeCard.innerHTML = `
-        <div class="node-name">${hbNodeName}</div>
-        <div class="status">
-            <span class="status-indicator loading"></span>
-            <span>Checking HyperBEAM...</span>
-        </div>
-        <div class="response-time">-</div>
-        <div class="cu-status-container">
-            <div class="cu-label">CU: ${cuNodeName}</div>
-            <div class="status">
-                <span class="status-indicator ${cuNodeUrl === "--" ? "unavailable" : "loading"}"></span>
-                <span>${cuNodeUrl === "--" ? "Not Available" : "Checking CU..."}</span>
-            </div>
-            <div class="response-time">${cuNodeUrl === "--" ? "-" : "-"}</div>
-        </div>
-        <div class="node-actions">
-            <a href="${unwrapProxiedUrl(hbDisplayName)}" target="_blank" title="Visit HyperBEAM Node">
+  console.log(`Checking ${mainnetNodes.length} mainnet nodes with ${cuNodesTotal} CU nodes...`);
 
-                <i class="fas fa-external-link-alt"></i>
-            </a>
-            <a href="${unwrapProxiedUrl(hbDisplayName)}~meta@1.0/info" target="_blank" title="View HyperBEAM Metadata">
-                <i class="fas fa-info-circle"></i>
-            </a>
-            ${cuNodeUrl !== "--" ? `
-            <a href="${unwrapProxiedUrl(cuDisplayName)}" target="_blank" title="Visit CU Node">
-                <i class="fas fa-server"></i>
-            </a>` : ''}
-        </div>
-    `;
-    
-    // Check HyperBEAM node status
-    let hbOnline = false;
-    let cuOnline = false;
-    
-    // Check HB node first
-    checkHyperBeamNodeStatus(hbNodeUrl, nodeCard, (isHbOnline) => {
-        hbOnline = isHbOnline;
-        
-        // After HB check is done, check CU if it exists
-        if (cuNodeUrl !== "--") {
-            checkCuNodeStatus(cuNodeUrl, nodeCard, (isCuOnline) => {
-                cuOnline = isCuOnline;
-                if (callback) callback(hbOnline, cuOnline);
-            });
-        } else {
-            // No CU to check
-            if (callback) callback(hbOnline, false);
+  // Build all cards using the aggregated statuses (no per-node fetches)
+  mainnetNodes.forEach((node) => {
+    const hbUrl = normalizeUrl(node.hb);
+    const cuUrl = node.cu && node.cu !== "--" ? normalizeUrl(node.cu) : "--";
+
+    const hbStatus = statusMap.get(hbUrl);
+    const cuStatus = cuUrl === "--" ? null : statusMap.get(cuUrl);
+
+    checkMainnetNodePair(
+      null, // not used anymore
+      null, // not used anymore
+      node.hb,
+      node.cu,
+      mainnetStatusContainer,
+      (hbOnline, cuOnline) => {
+        checkedHBcount++;
+        if (hbOnline) mainnetNodesOnline++;
+
+        if (node.cu !== "--") {
+          checkedCUcount++;
+          if (cuOnline) cuNodesOnline++;
         }
-    });
+
+        totalChecked++;
+        if (totalChecked === totalNodes) {
+          setTimeout(() => sortNodeCards(mainnetStatusContainer), 100);
+        }
+        updateSummary();
+      },
+      hbStatus,
+      cuStatus
+    );
+  });
 }
+
+
+function checkMainnetNodePair(_hbNodeUrl, _cuNodeUrl, hbDisplayName, cuDisplayName, container, callback, hbStatusObj, cuStatusObj) {
+  // Create a card for this node pair
+  const nodeId = `mainnet-${hbDisplayName.replace(/https?:\/\//, '').replace(/\./g, '-').replace(/\//g, '')}`;
+  const hbNodeName = hbDisplayName.replace(/^https?:\/\//, '').replace(/\/$/, '');
+  const cuNodeName = cuDisplayName && cuDisplayName !== "--"
+    ? cuDisplayName.replace(/^https?:\/\//, '').replace(/\/$/, '')
+    : "--";
+
+  const nodeCard = document.createElement('div');
+  nodeCard.id = nodeId;
+  nodeCard.className = 'node-card';
+  container.appendChild(nodeCard);
+
+  nodeCard.innerHTML = `
+    <div class="node-name">${hbNodeName}</div>
+    <div class="status">
+      <span class="status-indicator loading"></span>
+      <span>Loading...</span>
+    </div>
+    <div class="response-time">-</div>
+    <div class="cu-status-container">
+      <div class="cu-label">CU: ${cuNodeName}</div>
+      <div class="status">
+        <span class="status-indicator ${cuDisplayName === "--" ? "unavailable" : "loading"}"></span>
+        <span>${cuDisplayName === "--" ? "Not Available" : "Loading..."}</span>
+      </div>
+      <div class="response-time">${cuDisplayName === "--" ? "-" : "-"}</div>
+    </div>
+    <div class="node-actions">
+      <a href="${unwrapProxiedUrl(hbDisplayName)}" target="_blank" title="Visit HyperBEAM Node">
+        <i class="fas fa-external-link-alt"></i>
+      </a>
+      <a href="${unwrapProxiedUrl(hbDisplayName)}~meta@1.0/info" target="_blank" title="View HyperBEAM Metadata">
+        <i class="fas fa-info-circle"></i>
+      </a>
+      ${cuDisplayName !== "--" ? `
+      <a href="${unwrapProxiedUrl(cuDisplayName)}" target="_blank" title="Visit CU Node">
+        <i class="fas fa-server"></i>
+      </a>` : ''}
+    </div>
+  `;
+
+  // Render from the aggregated statuses (no network calls)
+  const hbOnline = applyHBFromStatus(nodeCard, hbStatusObj, config.busyTimeout);
+  let cuOnline = false;
+
+  if (cuDisplayName !== "--") {
+    cuOnline = applyCUFromStatus(nodeCard, cuStatusObj);
+  } else {
+    // mark as not available (already set in HTML)
+  }
+
+  if (callback) callback(hbOnline, cuOnline);
+}
+
 
 function unwrapProxiedUrl(url) {
     if (url.includes(proxyURL)) {
