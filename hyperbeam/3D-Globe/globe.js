@@ -1,3 +1,5 @@
+import { mainnetNodes } from '../mainnet-node-list.js';
+
 // Globe application using globe.gl
 class HyperBEAMGlobe {
   constructor() {
@@ -75,69 +77,49 @@ class HyperBEAMGlobe {
   }
 
   async loadNodeData() {
+  try {
+    // we have the nodes now via ESM import
+    const nodesFromFile = mainnetNodes;
+
+    // 🔴 Single aggregated request for all statuses (unchanged)
+    let statusMap;
     try {
-      // Load real node data from your mainnet-node-list-with-locations.js
-      const response = await fetch('../mainnet-node-list.js');
-      const moduleText = await response.text();
-
-      // Extract the mainnetNodes array from the module
-      const startIndex = moduleText.indexOf('[');
-      const endIndex = moduleText.lastIndexOf(']') + 1;
-      const arrayText = moduleText.substring(startIndex, endIndex);
-      const mainnetNodes = JSON.parse(arrayText);
-
-      console.log(`Loaded ${mainnetNodes.length} nodes from file`);
-
-      // 🔴 Single aggregated request for all statuses
-      let statusMap;
-      try {
-        statusMap = await this.fetchAggregatedStatus();
-      } catch (e) {
-        console.error('Failed to load aggregated status for globe:', e);
-        statusMap = new Map(); // fallback: everyone looks offline
-      }
-
-      // Build per-node entries using the aggregated statuses
-      const nodesWithStatus = mainnetNodes.map(node => {
-        const hbUrlNorm = this.normalizeUrl(node.hb);
-        const hbStatusObj = statusMap.get(hbUrlNorm);
-        const status = this.statusFromSnapshot(hbStatusObj);
-
-        return {
-          url: this.extractHostname(node.hb),
-          lat: node.lat,
-          lng: node.lng,
-          status, // 'online' | 'busy' | 'offline'
-          location: node.location || 'Unknown Location',
-          country: node.country || 'Unknown',
-          fullUrl: node.hb,
-          cu: node.cu || '--',
-          proxy: node.proxy || false
-        };
-      });
-
-      // Cluster or offset nodes to avoid overlap
-      this.nodeData = this.clusterNodesByLocation(nodesWithStatus);
-
-      this.updateStats();
-    } catch (error) {
-      console.error('Error loading node data:', error);
-      // Fallback to sample data if loading fails
-      this.nodeData = [
-        {
-          url: 'Sample Node',
-          lat: 0,
-          lng: 0,
-          status: 'offline',
-          location: 'Error loading nodes',
-          fullUrl: '#',
-          cu: '--',
-          proxy: false
-        }
-      ];
-      this.updateStats();
+      statusMap = await this.fetchAggregatedStatus();
+    } catch (e) {
+      console.error('Failed to load aggregated status for globe:', e);
+      statusMap = new Map();
     }
+
+    const nodesWithStatus = nodesFromFile.map(node => {
+      const hbUrlNorm = this.normalizeUrl(node.hb);
+      const hbStatusObj = statusMap.get(hbUrlNorm);
+      const status = this.statusFromSnapshot(hbStatusObj);
+
+      return {
+        url: this.extractHostname(node.hb),
+        lat: node.lat,
+        lng: node.lng,
+        status,
+        location: node.location || 'Unknown Location',
+        country: node.country || 'Unknown',
+        fullUrl: node.hb,
+        cu: node.cu || '--',
+        proxy: node.proxy || false
+      };
+    });
+
+    this.nodeData = this.clusterNodesByLocation(nodesWithStatus);
+    this.updateStats();
+  } catch (error) {
+    console.error('Error loading node data:', error);
+    this.nodeData = [{
+      url: 'Sample Node', lat: 0, lng: 0, status: 'offline',
+      location: 'Error loading nodes', fullUrl: '#', cu: '--', proxy: false
+    }];
+    this.updateStats();
   }
+}
+
 
   // Cluster nodes by location (kept your behavior; comment said 4+ but code used >=2)
   clusterNodesByLocation(nodes) {
@@ -669,6 +651,15 @@ function hideNodeInfo() {
 function goBack() {
   window.location.href = '../../index.html';
 }
+
+// Expose functions used by inline onclicks in globe.html
+Object.assign(window, {
+  goBack,
+  toggleAutoRotate,
+  toggleLabels,
+  resetView,
+  hideNodeInfo
+});
 
 // Initialize globe when page loads
 window.addEventListener('load', () => {

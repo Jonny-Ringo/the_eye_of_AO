@@ -1,5 +1,22 @@
 {
+  "name": "dev",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "deploy": "npm run build && permaweb-deploy --arns-name dev-eye-of-ao"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "description": "",
+  "devDependencies": {
+    "vite": "^7.1.2"
+  },
   "dependencies": {
-    "chart.js": "^4.4.9"
+    "permaweb-deploy": "^2.5.1"
   }
 }

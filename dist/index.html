@@ -10,14 +10,14 @@
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <meta name="language" content="English">
         <meta name="author" content="Jonny Ringo">
-        <link rel="icon" href="images/eyecon.png">
+        <link rel="icon" href="./assets/eyecon-CftoeqsG.png">
         
         <!-- Open Graph / Facebook -->
         <meta property="og:type" content="website">
         <meta property="og:url" content="https://eye-of-ao.arweave.net/">
         <meta property="og:title" content="The Eye of AO">
         <meta property="og:description" content="Data dashboard for monitoring the AO Compute Network">
-        <meta property="og:image" content="images/preview.png">
+        <meta property="og:image" content="./assets/preview-C4qJb_yR.png">
         <meta property="og:image:width" content="1200">
         <meta property="og:image:height" content="630">
         <meta property="og:site_name" content="The Eye of AO">
@@ -27,7 +27,7 @@
         <meta name="twitter:url" content="https://eye-of-ao.arweave.net/">
         <meta name="twitter:title" content="The Eye of AO">
         <meta name="twitter:description" content="Data dashboard for monitoring the AO Compute Network">
-        <meta name="twitter:image" content="images/preview.png">
+        <meta name="twitter:image" content="./assets/preview-C4qJb_yR.png">
         <meta name="twitter:creator" content="Jonny Ringo">
         
         <!-- Fonts -->
@@ -38,8 +38,12 @@
         <!-- Chart.js for graphs -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
         
-        <!-- Custom styles -->
-        <link rel="stylesheet" href="dash.css">
+        <!-- Custom styles -->
+      <script type="module" crossorigin src="./assets/main-BW81-F9J.js"></script>
+      <link rel="modulepreload" crossorigin href="./assets/modulepreload-polyfill-B5Qt9EMX.js">
+      <link rel="modulepreload" crossorigin href="./assets/mainnet-node-list-CbXJ3SIC.js">
+      <link rel="modulepreload" crossorigin href="./assets/nav-BgMtwFJp.js">
+      <link rel="stylesheet" crossorigin href="./assets/mainnet-node-list-DIW27RnI.css">
     </head>
 <body>
     <header>
@@ -116,7 +120,7 @@
                 <div class="stat-title">Active Developer Addresses</div>
                 <div class="stat-value" id="activeDevCount">--</div>
                 <div class="stat-link">
-                    <a href="#" onclick="downloadDevCSV()"><img src="images/eyecon2.png" > Download CSV</a>
+                    <a href="#" onclick="downloadDevCSV()"><img src="./assets/eyecon2-D-55L1q8.png" > Download CSV</a>
                 </div>
 
             </div>
@@ -479,9 +483,7 @@
         </div>
     </footer>
 
-    <!-- Load application using ES modules -->
-    <script type="module" src="index.js"></script>
-    <script type="module" src="nav.js"></script>
+    <!-- Load application using ES modules -->
     <script>
         function downloadDevCSV() {
             const fileUrl = "https://raw.githubusercontent.com/Jonny-Ringo/the_eye_of_AO/main/data/dev-addresses.csv";

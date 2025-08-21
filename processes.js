@@ -136,7 +136,7 @@ async function fetchProcessAddresses(spawnerProcess, defaultAddresses = []) {
         while (hasNextPage && pageCount < MAX_PAGES) {
             pageCount++;
             
-            const response = await fetch('https://arweave-search.goldsky.com/graphql', {
+            const response = await fetch('https://ao-search-gateway.goldsky.com/graphql', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
