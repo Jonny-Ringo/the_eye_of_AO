@@ -14,7 +14,7 @@ mainnetNodes.forEach(node => {
   }
 });
 
-const GATEWAY_PATTERN = /^https:\/\/eye-of-ao\.[^\/]+/i;
+const GATEWAY_PATTERN = /^https:\/\/(dev-)?eye-of-ao\.[^\/]+/i;
 const LOCAL_ALLOWLIST = ["localhost:8080", "localhost"];
 
 function isAuthorizedReferrer(header) {
@@ -111,3 +111,4 @@ if (process.argv.includes('--serve')) {
   await checkAllNodes();
   process.exit(0);
 }
+
