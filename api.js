@@ -193,7 +193,7 @@ export async function fetchProcessData(processName, periods, currentHeight) {
                         currentHeight
                     );
                     
-                    const response = await fetch('https://ao-search-gateway.goldsky.com/graphql', {
+                    const response = await fetch('https://arweave-search.goldsky.com/graphql', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ query }),
@@ -371,4 +371,5 @@ export async function fetchStargridStats() {
  */
 export function clearCache() {
     responseCache.clear();
+
 }
