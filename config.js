@@ -27,7 +27,9 @@ export const TIME_RANGES = {
     '1W': 7 * 24 * 60 * 60 * 1000,     // 1 week in milliseconds
     '1M': 30 * 24 * 60 * 60 * 1000,    // 1 month in milliseconds
     '3M': 90 * 24 * 60 * 60 * 1000,    // 3 months in milliseconds
-    '6M': 180 * 24 * 60 * 60 * 1000    // 6 months in milliseconds
+    '6M': 180 * 24 * 60 * 60 * 1000,    // 6 months in milliseconds
+    '9M': 270 * 24 * 60 * 60 * 1000,    // 9 months in milliseconds
+    '1Y': 360 * 24 * 60 * 60 * 1000    // 12 months(1 Year) in milliseconds
 };
 
 export const UTC_TIMESTAMP_PROCESSES = [

@@ -76,6 +76,12 @@ async function fetchAdditionalWeeklyData(processName, timeRange) {
         } else if (timeRange === '3M') {
             // For 3 months, we need around 12 weeks of data
             extendedPeriods = generateWeeklyPeriods(currentHeight, blockData, 12);
+        } else if (timeRange === '6M') {
+            // For 6 months, we need around 26 weeks of data
+            extendedPeriods = generateWeeklyPeriods(currentHeight, blockData, 26);
+        } else if (timeRange === '9M') {
+            // For 9 months, we need around 39 weeks of data
+            extendedPeriods = generateWeeklyPeriods(currentHeight, blockData, 39);
         } else {
             // For shorter time ranges, use the current periods
             return; // No additional data needed

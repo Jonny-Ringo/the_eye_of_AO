@@ -121,7 +121,6 @@ function startAutoRefresh() {
 
 function updateLastCheckedTime() {
     const mainnetLastUpdatedEl = document.getElementById('mainnetLastUpdated');
-    const customLastUpdatedEl = document.getElementById('customLastUpdated');
     
     const now = new Date();
     const timeString = `Last updated: ${now.toLocaleTimeString()}`;
@@ -131,10 +130,6 @@ function updateLastCheckedTime() {
         mainnetLastUpdatedEl.textContent = timeString;
     }
     
-    // Update custom nodes timestamp
-    if (customLastUpdatedEl) {
-        customLastUpdatedEl.textContent = timeString;
-    }
 }
 
 async function checkAllMainnetNodes() {

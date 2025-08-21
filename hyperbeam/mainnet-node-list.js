@@ -252,7 +252,7 @@ const mainnetNodes = [
         "country": "FI"
     },
     {
-        "hb": "http://146.190.54.24:8734/",
+        "hb": "https://jonny-ringo.xyz/",
         "cu": "--",
         "proxy": true,
         "lat": 37.3931,
@@ -412,6 +412,24 @@ const mainnetNodes = [
         "lng": 103.851,
         "location": "Singapore, Central Singapore, Singapore",
         "country": "SG"
+    },
+    {
+        "hb": "http://157.180.52.245:8734/",
+        "cu": "--",
+        "proxy": true,
+        "lat": 60.1719,
+        "lng": 24.9347,
+        "location": "Helsinki, Uusimaa, Finland",
+        "country": "FI"
+    },
+    {
+        "hb": "https://hyperbeam.permaweb.black/",
+        "cu": "--",
+        "proxy": true,
+        "lat": 60.1719,
+        "lng": 24.9347,
+        "location": "Helsinki, Uusimaa, Finland",
+        "country": "FI"
     }
 ];
 

@@ -219,7 +219,7 @@ export function setupTimeRangeButtons(fetchDataCallback, fetchWeeklyCallback) {
                     // For weekly charts
                     // Special handling for wAR weekly combined chart
                     else if (processName === 'wARweeklyTransfer') {
-                        if (timeRange === '1M' || timeRange === '3M') {
+                        if (timeRange === '1M' || timeRange === '3M' || timeRange === '6M' || timeRange === '9M' || timeRange === '1Y') {
                             await fetchWeeklyCallback(processName, timeRange);
                         } else {
                             updateChartTimeRange(processName, timeRange);
@@ -282,7 +282,7 @@ export function setupModalTimeRangeButtons(processName) {
             toggleChartLoader(processName, true);
 
             try {
-                if (['1M', '3M'].includes(selectedRange)) {
+                if (['1M', '3M', '6M', '9M', '1Y'].includes(selectedRange)) {
                     await fetchChartData(processName, selectedRange);
                 } else {
                     updateChartTimeRange(processName, selectedRange);

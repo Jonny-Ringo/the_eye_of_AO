@@ -11,8 +11,8 @@ document.addEventListener('DOMContentLoaded', function () {
             default: 'theFirst150'
         },
         {
-            links: ['mainnetNodesLink', 'hbCustomNodesLink'],
-            contents: ['mainnetNodesContent', 'hbCustomNodesContent'],
+            links: ['mainnetNodesLink'],
+            contents: ['mainnetNodesContent'],
             default: 'mainnetNodes'
         }
     ];

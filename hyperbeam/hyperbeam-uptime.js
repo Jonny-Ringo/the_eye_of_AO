@@ -1,11 +1,4 @@
 // hyperbeam-uptime.js with fixes for node rendering issues
-import { 
-    addCustomNode, 
-    removeCustomNode, 
-    loadCustomNodes, 
-    customNodes,
-    loadAndDisplayCustomNodes
-} from './customnodes/custom.js';
 
 import { 
     initializeMainnetNodes,
@@ -23,30 +16,6 @@ let appInitialized = false;
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log("DOM Content Loaded event fired");
-    
-    // Get DOM elements
-    const additionalNodeInput = document.getElementById('additionalNode');
-    const addNodeBtn = document.getElementById('addNodeBtn');
-    const removeNodeBtn = document.getElementById('removeNodeBtn');
-    const customStatusContainer = document.getElementById('customStatusContainer');
-    
-    // Load custom nodes with delay to ensure DOM is ready
-    setTimeout(() => {
-        loadCustomNodes();
-    }, 100);
-    
-    // Add event listeners for nodes
-    if (addNodeBtn) {
-        addNodeBtn.addEventListener('click', function() {
-            addCustomNode(additionalNodeInput, customStatusContainer);
-        });
-    }
-    
-    if (removeNodeBtn) {
-        removeNodeBtn.addEventListener('click', function() {
-            removeCustomNode(additionalNodeInput);
-        });
-    }
     
     // Handle navigation highlighting
     handleNavigationHighlighting();
@@ -117,8 +86,6 @@ function initializeApp() {
     // Try to get the summary element again in case it wasn't available earlier
     summaryTextEl = document.getElementById('summaryText');
     
-    // Load custom nodes from localStorage if available
-    loadCustomNodes();
     
     // Initialize mainnet nodes if the section exists
     const mainnetContent = document.getElementById('mainnetNodesContent');
@@ -140,15 +107,7 @@ function initializeApp() {
     } else {
         console.warn("Mainnet nodes section not found. Skipping mainnet initialization.");
     }
-    
-    // Only check custom nodes if we have the container
-    const customStatusContainer = document.getElementById('customStatusContainer');
-    if (customStatusContainer) {
-        console.log("Checking custom nodes...");
-        loadAndDisplayCustomNodes(customStatusContainer);
-    } else {
-        console.warn("Custom nodes container not found. Skipping custom node check.");
-    }
+
     
     // Set the initialization flag
     appInitialized = true;
