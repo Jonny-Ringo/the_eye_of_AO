@@ -371,5 +371,4 @@ export async function fetchStargridStats() {
  */
 export function clearCache() {
     responseCache.clear();
-
 }

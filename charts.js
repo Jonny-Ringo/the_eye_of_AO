@@ -134,10 +134,13 @@ function createStandardTooltipCallbacks(processName) {
             const dataPoint = historicalData[processName][dataIndex];
             if (!dataPoint) return context[0].label;
             
-            // Then use it in the tooltip callback
-            const date = new Date(dataPoint.timestamp);
+            // Don't apply the -1 fix to volume charts
+            const timestamp = ['stargrid', 'wARVolume', 'AOVolume', 'wUSDCVolume'].includes(processName)
+                ? dataPoint.timestamp
+                : dataPoint.timestamp - 1;
+            
+            const date = new Date(timestamp);
             if (NON_UTC_TIMESTAMP_PROCESSES.includes(processName)) {
-                // Add one day for non-UTC processes
                 const adjustedDate = new Date(date.getTime());
                 return formatDate(adjustedDate, TIME_FORMAT.dateYear);
             } else if (UTC_TIMESTAMP_PROCESSES.includes(processName)) {
@@ -615,13 +618,22 @@ export function updateStandardChart(processName, dataPoints) {
     
     // Store the sorted data in historicalData for tooltip access
     historicalData[processName] = sortedData;
-    
+        
     // Create labels from timestamps
     const labels = sortedData.map(d => {
-        const date = new Date(d.timestamp);
-        return ['stargrid', 'wARVolume', 'AOVolume', 'wUSDCVolume'].includes(processName) 
-        ? formatDateUTCWithLocalTime(date) 
-        : formatDate(date);
+        // Don't apply the -1 fix to volume charts
+        const timestamp = ['stargrid', 'wARVolume', 'AOVolume', 'wUSDCVolume'].includes(processName) 
+            ? d.timestamp 
+            : d.timestamp - 1;
+        
+        const date = new Date(timestamp);
+        
+        // Volume charts use the original hardcoded logic, others use the new config-based logic
+        return ['AOVolume', 'wARVolume', 'wUSDCVolume'].includes(processName)
+            ? formatDateUTCWithLocalTime(date)  // ← Original working logic for volume charts
+            : (UTC_TIMESTAMP_PROCESSES.includes(processName)  // ← New logic for other charts
+                ? formatDateUTCWithLocalTime(date) 
+                : formatDate(date));
     });
     
     // Get the data values with proper decimal formatting
@@ -716,8 +728,12 @@ function updateStandardCombinedChart(chart, primaryProcess, secondaryProcess, pr
         alignedPrimaryData.push(primaryPoint || { timestamp, count: null });
         alignedSecondaryData.push(secondaryPoint || { timestamp, count: null });
         
-        const date = new Date(timestamp);
-        labels.push(formatDate(date));
+        // Apply the same logic as other UTC charts - apply -1 fix and use UTC formatting
+        const adjustedTimestamp = timestamp - 1;
+        const date = new Date(adjustedTimestamp);
+        
+        const useUTC = UTC_TIMESTAMP_PROCESSES.includes(primaryProcess) || UTC_TIMESTAMP_PROCESSES.includes(secondaryProcess);
+        labels.push(useUTC ? formatDateUTCWithLocalTime(date) : formatDate(date));
     });
     
     // Store the aligned data for tooltip access
@@ -774,15 +790,27 @@ function createCombinedTooltipCallbacks(primaryProcess, secondaryProcess) {
             // Try to get timestamp from primary data first
             const primaryData = historicalData[primaryProcess];
             if (primaryData && primaryData[dataIndex]) {
-                const date = new Date(primaryData[dataIndex].timestamp);
-                return formatDate(date, TIME_FORMAT.tooltip);
+                const timestamp = primaryData[dataIndex].timestamp - 1; // Apply -1 fix
+                const date = new Date(timestamp);
+                
+                if (UTC_TIMESTAMP_PROCESSES.includes(primaryProcess)) {
+                    return formatDateUTCWithLocalTime(date);
+                } else {
+                    return formatDate(date, TIME_FORMAT.tooltip);
+                }
             }
             
             // Fall back to secondary data if needed
             const secondaryData = historicalData[secondaryProcess];
             if (secondaryData && secondaryData[dataIndex]) {
-                const date = new Date(secondaryData[dataIndex].timestamp);
-                return formatDate(date, TIME_FORMAT.tooltip);
+                const timestamp = secondaryData[dataIndex].timestamp - 1; // Apply -1 fix
+                const date = new Date(timestamp);
+                
+                if (UTC_TIMESTAMP_PROCESSES.includes(secondaryProcess)) {
+                    return formatDateUTCWithLocalTime(date);
+                } else {
+                    return formatDate(date, TIME_FORMAT.tooltip);
+                }
             }
             
             // If no data is available, use the default formatting
