@@ -2,7 +2,7 @@ const { defineConfig } = require('vite');
 const { resolve } = require('node:path');
 
 module.exports = defineConfig({
-  base: './', // or '/<your-subpath>/' if deploying under a folder
+  base: './',
   build: {
     rollupOptions: {
       input: {

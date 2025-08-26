@@ -323,5 +323,4 @@ export function getProcessDisplayName(processName) {
  */
 export function clearProcessAddressCache() {
     processAddressCache.clear();
-
 }

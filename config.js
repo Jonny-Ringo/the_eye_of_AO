@@ -37,15 +37,19 @@ export const UTC_TIMESTAMP_PROCESSES = [
     'stargridMatches',
     'wARVolume',
     'AOVolume',
-    'wUSDCVolume'
-];
-
-export const NON_UTC_TIMESTAMP_PROCESSES = [
+    'wUSDCVolume',
     'wARTransfer',
+    'wUSDCTransfer',
+    'USDATransfer',
     'AOTransfer',
     'permaswap',
     'botega',
     'llamaLand',
+    'bazarAADaily',
+    'wARweeklyTransfer'
+];
+
+export const NON_UTC_TIMESTAMP_PROCESSES = [
     'wARTotalSupply'
 ];
 
