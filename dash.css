@@ -73,7 +73,7 @@
   .container {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 0 1.5rem;
+    padding: 0 max(69px, 1.5rem);
   }
   
   /* Header */
@@ -504,6 +504,7 @@
     box-shadow: var(--shadow-sm);
     display: flex;
     flex-direction: column;
+    position: relative;
   }
   
   .stat-title {
@@ -554,6 +555,38 @@
     width: 16px;
     vertical-align: baseline;
   }
+
+
+  /* Leaning character styling */
+  .leaning-character {
+      position: absolute;
+      left: -65px; /* Positions image 3px overlapping the stat card */
+      top: 0;
+      height: 100%; /* Matches the height of the stat-card element */
+      max-height: 135px;
+      width: auto; /* Maintains aspect ratio as height scales */
+      z-index: 10; /* Ensures image appears above background elements */
+      pointer-events: none; /* Allows clicks to pass through to stat card */
+      object-fit: contain; /* Ensures proper scaling */
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+      .leaning-character {
+          display: none
+      }
+
+        /* Layout */
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 1.5rem;
+      }
+
+  }
+
+
+
   
   .trend-up {
     color: var(--success);
