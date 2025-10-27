@@ -1,4 +1,6 @@
 import { mainnetNodes } from '../mainnet-node-list.js';
+import { USE_SERVER_NODES_LIST } from '../../config.js';
+import { fetchNodesList } from '../../api.js';
 
 // Globe application using globe.gl
 class HyperBEAMGlobe {
@@ -33,38 +35,8 @@ class HyperBEAMGlobe {
     }
   }
 
-  // --- helpers for aggregated status ---
-
-  // Normalize URLs (remove trailing "/" so worker and list match)
-  normalizeUrl(u) {
-    try {
-      const url = new URL(u);
-      url.pathname = url.pathname.replace(/\/+$/, '');
-      return url.toString();
-    } catch {
-      return (u || '').replace(/\/+$/, '');
-    }
-  }
-
-  // One call to the worker; returns Map<normalizedUrl, statusObj>
-  async fetchAggregatedStatus() {
-    const res = await fetch(`${this.statusEndpoint}?t=${Date.now()}`, { cache: 'no-store' });
-    if (!res.ok) throw new Error(`Status fetch failed: ${res.status}`);
-    const { statuses = [] } = await res.json();
-    const map = new Map();
-    for (const s of statuses) {
-      map.set(this.normalizeUrl(s.url), s);
-    }
-    return map;
-  }
-
-  // Translate a worker status object into 'online' | 'busy' | 'offline'
-  statusFromSnapshot(statusObj) {
-    if (!statusObj) return 'offline';
-    if (!statusObj.online) return 'offline';
-    const rt = Number(statusObj.responseTime ?? 0);
-    return rt > this.busyMs ? 'busy' : 'online';
-  }
+  // Note: Status data is now included in the node list response from fetchNodesList()
+  // No need for separate status fetching or URL normalization
 
   extractHostname(url) {
     try {
@@ -78,22 +50,26 @@ class HyperBEAMGlobe {
 
   async loadNodeData() {
   try {
-    // we have the nodes now via ESM import
-    const nodesFromFile = mainnetNodes;
-
-    // 🔴 Single aggregated request for all statuses (unchanged)
-    let statusMap;
-    try {
-      statusMap = await this.fetchAggregatedStatus();
-    } catch (e) {
-      console.error('Failed to load aggregated status for globe:', e);
-      statusMap = new Map();
+    // Get enriched node list (already includes status from server!)
+    let nodesFromFile;
+    if (USE_SERVER_NODES_LIST) {
+      try {
+        nodesFromFile = await fetchNodesList();
+      } catch (error) {
+        console.warn('Failed to fetch nodes from server, using bundled list:', error);
+        nodesFromFile = mainnetNodes;
+      }
+    } else {
+      nodesFromFile = mainnetNodes;
     }
 
+    // Transform enriched data for globe display
     const nodesWithStatus = nodesFromFile.map(node => {
-      const hbUrlNorm = this.normalizeUrl(node.hb);
-      const hbStatusObj = statusMap.get(hbUrlNorm);
-      const status = this.statusFromSnapshot(hbStatusObj);
+      // Determine status from the enriched data
+      let status = 'offline';
+      if (node.hbOnline) {
+        status = node.hbResponseTime > this.busyMs ? 'busy' : 'online';
+      }
 
       return {
         url: this.extractHostname(node.hb),
@@ -104,7 +80,8 @@ class HyperBEAMGlobe {
         country: node.country || 'Unknown',
         fullUrl: node.hb,
         cu: node.cu || '--',
-        proxy: node.proxy || false
+        proxy: node.proxy || false,
+        responseTime: node.hbResponseTime
       };
     });
 

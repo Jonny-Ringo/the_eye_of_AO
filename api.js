@@ -2,11 +2,18 @@
  * API functions for fetching data from Arweave and AO Network
  */
 import { dryrun } from "https://unpkg.com/@permaweb/aoconnect@0.0.82/dist/browser.js";
-import { BLOCK_TRACKING_PROCESS } from './config.js';
+import { BLOCK_TRACKING_PROCESS, NODES_LIST_CACHE_TTL, NODES_API_ENDPOINT } from './config.js';
 import { generateQuery } from './processes.js';
 
 // Cache for API responses
 const responseCache = new Map();
+
+// Node list cache
+let nodesListCache = null;
+let nodesCacheTimestamp = 0;
+
+// QGL Query Counter
+let qglQueryCounter = 0;
 
 /**
  * Fetches the current Arweave network information
@@ -193,6 +200,8 @@ export async function fetchProcessData(processName, periods, currentHeight) {
                         currentHeight
                     );
                     
+                    qglQueryCounter++;
+                    
                     const response = await fetch('https://arweave-search.goldsky.com/graphql', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -367,8 +376,73 @@ export async function fetchStargridStats() {
 
 
 /**
+ * Logs the total QGL queries made during page load
+ */
+export function logQglQueryCount() {
+    console.log(`🔍 Total QGL queries made: ${qglQueryCounter}`);
+}
+
+// Make the function available globally for console access
+if (typeof window !== 'undefined') {
+    window.logQglQueryCount = logQglQueryCount;
+}
+
+/**
+ * Fetches the node list from the server with 5-minute caching
+ * @returns {Promise<Array>} Array of node objects
+ */
+export async function fetchNodesList() {
+    try {
+        // Check if cache is valid (less than 5 minutes old)
+        if (nodesListCache && (Date.now() - nodesCacheTimestamp < NODES_LIST_CACHE_TTL)) {
+            console.log('Using cached node list');
+            return nodesListCache;
+        }
+
+        console.log('Fetching fresh node list from server...');
+        const response = await fetch(NODES_API_ENDPOINT);
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+
+        // Support different response formats
+        // If response has 'items' property, use that; otherwise use the data directly
+        const nodesList = data.items || data;
+
+        // Validate that we got an array
+        if (!Array.isArray(nodesList)) {
+            throw new Error('Invalid response format: expected array of nodes');
+        }
+
+        // Update cache
+        nodesListCache = nodesList;
+        nodesCacheTimestamp = Date.now();
+
+        console.log(`Node list loaded: ${nodesList.length} nodes`);
+        return nodesListCache;
+
+    } catch (error) {
+        console.error('Error fetching nodes list:', error);
+
+        // Return stale cached data if available (graceful degradation)
+        if (nodesListCache) {
+            console.warn('Using stale cache due to fetch error');
+            return nodesListCache;
+        }
+
+        // If no cache available, throw the error
+        throw error;
+    }
+}
+
+/**
  * Clears the API response cache
  */
 export function clearCache() {
     responseCache.clear();
+    nodesListCache = null;
+    nodesCacheTimestamp = 0;
 }

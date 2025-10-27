@@ -117,15 +117,6 @@ const mainnetNodes = [
         "country": "IN"
     },
     {
-        "hb": "https://hb.ao.p10node.com/",
-        "cu": "https://cu.ao.p10node.com/",
-        "proxy": false,
-        "lat": 43.6532,
-        "lng": -79.3832,
-        "location": "Toronto, Ontario, Canada",
-        "country": "CA"
-    },
-    {
         "hb": "https://hb.randao.net/",
         "cu": "--",
         "proxy": false,
@@ -180,15 +171,6 @@ const mainnetNodes = [
         "country": "US"
     },
     {
-        "hb": "http://43.160.203.36:10000/",
-        "cu": "http://43.160.203.36:6363/",
-        "proxy": true,
-        "lat": 1.352,
-        "lng": 103.8198,
-        "location": "Singapore, North West, Singapore",
-        "country": "SG"
-    },
-    {
         "hb": "http://84.247.181.43:10000/",
         "cu": "--",
         "proxy": true,
@@ -198,33 +180,6 @@ const mainnetNodes = [
         "country": "DE"
     },
     {
-        "hb": "http://80.190.80.172:8734/",
-        "cu": "--",
-        "proxy": true,
-        "lat": 50.8514,
-        "lng": -0.9903,
-        "location": "Portsmouth, England, United Kingdom",
-        "country": "GB"
-    },
-    {
-        "hb": "http://65.109.27.148:10000/",
-        "cu": "--",
-        "proxy": true,
-        "lat": 60.1719,
-        "lng": 24.9347,
-        "location": "Helsinki, Uusimaa, Finland",
-        "country": "FI"
-    },
-    {
-        "hb": "http://62.171.187.29:10001/",
-        "cu": "http://62.171.187.29:6363/",
-        "proxy": true,
-        "lat": 48.9742,
-        "lng": 8.1851,
-        "location": "Lauterbourg, Grand Est, France",
-        "country": "FR"
-    },
-    {
         "hb": "http://65.108.201.218:8734/",
         "cu": "https://adn79.pro/ao/cu",
         "proxy": true,
@@ -232,15 +187,6 @@ const mainnetNodes = [
         "lng": 24.9347,
         "location": "Helsinki, Uusimaa, Finland",
         "country": "FI"
-    },
-    {
-        "hb": "http://47.128.240.209:10001/",
-        "cu": "http://47.128.240.209:6363/",
-        "proxy": true,
-        "lat": 1.28009,
-        "lng": 103.851,
-        "location": "Singapore, Central Singapore, Singapore",
-        "country": "SG"
     },
     {
         "hb": "http://95.216.248.117:10000/",
@@ -288,78 +234,6 @@ const mainnetNodes = [
         "country": "FR"
     },
     {
-        "hb": "http://95.111.252.179:10000/",
-        "cu": "http://95.111.252.179:6363/",
-        "proxy": true,
-        "lat": 48.9742,
-        "lng": 8.1851,
-        "location": "Lauterbourg, Grand Est, France",
-        "country": "FR"
-    },
-    {
-        "hb": "http://173.212.194.71:10000/",
-        "cu": "http://173.212.194.71:6363/",
-        "proxy": true,
-        "lat": 48.9742,
-        "lng": 8.1851,
-        "location": "Lauterbourg, Grand Est, France",
-        "country": "FR"
-    },
-    {
-        "hb": "http://213.160.68.7:10001/",
-        "cu": "--",
-        "proxy": true,
-        "lat": 50.7753,
-        "lng": 6.08389,
-        "location": "Aachen, North Rhine-Westphalia, Germany",
-        "country": "DE"
-    },
-    {
-        "hb": "http://5.189.147.76:10000/",
-        "cu": "http://5.189.147.76:6363/",
-        "proxy": true,
-        "lat": 48.9742,
-        "lng": 8.1851,
-        "location": "Lauterbourg, Grand Est, France",
-        "country": "FR"
-    },
-    {
-        "hb": "http://38.242.230.205:10000/",
-        "cu": "http://38.242.230.205:6363/",
-        "proxy": true,
-        "lat": 51.1864,
-        "lng": 6.8624,
-        "location": "Düsseldorf, North Rhine-Westphalia, Germany",
-        "country": "DE"
-    },
-    {
-        "hb": "http://173.249.11.37:10000/",
-        "cu": "http://173.249.11.37:6363/",
-        "proxy": true,
-        "lat": 48.9742,
-        "lng": 8.1851,
-        "location": "Lauterbourg, Grand Est, France",
-        "country": "FR"
-    },
-    {
-        "hb": "http://95.111.238.178:10000/",
-        "cu": "http://95.111.238.178:6363/",
-        "proxy": true,
-        "lat": 48.9742,
-        "lng": 8.1851,
-        "location": "Lauterbourg, Grand Est, France",
-        "country": "FR"
-    },
-    {
-        "hb": "http://ao1.decentralizedinfra.com:10000/",
-        "cu": "--",
-        "proxy": true,
-        "lat": 29.7604,
-        "lng": -95.3698,
-        "location": "Houston, Texas, United States",
-        "country": "US"
-    },
-    {
         "hb": "http://161.97.126.148:8734/",
         "cu": "--",
         "proxy": true,
@@ -378,15 +252,6 @@ const mainnetNodes = [
         "country": "DE"
     },
     {
-        "hb": "http://einstein.it.com:10000/",
-        "cu": "http://einstein.it.com:6363/",
-        "proxy": true,
-        "lat": -27.4683,
-        "lng": 153.0322,
-        "location": "Brisbane, Queensland, Australia",
-        "country": "AU"
-    },
-    {
         "hb": "http://node.arweaveoasis.com:8734/",
         "cu": "--",
         "proxy": false,
@@ -399,9 +264,90 @@ const mainnetNodes = [
         "hb": "https://0.hb.ao.p10node.onl/",
         "cu": "--",
         "proxy": true,
-        "lat": 50.1109,
-        "lng": 8.68213,
-        "location": "Frankfurt am Main, Hesse, Germany",
+          "lat": 49.0291,
+        "lng": 8.35696,
+        "location": "Karlsruhe, Baden-Wurttemberg, Germany",
+        "country": "DE"
+    },
+    {
+        "hb": "https://1.hb.ao.p10node.onl/",
+        "cu": "--",
+        "proxy": true,
+          "lat": 49.0291,
+        "lng": 8.35696,
+        "location": "Karlsruhe, Baden-Wurttemberg, Germany",
+        "country": "DE"
+    },
+    {
+        "hb": "https://2.hb.ao.p10node.onl/",
+        "cu": "--",
+        "proxy": true,
+          "lat": 49.0291,
+        "lng": 8.35696,
+        "location": "Karlsruhe, Baden-Wurttemberg, Germany",
+        "country": "DE"
+    },
+    {
+        "hb": "https://3.hb.ao.p10node.onl/",
+        "cu": "--",
+        "proxy": true,
+          "lat": 49.0291,
+        "lng": 8.35696,
+        "location": "Karlsruhe, Baden-Wurttemberg, Germany",
+        "country": "DE"
+    },
+    {
+        "hb": "https://4.hb.ao.p10node.onl/",
+        "cu": "--",
+        "proxy": true,
+          "lat": 49.0291,
+        "lng": 8.35696,
+        "location": "Karlsruhe, Baden-Wurttemberg, Germany",
+        "country": "DE"
+    },
+    {
+        "hb": "https://5.hb.ao.p10node.onl/",
+        "cu": "--",
+        "proxy": true,
+          "lat": 49.0291,
+        "lng": 8.35696,
+        "location": "Karlsruhe, Baden-Wurttemberg, Germany",
+        "country": "DE"
+    },
+    {
+        "hb": "https://6.hb.ao.p10node.onl/",
+        "cu": "--",
+        "proxy": true,
+          "lat": 49.0291,
+        "lng": 8.35696,
+        "location": "Karlsruhe, Baden-Wurttemberg, Germany",
+        "country": "DE"
+    },
+    {
+        "hb": "https://7.hb.ao.p10node.onl/",
+        "cu": "--",
+        "proxy": true,
+          "lat": 49.0291,
+        "lng": 8.35696,
+        "location": "Karlsruhe, Baden-Wurttemberg, Germany",
+        "country": "DE"
+    },
+    {
+        "hb": "https://8.hb.ao.p10node.onl/",
+        "cu": "--",
+        "proxy": true,
+          "lat": 49.0291,
+        "lng": 8.35696,
+        "location": "Karlsruhe, Baden-Wurttemberg, Germany",
+        "country": "DE"
+    },
+    {
+        "hb": "https://9.hb.ao.p10node.onl/",
+        "cu": "--",
+        "proxy": true,
+          "lat": 49.0291,
+        "lng": 8.35696,
+        "location": "Karlsruhe, Baden-Wurttemberg, Germany",
         "country": "DE"
     },
     {
