@@ -22,7 +22,7 @@ function isAuthorizedReferrer(header) {
   if (GATEWAY_PATTERN.test(header)) return true;
   if (header.includes("hyperbeam-uptime.xyz")) return true;
   //----------- Local dev support------------------
-  return LOCAL_ALLOWLIST.some(prefix => header.includes(prefix));
+  // return LOCAL_ALLOWLIST.some(prefix => header.includes(prefix));
 }
 
 async function tryRequestWithin5s(targetUrl) {
@@ -42,15 +42,51 @@ async function tryRequestWithin5s(targetUrl) {
 
 async function checkAllNodes() {
   console.log(`🔄 Checking ${NODES_TO_MONITOR.length} nodes at ${new Date().toISOString()}`);
-  const statuses = [];
+
+  // Create a map of URL to status for easy lookup
+  const statusMap = new Map();
 
   await Promise.allSettled(NODES_TO_MONITOR.map(async (url) => {
     const result = await tryRequestWithin5s(url);
-    statuses.push({ url, ...result, lastChecked: Date.now() });
+    statusMap.set(url, { ...result, lastChecked: Date.now() });
     console.log(`✓ ${url}: ${result.online ? 'online' : 'offline'} (${result.responseTime}ms)`);
   }));
 
-  const data = { lastUpdate: new Date().toISOString(), statuses };
+  // Build enriched status array with full node metadata
+  const statuses = [];
+  mainnetNodes.forEach(node => {
+    const hbStatus = statusMap.get(node.hb) || { online: false, responseTime: null, lastChecked: Date.now() };
+    const cuStatus = node.cu && node.cu !== "--" ? statusMap.get(node.cu) : null;
+
+    statuses.push({
+      // Full node metadata
+      hb: node.hb,
+      cu: node.cu,
+      proxy: node.proxy,
+      lat: node.lat,
+      lng: node.lng,
+      location: node.location,
+      country: node.country,
+      // HyperBEAM status
+      hbOnline: hbStatus.online,
+      hbStatus: hbStatus.status,
+      hbResponseTime: hbStatus.responseTime,
+      hbLastChecked: hbStatus.lastChecked,
+      hbError: hbStatus.error,
+      // CU status (if exists)
+      cuOnline: cuStatus?.online || false,
+      cuStatus: cuStatus?.status,
+      cuResponseTime: cuStatus?.responseTime,
+      cuLastChecked: cuStatus?.lastChecked,
+      cuError: cuStatus?.error
+    });
+  });
+
+  const data = {
+    lastUpdate: new Date().toISOString(),
+    version: new Date().toISOString().split('T')[0],
+    items: statuses
+  };
   fs.writeFileSync(STATUS_FILE, JSON.stringify(data, null, 2));
   console.log(`✅ Wrote results to ${STATUS_FILE}`);
 }

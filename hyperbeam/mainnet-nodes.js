@@ -1,35 +1,29 @@
 // mainnet-nodes.js - HyperBEAM mainnet node checking functionality
 import { mainnetNodes } from './mainnet-node-list.js';
 import { updateSummary } from './hyperbeam-uptime.js';
+import { USE_SERVER_NODES_LIST } from '../config.js';
+import { fetchNodesList } from '../api.js';
 
 const proxyURL = "https://hyperbeam-uptime.xyz/?url=";
 
-// Use the worker's aggregated snapshot (authorized for eye-of-ao.* and hyperbeam-uptime.xyz)
-const STATUS_ENDPOINT = "https://hyperbeam-uptime.xyz/status";
-
-// Normalize for stable map lookups (worker stores exact URLs, but some lists have trailing /)
-function normalizeUrl(u) {
-  try {
-    const url = new URL(u);
-    // drop trailing slash for comparison symmetry
-    url.pathname = url.pathname.replace(/\/+$/, '');
-    return url.toString();
-  } catch {
-    return (u || '').replace(/\/+$/, '');
-  }
+/**
+ * Gets the current node list from server or fallback to bundled
+ * @returns {Promise<Array>} Array of node objects
+ */
+async function getNodesList() {
+    if (USE_SERVER_NODES_LIST) {
+        try {
+            return await fetchNodesList();
+        } catch (error) {
+            console.warn('Failed to fetch nodes from server, using bundled list:', error);
+            return mainnetNodes;
+        }
+    }
+    return mainnetNodes;
 }
 
-// Fetch the single JSON + build a Map by URL
-async function fetchAggregatedStatus() {
-  const res = await fetch(`${STATUS_ENDPOINT}?t=${Date.now()}`, { cache: 'no-store' });
-  if (!res.ok) throw new Error(`Status fetch failed: ${res.status}`);
-  const { statuses = [] } = await res.json();
-  const map = new Map();
-  for (const s of statuses) {
-    map.set(normalizeUrl(s.url), s);
-  }
-  return map; // Map<normalizedUrl, { url, online, status, responseTime, lastChecked }>
-}
+// Note: Status data is now included in the node list response from getNodesList()
+// No need for separate status fetching or URL normalization
 
 // Quick renderer for HB (top row) using a status object
 function applyHBFromStatus(nodeCard, statusObj, busyMs) {
@@ -142,66 +136,54 @@ async function checkAllMainnetNodes() {
   // Update last checked time
   updateLastCheckedTime();
 
+  // Get enriched node list (already includes status from server!)
+  const nodesList = await getNodesList();
+
   // Totals
-  mainnetNodesTotal = mainnetNodes.length;
+  mainnetNodesTotal = nodesList.length;
   mainnetNodesOnline = 0;
-  cuNodesTotal = mainnetNodes.filter(node => node.cu && node.cu !== "--").length;
+  cuNodesTotal = nodesList.filter(node => node.cu && node.cu !== "--").length;
   cuNodesOnline = 0;
 
-  let checkedHBcount = 0;
-  let checkedCUcount = 0;
-  let totalChecked = 0;
-  const totalNodes = mainnetNodes.length;
+  console.log(`Checking ${nodesList.length} mainnet nodes with ${cuNodesTotal} CU nodes...`);
 
-  // 🔴 Single network request here
-  let statusMap;
-  try {
-    statusMap = await fetchAggregatedStatus();
-  } catch (e) {
-    console.error('Failed to load aggregated status:', e);
-    // Render cards in "Unavailable" state so UI doesn't look empty
-    mainnetNodes.forEach(node => {
-      checkMainnetNodePair(null, null, node.hb, node.cu, mainnetStatusContainer, () => {});
-    });
-    updateSummary();
-    return;
-  }
+  // Build all cards using the enriched node data (already has status!)
+  nodesList.forEach((node) => {
+    // Create status objects from the enriched node data
+    const hbStatusObj = {
+      online: node.hbOnline,
+      status: node.hbStatus,
+      responseTime: node.hbResponseTime,
+      lastChecked: node.hbLastChecked,
+      error: node.hbError
+    };
 
-  console.log(`Checking ${mainnetNodes.length} mainnet nodes with ${cuNodesTotal} CU nodes...`);
-
-  // Build all cards using the aggregated statuses (no per-node fetches)
-  mainnetNodes.forEach((node) => {
-    const hbUrl = normalizeUrl(node.hb);
-    const cuUrl = node.cu && node.cu !== "--" ? normalizeUrl(node.cu) : "--";
-
-    const hbStatus = statusMap.get(hbUrl);
-    const cuStatus = cuUrl === "--" ? null : statusMap.get(cuUrl);
+    const cuStatusObj = node.cu && node.cu !== "--" ? {
+      online: node.cuOnline,
+      status: node.cuStatus,
+      responseTime: node.cuResponseTime,
+      lastChecked: node.cuLastChecked,
+      error: node.cuError
+    } : null;
 
     checkMainnetNodePair(
-      null, // not used anymore
-      null, // not used anymore
+      null, // not used
+      null, // not used
       node.hb,
       node.cu,
       mainnetStatusContainer,
       (hbOnline, cuOnline) => {
-        checkedHBcount++;
         if (hbOnline) mainnetNodesOnline++;
-
-        if (node.cu !== "--") {
-          checkedCUcount++;
-          if (cuOnline) cuNodesOnline++;
-        }
-
-        totalChecked++;
-        if (totalChecked === totalNodes) {
-          setTimeout(() => sortNodeCards(mainnetStatusContainer), 100);
-        }
+        if (node.cu !== "--" && cuOnline) cuNodesOnline++;
         updateSummary();
       },
-      hbStatus,
-      cuStatus
+      hbStatusObj,
+      cuStatusObj
     );
   });
+
+  // Sort cards after rendering
+  setTimeout(() => sortNodeCards(mainnetStatusContainer), 100);
 }
 
 

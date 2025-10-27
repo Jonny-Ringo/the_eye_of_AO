@@ -63,6 +63,15 @@ export const BLOCK_TRACKING_PROCESS = 'V5Pm1eScgJo1Ue6R0NL_qVUM53leE_B3zavwf1Z5z
 // Data refresh interval in milliseconds (20 minutes)
 export const DATA_REFRESH_INTERVAL = 20 * 60 * 1000;
 
+// Node list cache configuration (5 minutes)
+export const NODES_LIST_CACHE_TTL = 5 * 60 * 1000;
+
+// Feature flag: Use server-sourced node list instead of bundled
+export const USE_SERVER_NODES_LIST = true;
+
+// Nodes API endpoint
+export const NODES_API_ENDPOINT = 'https://hyperbeam-uptime.xyz/status';
+
 // Time format settings for consistent date formatting across the app
 export const TIME_FORMAT = {
     dateOnly: {

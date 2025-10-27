@@ -1,13 +1,14 @@
-import { DATA_REFRESH_INTERVAL} from './config.js';
+import { DATA_REFRESH_INTERVAL, USE_SERVER_NODES_LIST } from './config.js';
 import { PROCESSES } from './processes.js';
 import { mainnetNodes } from './hyperbeam/mainnet-node-list.js';
-import { 
-    fetchNetworkInfo, 
-    fetchBlockHistory, 
-    fetchProcessData, 
+import {
+    fetchNetworkInfo,
+    fetchBlockHistory,
+    fetchProcessData,
     fetchSupplyHistory,
     fetchStargridStats,
-    fetchVolumeData
+    fetchVolumeData,
+    fetchNodesList
 } from './api.js';
 import { 
     initializeCharts, 
@@ -575,7 +576,7 @@ async function initializeDashboard() {
         });
 
         // 1. Populate mainnet node count
-        document.getElementById('nodeCount').textContent = mainnetNodes.length;
+        updateNodeCount();
         loadDevAddressCount();
         
         loadStargridChart().catch(error => {
@@ -621,6 +622,36 @@ async function loadDevAddressCount() {
     console.error("Failed to load dev address count:", err);
     document.getElementById('activeDevCount').textContent = "N/A";
   }
+}
+
+/**
+ * Updates the node count display using server-sourced or bundled node list
+ * @returns {Promise<void>}
+ */
+async function updateNodeCount() {
+    try {
+        let nodes;
+
+        if (USE_SERVER_NODES_LIST) {
+            // Fetch from server with caching
+            nodes = await fetchNodesList();
+        } else {
+            // Use bundled list (fallback)
+            nodes = mainnetNodes;
+        }
+
+        document.getElementById('nodeCount').textContent = nodes.length;
+    } catch (error) {
+        console.error('Failed to load node count:', error);
+
+        // Fallback to bundled list on error
+        if (mainnetNodes) {
+            console.warn('Using bundled node list as fallback');
+            document.getElementById('nodeCount').textContent = mainnetNodes.length;
+        } else {
+            document.getElementById('nodeCount').textContent = '--';
+        }
+    }
 }
 
 /**
