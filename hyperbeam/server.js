@@ -3,8 +3,12 @@ import cors from 'cors';
 import { fetch } from 'undici';
 import { mainnetNodes } from './mainnet-node-list.js';
 import fs from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
-const STATUS_FILE = 'node-status.json';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const STATUS_FILE = join(__dirname, 'node-status.json');
 
 const NODES_TO_MONITOR = [];
 mainnetNodes.forEach(node => {

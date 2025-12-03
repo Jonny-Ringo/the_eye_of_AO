@@ -553,8 +553,8 @@ async function initializeDashboard() {
         Object.keys(PROCESSES).forEach(processName => {
             if (!processName.includes('weekly') && processName !== 'wARTotalSupply' && processName !== 'wARTransfer') {
                 // Use appropriate periods based on chart type
-                const periods = ['AOTransfer', 'permaswap', 'botega', 'llamaLand','bazarAADaily'].includes(processName) 
-                    ? oneWeekPeriods 
+                const periods = ['AOTransfer', 'permaswap', 'botega', 'llamaLand','bazarAADaily', 'bazarSalesDaily'].includes(processName)
+                    ? oneWeekPeriods
                     : dailyPeriods;
                 
                 // Load each chart independently
