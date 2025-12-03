@@ -162,6 +162,51 @@ const mainnetNodes = [
         "country": "DE"
     },
     {
+        "hb": "https://hb00.ionode.top/",
+        "cu": "--",
+        "proxy": false,
+        "lat": 49.405,
+        "lng": 11.1617,
+        "location": "Nuremberg, Bavaria, Germany",
+        "country": "DE"
+    },
+    {
+        "hb": "https://hb01.ionode.top/",
+        "cu": "--",
+        "proxy": false,
+        "lat": 38.7475,
+        "lng": -77.5317,
+        "location": "Manassas, Virginia, United States",
+        "country": "US"
+    },
+    {
+        "hb": "https://hb02.ionode.top/",
+        "cu": "--",
+        "proxy": false,
+        "lat": 49.405,
+        "lng": 11.1617,
+        "location": "Nuremberg, Bavaria, Germany",
+        "country": "DE"
+    },
+    {
+        "hb": "https://555.hb.khang.pro/",
+        "cu": "--",
+        "proxy": false,
+        "lat": 21.0278,
+        "lng": 105.834,
+        "location": "Hanoi, Hanoi, Vietnam",
+        "country": "VN"
+    },
+    {
+        "hb": "https://communityhb.dnshome.eu/",
+        "cu": "--",
+        "proxy": false,
+        "lat": 49.1981,
+        "lng": 9.5084,
+        "location": "Öhringen, Baden-Wurttemberg, Germany",
+        "country": "DE"
+    },
+    {
         "hb": "http://38.58.182.4:10000/",
         "cu": "--",
         "proxy": true,

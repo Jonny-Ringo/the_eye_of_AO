@@ -76,6 +76,11 @@ export const PROCESSES = {
         ticker: "ATOMIC",
         action: "Bootloader-Ticker",
         displayName: "Atomic Assets"
+    },
+    bazarSalesDaily: {
+        description: "Bazar Sales Tracking - Update Executed Orders",
+        displayName: "Bazar Sales Daily",
+        action: "Update-Executed-Orders"
     }
 };
 
@@ -302,7 +307,19 @@ export async function generateQuery(processType, startHeight, endHeight, current
                     count
                 }
             }`;
-            
+
+        case 'bazarSalesDaily':
+            return `query {
+                transactions(
+                    ${blockRange}
+                    tags: [
+                        { name: "Action", values: ["${process.action}"] }
+                    ]
+                ) {
+                    count
+                }
+            }`;
+
         default:
             throw new Error(`Query template not found for process type: ${processType}`);
     }
