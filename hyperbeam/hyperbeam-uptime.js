@@ -1,14 +1,11 @@
 // hyperbeam-uptime.js with fixes for node rendering issues
 
-import { 
+import {
     initializeMainnetNodes,
     checkAllMainnetNodes,
     getMainnetNodesTotal,
     getMainnetNodesOnline,
-    getCuNodesTotal,
-    getCuNodesOnline,
-    checkHyperBeamNodeStatus,
-    checkCuNodeStatus
+    checkHyperBeamNodeStatus
 } from './mainnet-nodes.js';
 
 // Added flag to track initialization state
@@ -172,23 +169,15 @@ function updateSummary() {
     // Get current values from mainnet node tracker
     const mainnetHBTotal = getMainnetNodesTotal() || 0;
     const mainnetHBOnline = getMainnetNodesOnline() || 0;
-    const mainnetCUTotal = getCuNodesTotal() || 0;
-    const mainnetCUOnline = getCuNodesOnline() || 0;
-    
+
     // Sanity check - ensure online count never exceeds total count
-    const validatedCUOnline = Math.min(mainnetCUOnline, mainnetCUTotal);
     const validatedHBOnline = Math.min(mainnetHBOnline, mainnetHBTotal);
 
     // Make sure total is at least equal to online count
-    const adjustedCUTotal = Math.max(mainnetCUTotal, mainnetCUOnline);
     const adjustedHBTotal = Math.max(mainnetHBTotal, mainnetHBOnline);
 
     const hbPercentage = adjustedHBTotal > 0
         ? ((validatedHBOnline / adjustedHBTotal) * 100).toFixed(1)
-        : 0;
-
-    const cuPercentage = adjustedCUTotal > 0
-        ? ((validatedCUOnline / adjustedCUTotal) * 100).toFixed(1)
         : 0;
 
     summaryTextEl.innerHTML = `
@@ -197,13 +186,6 @@ function updateSummary() {
             <strong>${validatedHBOnline}</strong> of <strong>${adjustedHBTotal}</strong> nodes available (${hbPercentage}%)
             <br>
             <progress value="${validatedHBOnline}" max="${adjustedHBTotal}" style="width: 70%; margin-top: 10px;"></progress>
-        </div>
-        
-        <div class="stats-section" style="margin-top: 15px;">
-            <h3>Compute Units (CU)</h3>
-            <strong>${validatedCUOnline}</strong> of <strong>${adjustedCUTotal}</strong> nodes available (${cuPercentage}%)
-            <br>
-            <progress value="${validatedCUOnline}" max="${adjustedCUTotal}" style="width: 70%; margin-top: 10px;"></progress>
         </div>
     `;
 }

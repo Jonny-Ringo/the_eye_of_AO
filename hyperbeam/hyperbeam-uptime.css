@@ -563,20 +563,6 @@ section.active {
     max-width: 1400px;
   }
 
-  /* CU Node status styling */
-.cu-status-container {
-    margin-top: 10px;
-    padding-top: 10px;
-    border-top: 1px dashed var(--border);
-}
-
-.cu-label {
-    font-weight: 600;
-    margin-bottom: 5px;
-    font-size: 14px;
-    color: var(--text-secondary);
-}
-  
   /* Node cards */
   .node-card {
     background-color: var(--card-bg);

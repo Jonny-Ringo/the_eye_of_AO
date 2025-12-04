@@ -13,9 +13,6 @@ const STATUS_FILE = join(__dirname, 'node-status.json');
 const NODES_TO_MONITOR = [];
 mainnetNodes.forEach(node => {
   NODES_TO_MONITOR.push(node.hb);
-  if (node.cu && node.cu !== "--") {
-    NODES_TO_MONITOR.push(node.cu);
-  }
 });
 
 const GATEWAY_PATTERN = /^https:\/\/(dev-)?eye-of-ao\.[^\/]+/i;
@@ -60,12 +57,10 @@ async function checkAllNodes() {
   const statuses = [];
   mainnetNodes.forEach(node => {
     const hbStatus = statusMap.get(node.hb) || { online: false, responseTime: null, lastChecked: Date.now() };
-    const cuStatus = node.cu && node.cu !== "--" ? statusMap.get(node.cu) : null;
 
     statuses.push({
       // Full node metadata
       hb: node.hb,
-      cu: node.cu,
       proxy: node.proxy,
       lat: node.lat,
       lng: node.lng,
@@ -76,13 +71,7 @@ async function checkAllNodes() {
       hbStatus: hbStatus.status,
       hbResponseTime: hbStatus.responseTime,
       hbLastChecked: hbStatus.lastChecked,
-      hbError: hbStatus.error,
-      // CU status (if exists)
-      cuOnline: cuStatus?.online || false,
-      cuStatus: cuStatus?.status,
-      cuResponseTime: cuStatus?.responseTime,
-      cuLastChecked: cuStatus?.lastChecked,
-      cuError: cuStatus?.error
+      hbError: hbStatus.error
     });
   });
 
