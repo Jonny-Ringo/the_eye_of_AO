@@ -1,7 +1,6 @@
 const mainnetNodes = [
     {
         "hb": "https://tee-2.forward.computer/",
-        "cu": "--",
         "proxy": false,
         "lat": 33.7838,
         "lng": -84.4455,
@@ -10,7 +9,6 @@ const mainnetNodes = [
     },
     {
         "hb": "https://tee-3.forward.computer/",
-        "cu": "--",
         "proxy": false,
         "lat": 42.0048,
         "lng": -87.9954,
@@ -19,7 +17,6 @@ const mainnetNodes = [
     },
     {
         "hb": "https://tee-4.forward.computer/",
-        "cu": "--",
         "proxy": false,
         "lat": 40.5511,
         "lng": -74.4606,
@@ -28,7 +25,6 @@ const mainnetNodes = [
     },
     {
         "hb": "https://tee-5.forward.computer/",
-        "cu": "--",
         "proxy": false,
         "lat": 32.7889,
         "lng": -96.8021,
@@ -37,7 +33,6 @@ const mainnetNodes = [
     },
     {
         "hb": "https://tee-6.forward.computer/",
-        "cu": "--",
         "proxy": false,
         "lat": 37.3931,
         "lng": -121.962,
@@ -46,7 +41,6 @@ const mainnetNodes = [
     },
     {
         "hb": "https://tee-8.forward.computer/",
-        "cu": "--",
         "proxy": false,
         "lat": 34.0609,
         "lng": -118.2414,
@@ -55,7 +49,6 @@ const mainnetNodes = [
     },
     {
         "hb": "https://router-1.forward.computer/",
-        "cu": "--",
         "proxy": false,
         "lat": 42.0048,
         "lng": -87.9954,
@@ -64,7 +57,6 @@ const mainnetNodes = [
     },
     {
         "hb": "https://dev-router.forward.computer/",
-        "cu": "--",
         "proxy": false,
         "lat": 34.0609,
         "lng": -118.2414,
@@ -73,7 +65,6 @@ const mainnetNodes = [
     },
     {
         "hb": "https://hb.perplex.finance/",
-        "cu": "https://cu.perplex.finance/",
         "proxy": false,
         "lat": 43.6532,
         "lng": -79.3832,
@@ -82,7 +73,6 @@ const mainnetNodes = [
     },
     {
         "hb": "https://hb.marshal.ao/",
-        "cu": "--",
         "proxy": false,
         "lat": 50.4777,
         "lng": 12.3649,
@@ -91,7 +81,6 @@ const mainnetNodes = [
     },
     {
         "hb": "https://arweave.nyc/",
-        "cu": "--",
         "proxy": false,
         "lat": 40.9476,
         "lng": -73.8624,
@@ -100,7 +89,6 @@ const mainnetNodes = [
     },
     {
         "hb": "https://hb.karakutu.xyz/",
-        "cu": "https://karakutu.xyz/ao/cu/",
         "proxy": false,
         "lat": 60.1719,
         "lng": 24.9347,
@@ -109,7 +97,6 @@ const mainnetNodes = [
     },
     {
         "hb": "https://hb.arnode.asia/",
-        "cu": "https://cu.arnode.asia/",
         "proxy": false,
         "lat": 19.0748,
         "lng": 72.8856,
@@ -118,7 +105,6 @@ const mainnetNodes = [
     },
     {
         "hb": "https://hb.randao.net/",
-        "cu": "--",
         "proxy": false,
         "lat": 50.4777,
         "lng": 12.3649,
@@ -127,7 +113,6 @@ const mainnetNodes = [
     },
     {
         "hb": "https://hb.arweave.asia/",
-        "cu": "https://cu.arweave.asia/",
         "proxy": false,
         "lat": 43.6532,
         "lng": -79.3832,
@@ -136,7 +121,6 @@ const mainnetNodes = [
     },
     {
         "hb": "https://hb.arhub.asia/",
-        "cu": "https://cu.arhub.asia/",
         "proxy": false,
         "lat": 19.0748,
         "lng": 72.8856,
@@ -145,7 +129,6 @@ const mainnetNodes = [
     },
     {
         "hb": "https://ao1.avx.im/",
-        "cu": "--",
         "proxy": false,
         "lat": 50.4777,
         "lng": 12.3649,
@@ -154,7 +137,6 @@ const mainnetNodes = [
     },
     {
         "hb": "https://guez.dev/",
-        "cu": "--",
         "proxy": false,
         "lat": 51.1864,
         "lng": 6.8624,
@@ -163,7 +145,6 @@ const mainnetNodes = [
     },
     {
         "hb": "https://hb00.ionode.top/",
-        "cu": "--",
         "proxy": false,
         "lat": 49.405,
         "lng": 11.1617,
@@ -172,7 +153,6 @@ const mainnetNodes = [
     },
     {
         "hb": "https://hb01.ionode.top/",
-        "cu": "--",
         "proxy": false,
         "lat": 38.7475,
         "lng": -77.5317,
@@ -181,7 +161,6 @@ const mainnetNodes = [
     },
     {
         "hb": "https://hb02.ionode.top/",
-        "cu": "--",
         "proxy": false,
         "lat": 49.405,
         "lng": 11.1617,
@@ -190,7 +169,6 @@ const mainnetNodes = [
     },
     {
         "hb": "https://555.hb.khang.pro/",
-        "cu": "--",
         "proxy": false,
         "lat": 21.0278,
         "lng": 105.834,
@@ -199,7 +177,6 @@ const mainnetNodes = [
     },
     {
         "hb": "https://communityhb.dnshome.eu/",
-        "cu": "--",
         "proxy": false,
         "lat": 49.1981,
         "lng": 9.5084,
@@ -208,7 +185,6 @@ const mainnetNodes = [
     },
     {
         "hb": "http://38.58.182.4:10000/",
-        "cu": "--",
         "proxy": true,
         "lat": 40.5247,
         "lng": -111.8638,
@@ -217,7 +193,6 @@ const mainnetNodes = [
     },
     {
         "hb": "http://84.247.181.43:10000/",
-        "cu": "--",
         "proxy": true,
         "lat": 51.2357,
         "lng": 6.8091,
@@ -226,7 +201,6 @@ const mainnetNodes = [
     },
     {
         "hb": "http://65.108.201.218:8734/",
-        "cu": "https://adn79.pro/ao/cu",
         "proxy": true,
         "lat": 60.1719,
         "lng": 24.9347,
@@ -235,7 +209,6 @@ const mainnetNodes = [
     },
     {
         "hb": "http://95.216.248.117:10000/",
-        "cu": "http://95.216.248.117:6363/",
         "proxy": true,
         "lat": 60.1719,
         "lng": 24.9347,
@@ -244,7 +217,6 @@ const mainnetNodes = [
     },
     {
         "hb": "https://jonny-ringo.xyz/",
-        "cu": "--",
         "proxy": true,
         "lat": 37.3931,
         "lng": -121.962,
@@ -253,7 +225,6 @@ const mainnetNodes = [
     },
     {
         "hb": "http://65.109.91.146:10000/",
-        "cu": "--",
         "proxy": true,
         "lat": 60.1719,
         "lng": 24.9347,
@@ -262,7 +233,6 @@ const mainnetNodes = [
     },
     {
         "hb": "http://167.114.172.27:10001/",
-        "cu": "http://167.114.172.27:6363/",
         "proxy": true,
         "lat": 45.5063,
         "lng": -73.5794,
@@ -271,7 +241,6 @@ const mainnetNodes = [
     },
     {
         "hb": "http://207.180.227.138:10000/",
-        "cu": "http://207.180.227.138:6363/",
         "proxy": true,
         "lat": 48.9742,
         "lng": 8.1851,
@@ -280,7 +249,6 @@ const mainnetNodes = [
     },
     {
         "hb": "http://161.97.126.148:8734/",
-        "cu": "--",
         "proxy": true,
         "lat": 48.9742,
         "lng": 8.1851,
@@ -289,7 +257,6 @@ const mainnetNodes = [
     },
     {
         "hb": "http://167.86.81.65:8734/",
-        "cu": "--",
         "proxy": true,
         "lat": 49.405,
         "lng": 11.1617,
@@ -298,7 +265,6 @@ const mainnetNodes = [
     },
     {
         "hb": "http://node.arweaveoasis.com:8734/",
-        "cu": "--",
         "proxy": false,
         "lat": 1.28009,
         "lng": 103.851,
@@ -307,7 +273,6 @@ const mainnetNodes = [
     },
     {
         "hb": "https://0.hb.ao.p10node.onl/",
-        "cu": "--",
         "proxy": true,
           "lat": 49.0291,
         "lng": 8.35696,
@@ -316,7 +281,6 @@ const mainnetNodes = [
     },
     {
         "hb": "https://1.hb.ao.p10node.onl/",
-        "cu": "--",
         "proxy": true,
           "lat": 49.0291,
         "lng": 8.35696,
@@ -325,7 +289,6 @@ const mainnetNodes = [
     },
     {
         "hb": "https://2.hb.ao.p10node.onl/",
-        "cu": "--",
         "proxy": true,
           "lat": 49.0291,
         "lng": 8.35696,
@@ -334,7 +297,6 @@ const mainnetNodes = [
     },
     {
         "hb": "https://3.hb.ao.p10node.onl/",
-        "cu": "--",
         "proxy": true,
           "lat": 49.0291,
         "lng": 8.35696,
@@ -343,7 +305,6 @@ const mainnetNodes = [
     },
     {
         "hb": "https://4.hb.ao.p10node.onl/",
-        "cu": "--",
         "proxy": true,
           "lat": 49.0291,
         "lng": 8.35696,
@@ -352,7 +313,6 @@ const mainnetNodes = [
     },
     {
         "hb": "https://5.hb.ao.p10node.onl/",
-        "cu": "--",
         "proxy": true,
           "lat": 49.0291,
         "lng": 8.35696,
@@ -361,7 +321,6 @@ const mainnetNodes = [
     },
     {
         "hb": "https://6.hb.ao.p10node.onl/",
-        "cu": "--",
         "proxy": true,
           "lat": 49.0291,
         "lng": 8.35696,
@@ -370,7 +329,6 @@ const mainnetNodes = [
     },
     {
         "hb": "https://7.hb.ao.p10node.onl/",
-        "cu": "--",
         "proxy": true,
           "lat": 49.0291,
         "lng": 8.35696,
@@ -379,7 +337,6 @@ const mainnetNodes = [
     },
     {
         "hb": "https://8.hb.ao.p10node.onl/",
-        "cu": "--",
         "proxy": true,
           "lat": 49.0291,
         "lng": 8.35696,
@@ -388,7 +345,6 @@ const mainnetNodes = [
     },
     {
         "hb": "https://9.hb.ao.p10node.onl/",
-        "cu": "--",
         "proxy": true,
           "lat": 49.0291,
         "lng": 8.35696,
@@ -397,7 +353,6 @@ const mainnetNodes = [
     },
     {
         "hb": "http://194.233.86.27:8734/ ",
-        "cu": "--",
         "proxy": true,
         "lat": 1.2821,
         "lng": 103.851,
@@ -406,7 +361,6 @@ const mainnetNodes = [
     },
     {
         "hb": "http://157.180.52.245:8734/",
-        "cu": "--",
         "proxy": true,
         "lat": 60.1719,
         "lng": 24.9347,
@@ -415,7 +369,6 @@ const mainnetNodes = [
     },
     {
         "hb": "https://hyperbeam.permaweb.black/",
-        "cu": "--",
         "proxy": true,
         "lat": 60.1719,
         "lng": 24.9347,

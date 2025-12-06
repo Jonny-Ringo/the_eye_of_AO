@@ -54,34 +54,6 @@ function applyHBFromStatus(nodeCard, statusObj, busyMs) {
   return true;
 }
 
-// Quick renderer for CU (bottom row) using a status object
-function applyCUFromStatus(nodeCard, statusObj) {
-  const statusIndicator = nodeCard.querySelector('.cu-status-container .status-indicator');
-  const statusText = nodeCard.querySelector('.cu-status-container .status span:last-child');
-  const responseTimeEl = nodeCard.querySelector('.cu-status-container .response-time');
-
-  if (!statusObj) {
-    statusIndicator.className = 'status-indicator unavailable';
-    statusText.textContent = 'CU Unavailable';
-    responseTimeEl.textContent = 'Unknown';
-    return false;
-  }
-
-  const isOnline = !!statusObj.online;
-  if (!isOnline) {
-    statusIndicator.className = 'status-indicator unavailable';
-    statusText.textContent = 'CU Unavailable';
-    responseTimeEl.textContent = 'Offline';
-    return false;
-  }
-
-  const rt = Number(statusObj.responseTime ?? 0);
-  statusIndicator.className = 'status-indicator online';
-  statusText.textContent = 'Online';
-  responseTimeEl.textContent = `Response time: ${rt || '—'}ms`;
-  return true;
-}
-
 
 // Configuration
 const config = {
@@ -94,8 +66,6 @@ const config = {
 let autoRefreshTimer;
 let mainnetNodesTotal = 0;
 let mainnetNodesOnline = 0;
-let cuNodesTotal = 0;
-let cuNodesOnline = 0;
 
 // Initialize mainnet nodes dashboard
 function initializeMainnetNodes() {
@@ -142,10 +112,8 @@ async function checkAllMainnetNodes() {
   // Totals
   mainnetNodesTotal = nodesList.length;
   mainnetNodesOnline = 0;
-  cuNodesTotal = nodesList.filter(node => node.cu && node.cu !== "--").length;
-  cuNodesOnline = 0;
 
-  console.log(`Checking ${nodesList.length} mainnet nodes with ${cuNodesTotal} CU nodes...`);
+  console.log(`Checking ${nodesList.length} mainnet nodes...`);
 
   // Build all cards using the enriched node data (already has status!)
   nodesList.forEach((node) => {
@@ -158,27 +126,16 @@ async function checkAllMainnetNodes() {
       error: node.hbError
     };
 
-    const cuStatusObj = node.cu && node.cu !== "--" ? {
-      online: node.cuOnline,
-      status: node.cuStatus,
-      responseTime: node.cuResponseTime,
-      lastChecked: node.cuLastChecked,
-      error: node.cuError
-    } : null;
-
     checkMainnetNodePair(
       null, // not used
       null, // not used
       node.hb,
-      node.cu,
       mainnetStatusContainer,
-      (hbOnline, cuOnline) => {
+      (hbOnline) => {
         if (hbOnline) mainnetNodesOnline++;
-        if (node.cu !== "--" && cuOnline) cuNodesOnline++;
         updateSummary();
       },
-      hbStatusObj,
-      cuStatusObj
+      hbStatusObj
     );
   });
 
@@ -187,13 +144,10 @@ async function checkAllMainnetNodes() {
 }
 
 
-function checkMainnetNodePair(_hbNodeUrl, _cuNodeUrl, hbDisplayName, cuDisplayName, container, callback, hbStatusObj, cuStatusObj) {
-  // Create a card for this node pair
+function checkMainnetNodePair(_hbNodeUrl, _cuNodeUrl, hbDisplayName, container, callback, hbStatusObj) {
+  // Create a card for this node
   const nodeId = `mainnet-${hbDisplayName.replace(/https?:\/\//, '').replace(/\./g, '-').replace(/\//g, '')}`;
   const hbNodeName = hbDisplayName.replace(/^https?:\/\//, '').replace(/\/$/, '');
-  const cuNodeName = cuDisplayName && cuDisplayName !== "--"
-    ? cuDisplayName.replace(/^https?:\/\//, '').replace(/\/$/, '')
-    : "--";
 
   const nodeCard = document.createElement('div');
   nodeCard.id = nodeId;
@@ -207,14 +161,6 @@ function checkMainnetNodePair(_hbNodeUrl, _cuNodeUrl, hbDisplayName, cuDisplayNa
       <span>Loading...</span>
     </div>
     <div class="response-time">-</div>
-    <div class="cu-status-container">
-      <div class="cu-label">CU: ${cuNodeName}</div>
-      <div class="status">
-        <span class="status-indicator ${cuDisplayName === "--" ? "unavailable" : "loading"}"></span>
-        <span>${cuDisplayName === "--" ? "Not Available" : "Loading..."}</span>
-      </div>
-      <div class="response-time">${cuDisplayName === "--" ? "-" : "-"}</div>
-    </div>
     <div class="node-actions">
       <a href="${unwrapProxiedUrl(hbDisplayName)}" target="_blank" title="Visit HyperBEAM Node">
         <i class="fas fa-external-link-alt"></i>
@@ -222,24 +168,13 @@ function checkMainnetNodePair(_hbNodeUrl, _cuNodeUrl, hbDisplayName, cuDisplayNa
       <a href="${unwrapProxiedUrl(hbDisplayName)}~meta@1.0/info" target="_blank" title="View HyperBEAM Metadata">
         <i class="fas fa-info-circle"></i>
       </a>
-      ${cuDisplayName !== "--" ? `
-      <a href="${unwrapProxiedUrl(cuDisplayName)}" target="_blank" title="Visit CU Node">
-        <i class="fas fa-server"></i>
-      </a>` : ''}
     </div>
   `;
 
   // Render from the aggregated statuses (no network calls)
   const hbOnline = applyHBFromStatus(nodeCard, hbStatusObj, config.busyTimeout);
-  let cuOnline = false;
 
-  if (cuDisplayName !== "--") {
-    cuOnline = applyCUFromStatus(nodeCard, cuStatusObj);
-  } else {
-    // mark as not available (already set in HTML)
-  }
-
-  if (callback) callback(hbOnline, cuOnline);
+  if (callback) callback(hbOnline);
 }
 
 
@@ -318,106 +253,6 @@ function checkHyperBeamNodeStatus(nodeUrl, nodeCard, callback) {
 }
 
 
-function checkCuNodeStatus(nodeUrl, nodeCard, callback) {
-    checkCuViaWorker(nodeUrl, nodeCard, callback);
-}
-
-function checkCuViaWorker(nodeUrl, nodeCard, callback) {
-    const startTime = performance.now();
-    const controller = new AbortController();
-
-    fetch(nodeUrl, {
-        method: 'GET',
-        signal: controller.signal,
-        mode: 'cors',
-        credentials: 'omit'
-    })
-    .then(async res => {
-        const endTime = performance.now();
-        const responseTime = (endTime - startTime).toFixed(0);
-
-        let data;
-        try {
-            data = await res.json();
-        } catch {
-            console.warn(`⚠️ CU Proxy JSON invalid for ${nodeUrl}`);
-            return markCuOffline();
-        }
-
-        // Handle cached response format from your server
-        if (data.cached) {
-            // Use server's cached result
-            const isOnline = data.online === true;
-            const serverResponseTime = data.responseTime || 'Unknown';
-            updateCuDisplay(isOnline, serverResponseTime, nodeCard, callback);
-        } else {
-            // Fallback to old format (shouldn't happen with new server)
-            console.warn(`⚠️ CU Proxy response not cached for ${nodeUrl}`);
-        }
-    })
-    .catch(err => {
-        console.error(`[CU Proxy ERROR] ${nodeUrl}`, err.message);
-        updateCuDisplay(false, 'Error', nodeCard, callback);
-    });
-
-    function markCuOffline() {
-        updateCuDisplay(false, 'Offline', nodeCard, callback);
-    }
-}
-
-/*
-function checkCuDirectHttps(nodeUrl, nodeCard, callback) {
-    const startTime = performance.now();
-    const controller = new AbortController();
-
-    // Try normal fetch first to get real status codes
-    fetch(nodeUrl, {
-        method: 'HEAD',
-        signal: controller.signal,
-        credentials: 'omit'
-        // No mode specified = normal fetch
-    })
-    .then(response => {
-        const endTime = performance.now();
-        const responseTime = (endTime - startTime).toFixed(0);
-        
-        // Now we can read actual status codes!
-        const isOnline = response.status >= 200 && response.status < 400;
-        updateCuDisplay(isOnline, responseTime, nodeCard, callback);
-    })
-    .catch(err => {
-        const endTime = performance.now();
-        const responseTime = (endTime - startTime).toFixed(0);
-
-        // Check if it's just a CORS issue (server is up but blocking)
-        if (err.message.includes('CORS') || err.message.includes('NetworkError')) {
-            console.log(`⚠️ CORS blocked ${nodeUrl}, assuming online`);
-            updateCuDisplay(true, responseTime, nodeCard, callback);
-        } else {
-            console.log(`✗ Failed ${nodeUrl}: ${err.message}`);
-            updateCuDisplay(false, responseTime, nodeCard, callback);
-        }
-    });
-}
-*/
-
-function updateCuDisplay(isOnline, responseTime, nodeCard, callback) {
-    const statusIndicator = nodeCard.querySelector('.cu-status-container .status-indicator');
-    const statusText = nodeCard.querySelector('.cu-status-container .status span:last-child');
-    const responseTimeEl = nodeCard.querySelector('.cu-status-container .response-time');
-
-    if (isOnline) {
-        statusIndicator.className = 'status-indicator online';
-        statusText.textContent = 'Online';
-        responseTimeEl.textContent = `Response time: ${responseTime}ms`;
-        if (callback) callback(true);
-    } else {
-        statusIndicator.className = 'status-indicator unavailable';
-        statusText.textContent = 'CU Unavailable';
-        responseTimeEl.textContent = responseTime;
-        if (callback) callback(false);
-    }
-}
 
 function sortNodeCards(container) {
     const cards = Array.from(container.children);
@@ -465,23 +300,12 @@ function getMainnetNodesOnline() {
     return mainnetNodesOnline;
 }
 
-function getCuNodesTotal() {
-    return cuNodesTotal;
-}
-
-function getCuNodesOnline() {
-    return cuNodesOnline;
-}
-
 // Export functions
 export {
     initializeMainnetNodes,
     checkAllMainnetNodes,
     getMainnetNodesTotal,
     getMainnetNodesOnline,
-    getCuNodesTotal,
-    getCuNodesOnline,
-    checkCuNodeStatus,
     checkHyperBeamNodeStatus,
     unwrapProxiedUrl
 };

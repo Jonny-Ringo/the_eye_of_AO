@@ -79,7 +79,6 @@ class HyperBEAMGlobe {
         location: node.location || 'Unknown Location',
         country: node.country || 'Unknown',
         fullUrl: node.hb,
-        cu: node.cu || '--',
         proxy: node.proxy || false,
         responseTime: node.hbResponseTime
       };
@@ -91,7 +90,7 @@ class HyperBEAMGlobe {
     console.error('Error loading node data:', error);
     this.nodeData = [{
       url: 'Sample Node', lat: 0, lng: 0, status: 'offline',
-      location: 'Error loading nodes', fullUrl: '#', cu: '--', proxy: false
+      location: 'Error loading nodes', fullUrl: '#', proxy: false
     }];
     this.updateStats();
   }
@@ -341,7 +340,6 @@ class HyperBEAMGlobe {
           </div>
           <div style="margin-bottom: 4px;"><strong>Location:</strong> ${nodeData.location}</div>
           <div style="margin-bottom: 4px;"><strong>Status:</strong> ${nodeData.status.charAt(0).toUpperCase() + nodeData.status.slice(1)}</div>
-          ${nodeData.cu !== '--' ? `<div><strong>CU:</strong> Available</div>` : '<div><strong>CU:</strong> Not Available</div>'}
         </div>
       `;
     }
@@ -370,7 +368,6 @@ class HyperBEAMGlobe {
       let nodeList = nodeData.allNodes.map(node => {
         const nodeStatusColor = this.getStatusColor(node.status);
         const hbUrl = node.fullUrl;
-        const cuUrl = node.cu !== '--' ? node.cu : null;
 
         return `
           <div style="margin: 4px 0;">
@@ -379,9 +376,6 @@ class HyperBEAMGlobe {
               <a href="${hbUrl}" target="_blank" style="color: #60a5fa; text-decoration: none; font-size: 12px;">${node.url}</a>
               <span style="font-size: 11px; opacity: 0.7; margin-left: 4px;">(${node.status})</span>
             </div>
-            ${cuUrl ? `<div style="margin-left: 20px; margin-top: 2px;">
-              <a href="${cuUrl}" target="_blank" style="color: #a78bfa; text-decoration: none; font-size: 11px;">CU: ${cuUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')}</a>
-            </div>` : ''}
           </div>
         `;
       }).join('');
@@ -401,7 +395,6 @@ class HyperBEAMGlobe {
     } else {
       // Single node tooltip with clickable links
       const hbUrl = nodeData.fullUrl;
-      const cuUrl = nodeData.cu !== '--' ? nodeData.cu : null;
 
       content = `
         <div style="font-weight: bold; margin-bottom: 8px;">
@@ -410,9 +403,6 @@ class HyperBEAMGlobe {
         </div>
         <div style="margin-bottom: 4px;"><strong>Location:</strong> ${nodeData.location}</div>
         <div style="margin-bottom: 4px;"><strong>Status:</strong> ${nodeData.status.charAt(0).toUpperCase() + nodeData.status.slice(1)}</div>
-        ${cuUrl ? `<div style="margin-left: 16px; margin-top: 4px;">
-          <a href="${cuUrl}" target="_blank" style="color: #a78bfa; text-decoration: none;">CU: ${cuUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')}</a>
-        </div>` : '<div style="margin-left: 16px; color: #9ca3af;">CU: Not Available</div>'}
       `;
     }
 
@@ -467,12 +457,6 @@ class HyperBEAMGlobe {
     const panel = document.getElementById('nodeInfo');
     const details = document.getElementById('nodeDetails');
 
-    const cuInfo = nodeData.cu && nodeData.cu !== "--"
-      ? `<div style="margin-bottom: 8px;">
-           <strong>CU Endpoint:</strong> ${nodeData.cu}
-         </div>`
-      : '';
-
     details.innerHTML = `
       <div style="margin-bottom: 15px;">
         <span class="node-status-indicator status-${nodeData.status}"></span>
@@ -487,7 +471,6 @@ class HyperBEAMGlobe {
       <div style="margin-bottom: 8px;">
         <strong>Coordinates:</strong> ${nodeData.lat.toFixed(4)}, ${nodeData.lng.toFixed(4)}
       </div>
-      ${cuInfo}
     `;
 
     panel.classList.add('visible');
