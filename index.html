@@ -128,13 +128,57 @@
                 <div class="stat-value" id="nodeCount">--</div>
             </div>
 
-            <div class="stat-card" title="Reserved for upcoming network metric">
-                <div class="stat-title">Coming Soon</div>
-                <div class="stat-value">--</div>
+            <div class="stat-card" title="Total count of all AO protocol messages (all-time)">
+                <div class="stat-title">Total AO Messages</div>
+                <div class="stat-value" id="totalAoMessages">--</div>
             </div>
         </div>
 
+        <!-- AO Message Analytics Charts -->
+        <div class="dashboard-grid dashboard-grid-3col">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3 class="chart-title">AO Daily Messages Count</h3>
+                </div>
+                <div class="chart-body">
+                    <div id="aoMessagesLoader" class="chart-loader">
+                        <div class="loader"></div>
+                        <div class="loader-text">Fetching Message History...</div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="aoMessagesChart"></canvas>
+                    </div>
+                    <a href="#" class="chart-fullscreen-link" onclick="openChartModal('aoMessages'); return false;">Fullscreen view</a>
+                    <div class="chart-actions">
+                        <button class="chart-action-btn">1W</button>
+                        <button class="chart-action-btn">1M</button>
+                        <button class="chart-action-btn">3M</button>
+                    </div>
+                </div>
+            </div>
 
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3 class="chart-title">Coming Soon</h3>
+                </div>
+                <div class="chart-body">
+                    <div class="chart-container" style="display: flex; align-items: center; justify-content: center; height: 300px; color: #999;">
+                        <p>Additional AO analytics chart coming soon</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3 class="chart-title">Coming Soon</h3>
+                </div>
+                <div class="chart-body">
+                    <div class="chart-container" style="display: flex; align-items: center; justify-content: center; height: 300px; color: #999;">
+                        <p>Additional AO analytics chart coming soon</p>
+                    </div>
+                </div>
+            </div>
+        </div>
 
             <div class="dashboard-grid">
 
@@ -400,9 +444,8 @@
                         </div>
                     </div>
                 </div>
+            </div>
         </section>
-
-
 
         <section id="gamingStatsContent">
 

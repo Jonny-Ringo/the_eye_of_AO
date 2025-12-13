@@ -81,6 +81,12 @@ export const PROCESSES = {
         description: "Bazar Sales Tracking - Update Executed Orders",
         displayName: "Bazar Sales Daily",
         action: "Update-Executed-Orders"
+    },
+    aoMessages: {
+        description: "All AO Messages",
+        displayName: "AO Messages",
+        action: "Data-Protocol",
+        protocol: "ao"
     }
 };
 
@@ -314,6 +320,18 @@ export async function generateQuery(processType, startHeight, endHeight, current
                     ${blockRange}
                     tags: [
                         { name: "Action", values: ["${process.action}"] }
+                    ]
+                ) {
+                    count
+                }
+            }`;
+
+        case 'aoMessages':
+            return `query {
+                transactions(
+                    ${blockRange}
+                    tags: [
+                        { name: "Data-Protocol", values: ["ao"] }
                     ]
                 ) {
                     count

@@ -589,7 +589,7 @@ export function initializeCharts() {
     charts['stargridMatches'] = createStargridMatchesChart();
     
     // Standard charts for remaining processes
-    ['wUSDCVolume', 'wARweeklyTransfer', 'wARTransfer', 'wARVolume', 'AOTransfer','AOVolume', 'permaswap', 'botega', 'llamaLand', 'stargrid', 'bazarAADaily', 'bazarSalesDaily'].forEach(processName => {
+    ['wUSDCVolume', 'wARweeklyTransfer', 'wARTransfer', 'wARVolume', 'AOTransfer','AOVolume', 'permaswap', 'botega', 'llamaLand', 'stargrid', 'bazarAADaily', 'bazarSalesDaily', 'aoMessages'].forEach(processName => {
         charts[processName] = createStandardChart(processName);
     });
 
