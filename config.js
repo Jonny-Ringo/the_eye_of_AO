@@ -20,6 +20,7 @@ export const CHART_COLORS = {
     USDATransfer: 'rgb(51, 139, 0)',
     bazarAADaily:'rgb(249, 110, 70)',
     bazarSalesDaily: 'rgb(249, 110, 70)',
+    aoMessages: 'rgb(47, 243, 8)',
 };
 
 // Time range values in milliseconds
@@ -48,7 +49,8 @@ export const UTC_TIMESTAMP_PROCESSES = [
     'llamaLand',
     'bazarAADaily',
     'bazarSalesDaily',
-    'wARweeklyTransfer'
+    'wARweeklyTransfer',
+    'aoMessages'
 ];
 
 export const NON_UTC_TIMESTAMP_PROCESSES = [

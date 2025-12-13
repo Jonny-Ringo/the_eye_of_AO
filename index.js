@@ -299,10 +299,10 @@ async function fetchAndUpdateProcessData(processName, periods, currentHeight) {
         });
         
         // Sort chronologically
-        const sortedData = mergedData.sort((a, b) => 
+        const sortedData = mergedData.sort((a, b) =>
             new Date(a.timestamp) - new Date(b.timestamp)
         );
-        
+
         // Update historical data
         historicalData[processName] = sortedData;
     } else {
@@ -553,10 +553,10 @@ async function initializeDashboard() {
         Object.keys(PROCESSES).forEach(processName => {
             if (!processName.includes('weekly') && processName !== 'wARTotalSupply' && processName !== 'wARTransfer') {
                 // Use appropriate periods based on chart type
-                const periods = ['AOTransfer', 'permaswap', 'botega', 'llamaLand','bazarAADaily', 'bazarSalesDaily'].includes(processName)
+                const periods = ['AOTransfer', 'permaswap', 'botega', 'llamaLand','bazarAADaily', 'bazarSalesDaily', 'aoMessages'].includes(processName)
                     ? oneWeekPeriods
                     : dailyPeriods;
-                
+
                 // Load each chart independently
                 loadProcessChart(processName, periods, currentHeight).catch(error => {
                     console.error(`Error loading ${processName} chart:`, error);
@@ -574,6 +574,9 @@ async function initializeDashboard() {
                 });
             }
         });
+
+        // Fetch all-time total AO messages count
+        updateTotalAoMessagesCount();
 
         // 1. Populate mainnet node count
         updateNodeCount();
@@ -622,6 +625,43 @@ async function loadDevAddressCount() {
     console.error("Failed to load dev address count:", err);
     document.getElementById('activeDevCount').textContent = "N/A";
   }
+}
+
+/**
+ * Fetches and displays the all-time total AO messages count
+ */
+async function updateTotalAoMessagesCount() {
+    try {
+        // Query for ALL-TIME total (no block height max restriction)
+        const query = `query {
+            transactions(
+                block: { min: 0 }
+                tags: [
+                    { name: "Data-Protocol", values: ["ao"] }
+                ]
+            ) {
+                count
+            }
+        }`;
+
+        const response = await fetch('https://arweave-search.goldsky.com/graphql', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query })
+        });
+
+        const result = await response.json();
+        const total = parseInt(result?.data?.transactions?.count) || 0;
+
+        const element = document.getElementById('totalAoMessages');
+        if (element) {
+            element.textContent = total.toLocaleString();
+        }
+
+        console.log('Total AO Messages:', total.toLocaleString());
+    } catch (error) {
+        console.error('Error fetching all-time AO messages count:', error);
+    }
 }
 
 /**
@@ -799,11 +839,11 @@ async function loadProcessChart(processName, periods, currentHeight) {
         } else {
             // Standard chart
             const data = await fetchProcessData(processName, periods, currentHeight);
-            
+
             // Update historical data
             if (data.length > 0) {
                 historicalData[processName] = data;
-                
+
                 // Update the chart
                 const timeRange = getChartTimeRange(processName);
                 updateChartTimeRange(processName, timeRange);
