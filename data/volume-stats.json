@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-04-18T06:02:33.448Z",
+  "lastUpdated": "2026-04-18T07:02:23.939Z",
   "blockHeights": [
     {
       "date": "2025-05-20",
@@ -1335,7 +1335,7 @@
     },
     {
       "date": "2026-04-18",
-      "endHeight": 1899884
+      "endHeight": 1899922
     }
   ],
   "volumeData": {
@@ -3524,8 +3524,8 @@
       {
         "date": "2026-04-18",
         "startHeight": 1899721,
-        "endHeight": 1899884,
-        "volume": 2991863173696
+        "endHeight": 1899922,
+        "volume": 12166956930496
       }
     ],
     "AO": [
@@ -5713,7 +5713,7 @@
       {
         "date": "2026-04-18",
         "startHeight": 1899721,
-        "endHeight": 1899884,
+        "endHeight": 1899922,
         "volume": 716262941657575
       }
     ],
@@ -7902,8 +7902,8 @@
       {
         "date": "2026-04-18",
         "startHeight": 1899721,
-        "endHeight": 1899884,
-        "volume": 22161105
+        "endHeight": 1899922,
+        "volume": 41520944
       }
     ]
   }
