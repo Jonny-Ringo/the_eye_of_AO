@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>The Eye</title>
+        <meta name="description" content="The Eye is a Data dashboard for monitoring the Arweave Storage & AO Compute Networks.">
+        <meta name="keywords" content="Arweave, AO, data, dashboard, blockchain, graphs, charts, analytics, monitoring, HyperBEAM">
+        <meta name="robots" content="index, follow">
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <meta name="language" content="English">
+        <meta name="author" content="Jonny Ringo">
+        <link rel="icon" href="images/eyecon.png">
+        
+        <!-- Open Graph / Facebook -->
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="https://eye-of-ao.arweave.net/">
+        <meta property="og:title" content="The Eye">
+        <meta property="og:description" content="Data dashboard for monitoring the Arweave Storage & AO Compute Networks">
+        <meta property="og:image" content="images/preview.png">
+        <meta property="og:image:width" content="1200">
+        <meta property="og:image:height" content="630">
+        <meta property="og:site_name" content="The Eye">
+        
+        <!-- Twitter -->
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:url" content="https://eye-of-ao.arweave.net/">
+        <meta name="twitter:title" content="The Eye">
+        <meta name="twitter:description" content="Data dashboard for monitoring the Arweave Storage & AO Compute Networks">
+        <meta name="twitter:image" content="images/preview.png">
+        <meta name="twitter:creator" content="Jonny Ringo">
+        
+        <!-- Fonts -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+        
+        <!-- Chart.js for graphs -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+        
+        <!-- Custom styles -->
+        <link rel="stylesheet" href="dash.css">
+    </head>
+<body>
+    <header>
+        <div class="container header-content">
+            <div class="logo">
+                <div>
+                    <h1>The Eye</h1>
+                </div>
+            </div>
+            <div class="header-info">
+                <div id="blockInfo" class="block-info">Loading network status...</div>
+            </div>
+        </div>
+        <nav class="navbar">
+            <div class="navbar-container">
+        
+                <!-- Network Stats -->
+                <div class="nav-dropdown">
+                    <a href="index.html" class="nav-item dropdown-toggle">Network Stats ▾</a>
+                    <div class="dropdown-menu">
+                        <a href="#networkStats" class="nav-item">Arweave & AO Network Stats</a>
+                        <!-- <a href="#gamingStats" class="nav-item">Gaming Stats</a> -->
+                    </div>
+                </div>
+        
+                <!-- Legacynet Uptime -->
+                <div class="nav-dropdown">
+                    <a href="legacynet/uptime.html" class="nav-item dropdown-toggle">Legacynet Uptime ▾</a>
+                    <div class="dropdown-menu">
+                        <a href="/legacynet/uptime.html#theFirst150" class="nav-item">The First 150</a>
+                        <a href="/legacynet/uptime.html#hundredThouNodes" class="nav-item">100k Nodes</a>
+                        <a href="/legacynet/uptime.html#lCustomNodes" class="nav-item">Custom Node Dashboard</a>
+                    </div>
+                </div>
+        
+                <!-- HyperBEAM Uptime -->
+                <div class="nav-dropdown">
+                    <a href="hyperbeam/hyperbeam-uptime.html" class="nav-item dropdown-toggle">HyperBEAM Uptime ▾</a>
+                    <div class="dropdown-menu">
+                        <a href="/hyperbeam/3D-Globe/globe.html" class="nav-item">🌏3D Hyperbeam Network</a>
+                        <a href="/hyperbeam/hyperbeam-uptime.html#hbMainnetNodes" class="nav-item">HyperBEAM Nodes</a>
+                    </div>
+                </div>
+        
+            </div>
+        </nav>
+    </header>
+
+    <div id="mainLoader" class="loader-container">
+        <div class="eye-loader">
+            <div class="eye-container">
+                <div class="iris">
+                    <div class="pupil"></div>
+                    <div class="reflection"></div>
+                </div>
+                <div class="eyelid"></div>
+                <div class="lower-lid"></div>
+            </div>
+        </div>
+        <div class="loader-text">Syncing with Arweave & AO...</div>
+    </div>
+
+
+    <div class="container">
+
+
+        <section id="networkStatsContent" class="active">
+            <div class="page-header">
+                <h1>Arweave & AO Network Stats</h1>
+            </div>
+
+        <div class="stats-row">
+            <div class="stat-card" title="Number of active developer addresses on the Arweave/AO networks">
+                <img src="/images/happy-lean.png" alt="Leaning Character" class="leaning-character">
+                <div class="stat-title">Active Developer Addresses</div>
+                <div class="stat-value" id="activeDevCount">--</div>
+                <div class="stat-link">
+                    <a href="#" onclick="downloadDevCSV()"><img src="images/eyecon2.png" > Download CSV</a>
+                </div>
+
+            </div>
+
+
+            <div class="stat-card" title="Total number of AO Mainnet nodes currently listed">
+                <div class="stat-title">HyperBEAM Mainnet Nodes</div>
+                <div class="stat-value" id="nodeCount">--</div>
+            </div>
+
+            <div class="stat-card" title="Total count of all AO protocol messages (all-time)">
+                <div class="stat-title">Total AO Messages</div>
+                <div class="stat-value" id="totalAoMessages">--</div>
+            </div>
+        </div>
+
+        <!-- AO Message Analytics Charts -->
+        <div class="dashboard-grid dashboard-grid-1col">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3 class="chart-title">Arweave Transaction Analytics (With AO Messages)</h3>
+                </div>
+                <div class="chart-body">
+                    <div id="arweaveTransactionsLoader" class="chart-loader">
+                        <div class="loader"></div>
+                        <div class="loader-text">Fetching Arweave Transaction Data...</div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="arweaveTransactionsChart"></canvas>
+                    </div>
+                    <a href="#" class="chart-fullscreen-link" onclick="openChartModal('arweaveTransactions'); return false;">Fullscreen view</a>
+                    <div class="chart-actions">
+                        <button class="chart-action-btn">1W</button>
+                        <button class="chart-action-btn">1M</button>
+                        <button class="chart-action-btn">3M</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+            <div class="dashboard-grid">
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">AO Daily Transfer Count</h3>
+                    </div>
+                    <div class="chart-body">
+                        <div id="AOTransferLoader" class="chart-loader">
+                            <div class="loader"></div>
+                            <div class="loader-text">Fetching Transaction History...</div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="AOTransferChart"></canvas>
+                        </div>
+                        <a href="#" class="chart-fullscreen-link" onclick="openChartModal('AOTransfer'); return false;">Fullscreen view</a>
+                        <div class="chart-actions">
+                            <button class="chart-action-btn">1W</button>
+                            <button class="chart-action-btn">1M</button>
+                            <button class="chart-action-btn">3M</button>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">AO Daily Volume</h3>
+                    </div>
+                    <div class="chart-body">
+                        <div id="AOVolumeLoader" class="chart-loader">
+                            <div class="loader"></div>
+                            <div class="loader-text">Fetching Transaction History...</div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="AOVolumeChart"></canvas>
+                        </div>
+                        <a href="#" class="chart-fullscreen-link" onclick="openChartModal('AOVolume'); return false;">Fullscreen view</a>
+                        <div class="chart-actions">
+                            <button class="chart-action-btn">1W</button>
+                            <button class="chart-action-btn">1M</button>
+                            <button class="chart-action-btn">3M</button>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">wUSDC/USDA Daily Transfer Count</h3>
+                    </div>
+                    <div class="chart-body">
+                        <div id="wUSDCTransferLoader" class="chart-loader">
+                            <div class="loader"></div>
+                            <div class="loader-text">Fetching Transaction History...</div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="wUSDCTransferChart"></canvas>
+                        </div>
+                        <a href="#" class="chart-fullscreen-link" onclick="openChartModal('wUSDCTransfer'); return false;">Fullscreen view</a>
+                        <div class="chart-actions">
+                            <button class="chart-action-btn">1W</button>
+                            <button class="chart-action-btn">1M</button>
+                            <button class="chart-action-btn">3M</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">wUSDC Daily Volume</h3>
+                    </div>
+                    <div class="chart-body">
+                        <div id="wUSDCVolumeLoader" class="chart-loader">
+                            <div class="loader"></div>
+                            <div class="loader-text">Fetching Transaction History...</div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="wUSDCVolumeChart"></canvas>
+                        </div>
+                        <a href="#" class="chart-fullscreen-link" onclick="openChartModal('wUSDCVolume'); return false;">Fullscreen view</a>
+                        <div class="chart-actions">
+                            <button class="chart-action-btn">1W</button>
+                            <button class="chart-action-btn">1M</button>
+                            <button class="chart-action-btn">3M</button>
+                        </div>
+                    </div>
+                </div>
+
+
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">wAR Daily Transfer Count</h3>
+                    </div>
+                    <div class="chart-body">
+                        <div id="wARTransferLoader" class="chart-loader">
+                            <div class="loader"></div>
+                            <div class="loader-text">Fetching Transaction History...</div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="wARTransferChart"></canvas>
+                        </div>
+                        <a href="#" class="chart-fullscreen-link" onclick="openChartModal('wARTransfer'); return false;">Fullscreen view</a>
+                        <div class="chart-actions">
+                            <button class="chart-action-btn">1W</button>
+                            <button class="chart-action-btn">1M</button>
+                            <button class="chart-action-btn">3M</button>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">wAR Daily Volume</h3>
+                    </div>
+                    <div class="chart-body">
+                        <div id="wARVolumeLoader" class="chart-loader">
+                            <div class="loader"></div>
+                            <div class="loader-text">Fetching Transaction History...</div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="wARVolumeChart"></canvas>
+                        </div>
+                        <a href="#" class="chart-fullscreen-link" onclick="openChartModal('wARVolume'); return false;">Fullscreen view</a>
+                        <div class="chart-actions">
+                            <button class="chart-action-btn">1W</button>
+                            <button class="chart-action-btn">1M</button>
+                            <button class="chart-action-btn">3M</button>
+                        </div>
+                    </div>
+                </div>
+
+
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">wAR Weekly Transfer Count</h3>
+                    </div>
+                    <div class="chart-body">
+                        <div id="wARweeklyTransferLoader" class="chart-loader">
+                            <div class="loader"></div>
+                            <div class="loader-text">Fetching Transaction History...</div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="wARweeklyTransferChart"></canvas>
+                        </div>
+                        <a href="#" class="chart-fullscreen-link" onclick="openChartModal('wARweeklyTransfer'); return false;">Fullscreen view</a>
+                        <div class="chart-actions">
+                            <button class="chart-action-btn">1W</button>
+                            <button class="chart-action-btn">1M</button>
+                            <button class="chart-action-btn">3M</button>
+                            <button class="chart-action-btn">6M</button>
+                            <button class="chart-action-btn">9M</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">wAR Daily Total Supply</h3>
+                    </div>
+                    <div class="chart-body">
+                        <div id="wARTotalSupplyLoader" class="chart-loader">
+                            <div class="loader"></div>
+                            <div class="loader-text">Fetching Supply History...</div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="wARTotalSupplyChart"></canvas>
+                        </div>
+                        <a href="#" class="chart-fullscreen-link" onclick="openChartModal('wARTotalSupply'); return false;">Fullscreen view</a>
+                        <div class="chart-actions">
+                            <button class="chart-action-btn">1W</button>
+                            <button class="chart-action-btn">1M</button>
+                            <button class="chart-action-btn">3M</button>
+                            <button class="chart-action-btn">6M</button>
+                            <button class="chart-action-btn">9M</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Permaswap Daily Swap Volume</h3>
+                    </div>
+                    <div class="chart-body">
+                        <div id="permaswapLoader" class="chart-loader">
+                            <div class="loader"></div>
+                            <div class="loader-text">Fetching Transaction History...</div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="permaswapChart"></canvas>
+                        </div>
+                        <a href="#" class="chart-fullscreen-link" onclick="openChartModal('permaswap'); return false;">Fullscreen view</a>
+                        <div class="chart-actions">
+                            <button class="chart-action-btn">1W</button>
+                            <button class="chart-action-btn">1M</button>
+                            <button class="chart-action-btn">3M</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Botega Daily Swap Volume</h3>
+                    </div>
+                    <div class="chart-body">
+                        <div id="botegaLoader" class="chart-loader">
+                            <div class="loader"></div>
+                            <div class="loader-text">Fetching Transaction History...</div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="botegaChart"></canvas>
+                        </div>
+                        <a href="#" class="chart-fullscreen-link" onclick="openChartModal('botega'); return false;">Fullscreen view</a>
+                        <div class="chart-actions">
+                            <button class="chart-action-btn">1W</button>
+                            <button class="chart-action-btn">1M</button>
+                            <button class="chart-action-btn">3M</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Atomic Asset Daily Creation Tracking on Bazar</h3>
+                    </div>
+                    <div class="chart-body">
+                        <div id="bazarAADailyLoader" class="chart-loader">
+                            <div class="loader"></div>
+                            <div class="loader-text">Fetching Transaction History...</div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="bazarAADailyChart"></canvas>
+                        </div>
+                        <a href="#" class="chart-fullscreen-link" onclick="openChartModal('bazarAADaily'); return false;">Fullscreen view</a>
+                        <div class="chart-actions">
+                            <button class="chart-action-btn">1W</button>
+                            <button class="chart-action-btn">1M</button>
+                            <button class="chart-action-btn">3M</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Atomic Asset Daily Sales on Bazar(UCM)</h3>
+                    </div>
+                    <div class="chart-body">
+                        <div id="bazarSalesDailyLoader" class="chart-loader">
+                            <div class="loader"></div>
+                            <div class="loader-text">Fetching Transaction History...</div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="bazarSalesDailyChart"></canvas>
+                        </div>
+                        <a href="#" class="chart-fullscreen-link" onclick="openChartModal('bazarSalesDaily'); return false;">Fullscreen view</a>
+                        <div class="chart-actions">
+                            <button class="chart-action-btn">1W</button>
+                            <button class="chart-action-btn">1M</button>
+                            <button class="chart-action-btn">3M</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="gamingStatsContent">
+
+            <div class="page-header">
+                <h1>Gaming on AO</h1>
+            </div>
+
+            <div class="dashboard-grid">
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Stargrid Battle Tactics Daily Player Count</h3>
+                    </div>
+                    <div class="chart-body">
+                        <div id="stargridLoader" class="chart-loader">
+                            <div class="loader"></div>
+                            <div class="loader-text">Fetching Player History...</div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="stargridChart"></canvas>
+                        </div>
+                        <a href="#" class="chart-fullscreen-link" onclick="openChartModal('stargrid'); return false;">Fullscreen view</a>
+                        <div class="chart-actions">
+                            <button class="chart-action-btn">1W</button>
+                            <button class="chart-action-btn">1M</button>
+                            <button class="chart-action-btn">3M</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Stargrid Battle Tactics - Player Matches</h3>
+                    </div>
+                    <div class="chart-body">
+                        <div id="stargridMatchesLoader" class="chart-loader">
+                            <div class="loader"></div>
+                            <div class="loader-text">Fetching Match History...</div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="stargridMatchesChart"></canvas>
+                        </div>
+                        <a href="#" class="chart-fullscreen-link" onclick="openChartModal('stargridMatches'); return false;">Fullscreen view</a>
+                        <div class="chart-actions">
+                            <button class="chart-action-btn">1W</button>
+                            <button class="chart-action-btn">1M</button>
+                            <button class="chart-action-btn">3M</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Llama Land Daily Player Count</h3>
+                    </div>
+                    <div class="chart-body">
+                        <div id="llamaLandLoader" class="chart-loader">
+                            <div class="loader"></div>
+                            <div class="loader-text">Fetching Player History...</div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="llamaLandChart"></canvas>
+                        </div>
+                        <a href="#" class="chart-fullscreen-link" onclick="openChartModal('llamaLand'); return false;">Fullscreen view</a>
+                        <div class="chart-actions">
+                            <button class="chart-action-btn">1W</button>
+                            <button class="chart-action-btn">1M</button>
+                            <button class="chart-action-btn">3M</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+    </div>
+
+    <!-- Chart Modal -->
+    <div id="chartModal" class="chart-modal">
+        <div class="chart-modal-content">
+            <div class="chart-modal-header">
+                <h3 id="chartModalTitle" class="chart-modal-title">Chart</h3>
+                <button id="chartModalClose" class="chart-modal-close" onclick="closeChartModal()">✕</button>
+            </div>
+            <div class="chart-modal-body">
+                <canvas id="chartModalCanvas" class="chart-modal-canvas"></canvas>
+            </div>
+            <div id="chartModalActions" class="chart-actions">
+                <!-- Buttons will be cloned here -->
+            </div>
+        </div>
+    </div>
+
+
+    <footer>
+        <div class="container footer-content">
+            <div class="footer-brand">
+                <div class="footer-text">2026 The Eye</div>
+                <a class="footer-attribution" href="https://goldsky.com" target="_blank" rel="noopener">
+                    <img class="footer-attribution-icon" src="images/goldsky.png" alt="Goldsky">
+                    <span>Data Provided By Goldsky.com</span>
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Load application using ES modules -->
+    <script type="module" src="index.js"></script>
+    <script type="module" src="nav.js"></script>
+    <script>
+        function downloadDevCSV() {
+            const fileUrl = "https://raw.githubusercontent.com/Jonny-Ringo/the_eye_of_AO/main/data/dev-addresses.csv";
+            const fileName = "dev-addresses.csv";
+
+            fetch(fileUrl)
+            .then(response => response.blob())
+            .then(blob => {
+                const blobUrl = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = blobUrl;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(blobUrl);
+            })
+            .catch(err => {
+                console.error("Failed to fetch CSV:", err);
+                alert("Error downloading the CSV file.");
+            });
+        }
+    </script>
+
+</body>
+</html>

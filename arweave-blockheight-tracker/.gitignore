@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+
+# Environment variables
+.env.local
+.env.production
+
+# Database files
+data/*.sqlite
+data/*.sqlite-shm
+data/*.sqlite-wal
+
+# Backups
+backups/
+
+# Logs
+logs/*.log
+logs/*.lock
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage/
+.nyc_output/

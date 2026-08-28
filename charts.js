@@ -1,0 +1,1391 @@
+/**
+ * Chart creation and management for the Eye of AO dashboard
+ */
+import { CHART_COLORS, CHART_DEFAULTS, TIME_FORMAT, UTC_TIMESTAMP_PROCESSES, NON_UTC_TIMESTAMP_PROCESSES } from './config.js';
+import { formatDate, formatDateUTCWithLocalTime, filterDataByTimeRange } from './utils.js';
+import { getProcessDisplayName } from './processes.js';
+import { setupTimeRangeButtons, toggleChartLoader, getChartTimeRange, toggleModalLoader, chartTimeRanges } from './ui.js';
+import { fetchStargridStats, fetchVolumeData, fetchArweaveTransactionAnalytics } from './api.js'
+import { fetchAdditionalData, updateVolumeChart, updateSupplyChart } from './index.js'
+
+// Store all chart instances
+export const charts = {};
+
+// Historical data for each chart
+export const historicalData = {};
+
+/**
+ * Creates tooltip callbacks for weekly charts
+ * @returns {Object} Tooltip callback functions
+ */
+function createWeeklyTooltipCallbacks() {
+    return {
+        label: function(context) {
+            // Get the current dataset index and data index
+            const datasetIndex = context.datasetIndex;
+            const dataIndex = context.dataIndex;
+            
+            // Determine which process data to use based on dataset index
+            const processName = 'wARweeklyTransfer';
+            const data = historicalData[processName];
+            
+            // If we don't have data or the index is out of bounds, show the raw value
+            if (!data || !data[dataIndex]) {
+                return `${context.dataset.label}: ${context.raw}`;
+            }
+            
+            const count = data[dataIndex].count;
+            
+            // If this is the latest period, show "Current data"
+            if (dataIndex === data.length - 1) {
+                const currentTime = formatDate(new Date());
+                return `${context.dataset.label}: ${count} (Current data as of ${currentTime})`;
+            }
+            
+            return `${context.dataset.label}: ${count}`;
+        },
+        title: function(context) {
+            const dataIndex = context[0].dataIndex;
+            
+            const wARData = historicalData['wARweeklyTransfer'];
+            if (wARData && wARData[dataIndex]) {
+                const date = new Date(wARData[dataIndex].timestamp);
+                return formatDate(date, TIME_FORMAT.tooltip);
+            }
+            
+            // If no data is available, use the default formatting
+            return context[0].label;
+        }
+    };
+}
+
+/**
+ * Returns the color for a specific process
+ * @param {string} processName - The process name
+ * @returns {string} Color value in rgb/rgba format
+ */
+export function getProcessColor(processName) {
+    return CHART_COLORS[processName] || 'rgb(0, 0, 0)';
+}
+
+/**
+ * Creates tooltip callbacks for a standard chart
+ * @param {string} processName - The process name
+ * @returns {Object} Tooltip callback functions
+ */
+function createStandardTooltipCallbacks(processName) {
+    return {
+        label: function(context) {
+            const dataIndex = context.dataIndex;
+            if (!historicalData[processName] || !historicalData[processName][dataIndex]) {
+                return `Value: ${context.raw}`;
+            }
+            
+            const dataPoint = historicalData[processName][dataIndex];
+            
+            // For volume charts, handle the value differently
+            if (['AOVolume', 'wARVolume', 'wUSDCVolume'].includes(processName)) {
+                // Ensure we have a numeric value
+                const rawValue = Number(dataPoint.value || dataPoint.count || context.raw || 0);
+                
+                if (isNaN(rawValue)) {
+                    console.warn(`Invalid value for ${processName}:`, dataPoint);
+                    return 'Invalid value';
+                }
+
+                let formattedValue;
+                // Format based on token type
+                if (['AOVolume', 'wARVolume'].includes(processName)) {
+                    const value = Math.floor(rawValue / Math.pow(10, 12));
+                    const tokenName = processName.replace('Volume', '');
+                    formattedValue = `Volume: ${value.toLocaleString()} ${tokenName}`;
+                } else {
+                    const value = Math.floor(rawValue / Math.pow(10, 6));
+                    formattedValue = `Volume: ${value.toLocaleString()} wUSDC`;
+                }
+
+                if (dataIndex === historicalData[processName].length - 1) {
+                    const currentTime = formatDate(new Date());
+                    return `${formattedValue} (Current data as of ${currentTime})`;
+                }
+
+                return formattedValue;
+                
+            }
+            
+            // For non-volume charts, use count
+            const count = dataPoint.count || 0;
+            const formattedValue = `Count: ${count.toLocaleString()}`;
+
+            // Add current time for latest entry
+            if (dataIndex === historicalData[processName].length - 1) {
+                const currentTime = formatDate(new Date());
+                return `${formattedValue} (Current data as of ${currentTime})`;
+            }
+
+            return formattedValue;
+        },
+        title: function(context) {
+            const dataIndex = context[0].dataIndex;
+            if (!historicalData[processName] || !historicalData[processName][dataIndex]) {
+                return context[0].label;
+            }
+            
+            const dataPoint = historicalData[processName][dataIndex];
+            if (!dataPoint) return context[0].label;
+            
+            // Don't apply the -1 fix to volume charts
+            const timestamp = ['stargrid', 'wARVolume', 'AOVolume', 'wUSDCVolume'].includes(processName)
+                ? dataPoint.timestamp
+                : dataPoint.timestamp - 1;
+            
+            const date = new Date(timestamp);
+            if (NON_UTC_TIMESTAMP_PROCESSES.includes(processName)) {
+                const adjustedDate = new Date(date.getTime());
+                return formatDate(adjustedDate, TIME_FORMAT.dateYear);
+            } else if (UTC_TIMESTAMP_PROCESSES.includes(processName)) {
+                return formatDateUTCWithLocalTime(date);
+            } else {
+                return formatDate(date, TIME_FORMAT.dateYear);
+            }
+        }
+    };
+}
+
+
+/**
+ * Creates tooltip callbacks for a supply chart
+ * @returns {Object} Tooltip callback functions
+ */
+function createSupplyTooltipCallbacks() {
+    return {
+        label: function(context) {
+            const value = context.raw;
+            return `Supply: ${Math.round(value).toLocaleString()}`;
+        }
+    };
+}
+
+
+/**
+ * Creates a legend configuration that uses the correct colors
+ * @returns {Object} Legend configuration object
+ */
+function createLegendConfig() {
+    return {
+        display: true,
+        labels: {
+            usePointStyle: true,
+            pointStyle: 'line',
+            pointRadius: 5,
+            generateLabels: function(chart) {
+                const originalLabels = Chart.defaults.plugins.legend.labels.generateLabels(chart);
+                return originalLabels.map((label, index) => {
+                    const datasetColor = chart.data.datasets[index].borderColor;
+                    return {
+                        ...label,
+                        fillStyle: datasetColor,
+                        strokeStyle: datasetColor,
+                        lineWidth: 2
+                    };
+                });
+            }
+        }
+    };
+}
+
+/**
+ * Creates axis configuration for charts
+ * @returns {Object} Axes configuration object
+ */
+function createAxesConfig() {
+    return {
+        y: {
+            beginAtZero: true,
+            ticks: {
+                callback: function(value) {
+                    return Number(value).toLocaleString();
+                }
+            }
+        },
+        x: {
+            ticks: {
+                sampleSize: 30,
+                maxRotation: 45,
+                minRotation: 45,
+                callback: function(value, index, ticks) {
+                    const date = new Date(this.getLabelForValue(value));
+                    return formatDate(date, TIME_FORMAT.dateOnly);
+                }
+            }
+        }
+    };
+}
+
+/**
+ * Creates a standard single-line chart
+ * @param {string} processName - The name of the process
+ * @returns {Object} Chart instance
+ */
+function createStandardChart(processName) {
+    const canvasId = processName + 'Chart';
+    const ctx = document.getElementById(canvasId)?.getContext('2d');
+    
+    if (!ctx) {
+        console.error(`Cannot create chart: Canvas element ${canvasId} not found`);
+        return null;
+    }
+    
+    return new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: getProcessDisplayName(processName),
+                data: [],
+                borderColor: getProcessColor(processName),
+                tension: CHART_DEFAULTS.tension,
+                pointRadius: CHART_DEFAULTS.pointRadius
+            }]
+        },
+        options: {
+            responsive: CHART_DEFAULTS.responsive,
+            maintainAspectRatio: CHART_DEFAULTS.maintainAspectRatio,
+            scales: createAxesConfig(),
+            plugins: {
+                legend: createLegendConfig(),
+                tooltip: {
+                    callbacks: createStandardTooltipCallbacks(processName)
+                }
+            }
+        }
+    });
+}
+
+/**
+ * Creates a combined chart for two datasets
+ * @param {string} primaryProcess - The primary process name
+ * @param {string} secondaryProcess - The secondary process name
+ * @returns {Object} Chart instance
+ */
+function createCombinedChart(primaryProcess, secondaryProcess) {
+    const canvasId = primaryProcess + 'Chart';
+    const ctx = document.getElementById(canvasId)?.getContext('2d');
+    
+    if (!ctx) {
+        console.error(`Cannot create chart: Canvas element ${canvasId} not found`);
+        return null;
+    }
+    
+    // Initialize historical data for both processes if not already done
+    if (!historicalData[primaryProcess]) {
+        historicalData[primaryProcess] = [];
+    }
+    if (!historicalData[secondaryProcess]) {
+        historicalData[secondaryProcess] = [];
+    }
+    
+    // Determine correct display names and colors
+    let displayName1, displayName2, color1, color2;
+    
+    // For weekly charts, use the non-weekly process colors
+    displayName1 = getProcessDisplayName(primaryProcess);
+    displayName2 = getProcessDisplayName(secondaryProcess);
+    color1 = getProcessColor(primaryProcess);
+    color2 = getProcessColor(secondaryProcess);
+    
+    return new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [
+                {
+                    label: displayName1,
+                    data: [],
+                    borderColor: color1,
+                    tension: CHART_DEFAULTS.tension,
+                    pointRadius: CHART_DEFAULTS.pointRadius
+                },
+                {
+                    label: displayName2,
+                    data: [],
+                    borderColor: color2,
+                    tension: CHART_DEFAULTS.tension,
+                    pointRadius: CHART_DEFAULTS.pointRadius
+                }
+            ]
+        },
+        options: {
+            responsive: CHART_DEFAULTS.responsive,
+            maintainAspectRatio: CHART_DEFAULTS.maintainAspectRatio,
+            scales: createAxesConfig(),
+            plugins: {
+                legend: createLegendConfig(),
+                tooltip: {
+                    callbacks: primaryProcess === 'wARweeklyTransfer' ? 
+                        createWeeklyTooltipCallbacks() : 
+                        createCombinedTooltipCallbacks(primaryProcess, secondaryProcess)
+                }
+            }
+        }
+    });
+}
+
+/**
+ * Creates a combined chart for Stargrid match types
+ * @returns {Object} Chart instance
+ */
+function createStargridMatchesChart() {
+    const canvasId = 'stargridMatchesChart';
+    const ctx = document.getElementById(canvasId)?.getContext('2d');
+    
+    if (!ctx) {
+        console.error(`Cannot create chart: Canvas element ${canvasId} not found`);
+        return null;
+    }
+
+    return new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [
+                {
+                    label: 'Casual Matches',
+                    data: [], // Will be populated with data.casual
+                    borderColor: getProcessColor('stargrid'),
+                    tension: CHART_DEFAULTS.tension,
+                    pointRadius: CHART_DEFAULTS.pointRadius
+                },
+                {
+                    label: 'Ranked Matches',
+                    data: [], // Will be populated with data.ranked
+                    borderColor: getProcessColor('stargridRanked'),
+                    tension: CHART_DEFAULTS.tension,
+                    pointRadius: CHART_DEFAULTS.pointRadius
+                },
+                {
+                    label: 'Total Matches',
+                    data: [],
+                    borderColor: getProcessColor('stargridTotal'),
+                    tension: CHART_DEFAULTS.tension,
+                    pointRadius: CHART_DEFAULTS.pointRadius
+                }
+            ]
+        },
+        options: {
+            responsive: CHART_DEFAULTS.responsive,
+            maintainAspectRatio: CHART_DEFAULTS.maintainAspectRatio,
+            scales: createAxesConfig(),
+            plugins: {
+                legend: createLegendConfig(),
+                tooltip: {
+                    callbacks: createStargridMatchesTooltipCallbacks()
+                }
+            }
+        }
+    });
+}
+
+
+/**
+ * Creates a supply chart for wAR
+ * @returns {Object} Chart instance
+ */
+function createSupplyChart() {
+    const canvasId = 'wARTotalSupplyChart';
+    const ctx = document.getElementById(canvasId)?.getContext('2d');
+    
+    if (!ctx) {
+        console.error(`Cannot create chart: Canvas element ${canvasId} not found`);
+        return null;
+    }
+    
+    return new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [
+                {
+                    label: 'wAR Total Supply',
+                    data: [],
+                    borderColor: getProcessColor('wARTransfer'),
+                    tension: CHART_DEFAULTS.tension,
+                    pointRadius: CHART_DEFAULTS.pointRadius
+                }
+            ]
+        },
+        options: {
+            responsive: CHART_DEFAULTS.responsive,
+            maintainAspectRatio: CHART_DEFAULTS.maintainAspectRatio,
+            plugins: {
+                legend: createLegendConfig(),
+                tooltip: {
+                    callbacks: createSupplyTooltipCallbacks()
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return Number(value).toLocaleString();
+                        }
+                    }
+                },
+                x: {
+                    ticks: {
+                        sampleSize: 30,
+                        maxRotation: 45,
+                        minRotation: 45,
+                        callback: function(value, index, ticks) {
+                            const date = new Date(this.getLabelForValue(value));
+                            return formatDate(date, TIME_FORMAT.dateOnly);
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+/**
+ * Creates a stacked bar chart for Arweave transaction analytics
+ * @returns {Object} Chart instance
+ */
+function createArweaveTransactionsChart() {
+    const ctx = document.getElementById('arweaveTransactionsChart')?.getContext('2d');
+
+    if (!ctx) {
+        console.error('Cannot create chart: Canvas element arweaveTransactionsChart not found');
+        return null;
+    }
+
+    return new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: [],
+            datasets: [
+                {
+                    label: 'Redstone',
+                    data: [],
+                    backgroundColor: CHART_COLORS.arweaveTxRedstone,
+                    stack: 'stack0'
+                },
+                {
+                    label: 'ArDrive',
+                    data: [],
+                    backgroundColor: CHART_COLORS.arweaveTxArdrive,
+                    stack: 'stack0'
+                },
+                {
+                    label: 'AR.IO Network',
+                    data: [],
+                    backgroundColor: CHART_COLORS.arweaveTxArio,
+                    stack: 'stack0'
+                },
+                {
+                    label: 'KYVE',
+                    data: [],
+                    backgroundColor: CHART_COLORS.arweaveTxKyve,
+                    stack: 'stack0'
+                },
+                {
+                    label: 'AO Messages',
+                    data: [],
+                    backgroundColor: CHART_COLORS.arweaveTxAo,
+                    stack: 'stack0'
+                },
+                {
+                    label: 'Other',
+                    data: [],
+                    backgroundColor: CHART_COLORS.arweaveTxOther,
+                    stack: 'stack0'
+                }
+            ]
+        },
+        options: {
+            responsive: CHART_DEFAULTS.responsive,
+            maintainAspectRatio: CHART_DEFAULTS.maintainAspectRatio,
+            scales: {
+                x: {
+                    stacked: true,
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 45
+                    }
+                },
+                y: {
+                    stacked: true,
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return Number(value).toLocaleString();
+                        }
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        usePointStyle: false,
+                        boxWidth: 15,
+                        padding: 10
+                    }
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    callbacks: {
+                        title: function(context) {
+                            const dataIndex = context[0].dataIndex;
+                            const bucket = historicalData['arweaveTransactions']?.[dataIndex];
+                            if (bucket) {
+                                return bucket.date;
+                            }
+                            return context[0].label;
+                        },
+                        afterTitle: function(context) {
+                            const dataIndex = context[0].dataIndex;
+                            const bucket = historicalData['arweaveTransactions']?.[dataIndex];
+                            if (bucket && bucket.total !== undefined) {
+                                return `Total: ${bucket.total.toLocaleString()}`;
+                            }
+                            return '';
+                        },
+                        label: function(context) {
+                            const label = context.dataset.label || '';
+                            const value = context.parsed.y;
+                            return `${label}: ${value.toLocaleString()}`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+export async function fetchChartData(processName, timeRange) {
+    if (['stargrid', 'AOVolume', 'wARVolume', 'wUSDCVolume'].includes(processName)) {
+        await updateChartWithStats(processName);
+    } else if (['stargridMatches'].includes(processName)) {
+        await updateStargridMatchesChart(processName);
+    } else if (processName === 'arweaveTransactions') {
+        await updateArweaveTransactionsData(processName, timeRange);
+    } else {
+        console.log(`Using fetchAdditionalData for ${processName}`);
+        await fetchAdditionalData(processName, timeRange);
+    }
+}
+
+export async function updateChartWithStats(processName) {
+    try {
+        toggleChartLoader(processName, true);
+
+        let data;
+        if (processName === 'stargrid') {
+            data = await fetchStargridStats();
+        } else if (['AOVolume', 'wARVolume', 'wUSDCVolume'].includes(processName)) {
+            const volumeData = await updateVolumeChart(processName);
+            const tokenType = processName.replace('Volume', '');
+            // Use the full dataset
+            data = volumeData[tokenType].map(entry => ({
+                timestamp: entry.timestamp,
+                count: entry.value
+            }));
+            console.log(`Processing ${data.length} entries for ${processName}`);
+        }
+
+        if (!data) throw new Error(`Failed to fetch ${processName} data`);
+
+        // Store the complete dataset
+        historicalData[processName] = data;
+
+        // Get and apply time range
+        const timeRange = getChartTimeRange(processName);
+        console.log(`Updating ${processName} with time range: ${timeRange}`);
+        updateChartTimeRange(processName, timeRange || '1M');
+
+        toggleChartLoader(processName, false);
+    } catch (error) {
+        console.error(`Error updating ${processName} chart:`, error);
+        toggleChartLoader(processName, false);
+    }
+}
+
+
+/**
+ * Updates the Stargrid matches chart
+ * @param {string} processName - The process name (stargridMatches)
+ * @param {Array} preFilteredData - Optional pre-filtered data to use instead of fetching fresh
+ */
+export async function updateStargridMatchesChart(processName, preFilteredData = null) {
+    try {
+        toggleChartLoader(processName, true);
+
+        let dataToUse;
+        
+        if (preFilteredData) {
+            // Use the pre-filtered data passed to us
+            dataToUse = preFilteredData;
+            console.log(`Using pre-filtered data for ${processName}:`, preFilteredData.length, 'entries');
+        } else {
+            // Fetch fresh data (for initial load)
+            const data = await fetchStargridStats();
+            if (!data) throw new Error('Failed to fetch Stargrid stats');
+
+            // Format data for matches chart
+            const formattedData = data.map(entry => ({
+                timestamp: entry.timestamp,
+                casual: entry.casual || 0,
+                ranked: entry.ranked || 0
+            }));
+
+            // Store the complete dataset
+            historicalData[processName] = formattedData;
+
+            // Get and apply time range
+            const timeRange = getChartTimeRange(processName);
+            console.log(`Updating ${processName} with time range: ${timeRange}`);
+
+            // Filter by time range
+            dataToUse = filterDataByTimeRange(formattedData, timeRange || '1M');
+        }
+
+        // Update the chart
+        const chart = charts[processName];
+        if (!chart) throw new Error(`No chart found for process: ${processName}`);
+
+        // Sort chronologically
+        const sortedData = [...dataToUse].sort((a, b) => 
+            new Date(a.timestamp) - new Date(b.timestamp)
+        );
+
+        // IMPORTANT: Store the filtered data for tooltip access
+        // Use a special key to store the currently displayed data
+        historicalData[`${processName}_displayed`] = sortedData;
+
+        console.log(`Final data for chart update:`, {
+            processName,
+            totalEntries: sortedData.length,
+            firstEntry: sortedData[0]?.timestamp,
+            lastEntry: sortedData[sortedData.length - 1]?.timestamp
+        });
+
+        // Update chart data
+        chart.data.labels = sortedData.map(d => formatDateUTCWithLocalTime(new Date(d.timestamp)));
+        chart.data.datasets[0].data = sortedData.map(d => d.casual || 0);
+        chart.data.datasets[1].data = sortedData.map(d => d.ranked || 0);
+        chart.data.datasets[2].data = sortedData.map(d => (d.casual || 0) + (d.ranked || 0));
+
+        chart.update('none');
+        toggleChartLoader(processName, false);
+    } catch (error) {
+        console.error(`Error updating ${processName} chart:`, error);
+        toggleChartLoader(processName, false);
+    }
+}
+
+/**
+ * Initialize all charts based on process definitions
+ */
+export function initializeCharts() {
+    // Clear any existing chart instances to prevent memory leaks
+    Object.keys(charts).forEach(chartId => {
+        if (charts[chartId]) {
+            charts[chartId].destroy();
+        }
+    });
+    
+    // Special case: wUSDC/USDA combined chart
+    charts['wUSDCTransfer'] = createCombinedChart('wUSDCTransfer', 'USDATransfer');
+    
+    // Special case: wAR total supply chart
+    charts['wARTotalSupply'] = createSupplyChart();
+
+    // Add Stargrid matches chart
+    charts['stargridMatches'] = createStargridMatchesChart();
+
+    // Add Arweave transaction analytics chart
+    charts['arweaveTransactions'] = createArweaveTransactionsChart();
+
+    // Standard charts for remaining processes
+    ['wUSDCVolume', 'wARweeklyTransfer', 'wARTransfer', 'wARVolume', 'AOTransfer','AOVolume', 'permaswap', 'botega', 'llamaLand', 'stargrid', 'bazarAADaily', 'bazarSalesDaily'].forEach(processName => {
+        charts[processName] = createStandardChart(processName);
+    });
+
+    setupTimeRangeButtons(fetchChartData);
+    
+    return charts;
+}
+
+/**
+ * Updates a standard chart with new data
+ * @param {string} processName - The process name
+ * @param {Array} dataPoints - Array of data points
+ */
+export function updateStandardChart(processName, dataPoints) {
+    console.log(`Updating chart for ${processName} with`, dataPoints);
+    const chart = charts[processName];
+    if (!chart) {
+        console.error(`No chart found for process: ${processName}`);
+        return;
+    }
+    
+    // Ensure data is sorted chronologically by timestamp
+    const sortedData = [...dataPoints].sort((a, b) => {
+        return new Date(a.timestamp) - new Date(b.timestamp);
+    });
+    
+    // Store the sorted data in historicalData for tooltip access
+    historicalData[processName] = sortedData;
+        
+    // Create labels from timestamps
+    const labels = sortedData.map(d => {
+        // Don't apply the -1 fix to volume charts
+        const timestamp = ['stargrid', 'wARVolume', 'AOVolume', 'wUSDCVolume'].includes(processName) 
+            ? d.timestamp 
+            : d.timestamp - 1;
+        
+        const date = new Date(timestamp);
+        
+        // Volume charts use the original hardcoded logic, others use the new config-based logic
+        return ['AOVolume', 'wARVolume', 'wUSDCVolume'].includes(processName)
+            ? formatDateUTCWithLocalTime(date)  // ← Original working logic for volume charts
+            : (UTC_TIMESTAMP_PROCESSES.includes(processName)  // ← New logic for other charts
+                ? formatDateUTCWithLocalTime(date) 
+                : formatDate(date));
+    });
+    
+    // Get the data values with proper decimal formatting
+    const values = sortedData.map(d => {
+        const rawValue = d.count || d.value || 0;
+        
+        // Format based on token type
+        if (['AOVolume', 'wARVolume'].includes(processName)) {
+            return rawValue / 1000000000000; // Remove 12 zeros for AO and wAR
+        } else if (processName === 'wUSDCVolume') {
+            return rawValue / 1000000; // Remove 6 zeros for wUSDC
+        }
+        return rawValue;
+    });
+    
+    // Update chart
+    chart.data.labels = labels;
+    chart.data.datasets[0].data = values;
+    chart.data.datasets[0].label = getProcessDisplayName(processName);
+    
+    // Update the chart with animation disabled for performance
+    chart.update('none');
+}
+
+/**
+ * Updates a combined chart with data from two processes
+ * @param {string} primaryProcess - The primary process name
+ * @param {string} secondaryProcess - The secondary process name
+ * @param {string} timeRange - The selected time range
+ */
+export function updateCombinedChart(primaryProcess, secondaryProcess, timeRange) {
+    const chart = charts[primaryProcess];
+    if (!chart) {
+        console.error(`No chart found for process: ${primaryProcess}`);
+        return;
+    }
+    
+    const primaryData = historicalData[primaryProcess] || [];
+    const secondaryData = historicalData[secondaryProcess] || [];
+    
+    if (primaryData.length === 0 && secondaryData.length === 0) {
+        console.warn(`No data available for ${primaryProcess} or ${secondaryProcess}`);
+        return;
+    }
+    
+    // Filter data by time range
+    const filteredPrimaryData = filterDataByTimeRange(primaryData, timeRange);
+    const filteredSecondaryData = filterDataByTimeRange(secondaryData, timeRange);
+    
+    // Choose the right approach based on the process type
+    updateStandardCombinedChart(chart, primaryProcess, secondaryProcess, 
+            filteredPrimaryData, filteredSecondaryData);
+}
+
+/**
+ * Updates a standard combined chart (non-weekly)
+ * @param {Object} chart - The chart instance
+ * @param {string} primaryProcess - Primary process name
+ * @param {string} secondaryProcess - Secondary process name
+ * @param {Array} primaryData - Primary data array
+ * @param {Array} secondaryData - Secondary data array
+ */
+function updateStandardCombinedChart(chart, primaryProcess, secondaryProcess, primaryData, secondaryData) {
+    // Align the data to create consistent labels
+    const allTimestamps = [
+        ...primaryData.map(d => d.timestamp),
+        ...secondaryData.map(d => d.timestamp)
+    ];
+    
+    // Create a sorted unique array of timestamps (ensure chronological order)
+    const uniqueTimestamps = [...new Set(allTimestamps)].sort((a, b) => {
+        return new Date(a) - new Date(b);
+    });
+    
+    // Create aligned datasets
+    const primaryValues = [];
+    const secondaryValues = [];
+    const labels = [];
+    
+    // Update the aligned data points in historicalData for tooltip access
+    const alignedPrimaryData = [];
+    const alignedSecondaryData = [];
+    
+    uniqueTimestamps.forEach(timestamp => {
+        const primaryPoint = primaryData.find(d => d.timestamp === timestamp);
+        const secondaryPoint = secondaryData.find(d => d.timestamp === timestamp);
+        
+        primaryValues.push(primaryPoint ? primaryPoint.count : null);
+        secondaryValues.push(secondaryPoint ? secondaryPoint.count : null);
+        
+        // Add to aligned data arrays for tooltips
+        alignedPrimaryData.push(primaryPoint || { timestamp, count: null });
+        alignedSecondaryData.push(secondaryPoint || { timestamp, count: null });
+        
+        // Apply the same logic as other UTC charts - apply -1 fix and use UTC formatting
+        const adjustedTimestamp = timestamp - 1;
+        const date = new Date(adjustedTimestamp);
+        
+        const useUTC = UTC_TIMESTAMP_PROCESSES.includes(primaryProcess) || UTC_TIMESTAMP_PROCESSES.includes(secondaryProcess);
+        labels.push(useUTC ? formatDateUTCWithLocalTime(date) : formatDate(date));
+    });
+    
+    // Store the aligned data for tooltip access
+    historicalData[primaryProcess] = alignedPrimaryData;
+    historicalData[secondaryProcess] = alignedSecondaryData;
+    
+    // Update chart
+    chart.data.labels = labels;
+    chart.data.datasets[0].data = primaryValues;
+    chart.data.datasets[1].data = secondaryValues;
+    
+    // Update dataset labels
+    chart.data.datasets[0].label = getProcessDisplayName(primaryProcess);
+    chart.data.datasets[1].label = getProcessDisplayName(secondaryProcess);
+    
+    // Update the chart with animation disabled for performance
+    chart.update('none');
+}
+
+/**
+ * Updates the Arweave transactions chart with stacked bar data
+ * @param {string} processName - Should be 'arweaveTransactions'
+ * @param {Array} dataPoints - Array of daily transaction buckets
+ */
+export function updateArweaveTransactionsChart(processName, dataPoints) {
+    const chart = charts[processName];
+    if (!chart) {
+        console.error(`No chart found for process: ${processName}`);
+        return;
+    }
+
+    // Ensure stacked dataset labels never get overwritten by generic chart logic.
+    if (chart.data?.datasets?.length >= 6) {
+        chart.data.datasets[0].label = 'Redstone';
+        chart.data.datasets[1].label = 'ArDrive';
+        chart.data.datasets[2].label = 'AR.IO Network';
+        chart.data.datasets[3].label = 'KYVE';
+        chart.data.datasets[4].label = 'AO Messages';
+        chart.data.datasets[5].label = 'Other';
+    }
+
+    const sortedData = [...dataPoints].sort((a, b) =>
+        new Date(a.date) - new Date(b.date)
+    );
+
+    historicalData[processName] = sortedData;
+
+    const labels = sortedData.map(d => d.date);
+    const redstoneData = sortedData.map(d => d.redstone);
+    const ardriveData = sortedData.map(d => d.ardrive);
+    const arioData = sortedData.map(d => d.ario);
+    const kyveData = sortedData.map(d => d.kyve || 0);
+    const aoData = sortedData.map(d => d.ao);
+    const otherData = sortedData.map(d => d.other);
+
+    console.log('Arweave Transactions Chart Data:', {
+        labels,
+        redstone: redstoneData,
+        ardrive: ardriveData,
+        ario: arioData,
+        kyve: kyveData,
+        ao: aoData,
+        other: otherData,
+        sampleDataPoint: sortedData[0]
+    });
+
+    chart.data.labels = labels;
+    chart.data.datasets[0].data = redstoneData;
+    chart.data.datasets[1].data = ardriveData;
+    chart.data.datasets[2].data = arioData;
+    chart.data.datasets[3].data = kyveData;
+    chart.data.datasets[4].data = aoData;
+    chart.data.datasets[5].data = otherData;
+
+    chart.update('none');
+}
+
+/**
+ * Updates Arweave transaction analytics data for a new time range
+ * @param {string} processName - Should be 'arweaveTransactions'
+ * @param {string} timeRange - Time range ('1W', '1M', '3M')
+ */
+async function updateArweaveTransactionsData(processName, timeRange) {
+    try {
+        toggleChartLoader(processName, true);
+
+        const networkInfo = window.currentNetworkInfo;
+        const blockData = window.currentBlockData;
+        const currentHeight = networkInfo.height;
+
+        const days = timeRange === '1W' ? 7 : timeRange === '1M' ? 30 : 90;
+
+        // Import the function we need from index.js
+        const { generateExtendedDailyPeriods } = await import('./index.js');
+
+        const periods = generateExtendedDailyPeriods(currentHeight, blockData, days);
+        const newData = await fetchArweaveTransactionAnalytics(periods, currentHeight);
+
+        if (newData && newData.length > 0) {
+            historicalData[processName] = newData;
+            updateArweaveTransactionsChart(processName, newData);
+        }
+
+    } catch (error) {
+        console.error(`Error updating ${processName}:`, error);
+    } finally {
+        toggleChartLoader(processName, false);
+    }
+}
+
+/**
+ * Creates tooltip callbacks for a combined chart (non-weekly)
+ * @param {string} primaryProcess - Primary process name
+ * @param {string} secondaryProcess - Secondary process name
+ * @returns {Object} Tooltip callback functions
+ */
+function createCombinedTooltipCallbacks(primaryProcess, secondaryProcess) {
+    return {
+        label: function(context) {
+            const datasetIndex = context.datasetIndex;
+            const dataIndex = context.dataIndex;
+            
+            // Determine which process data to use based on dataset index
+            const processName = datasetIndex === 0 ? primaryProcess : secondaryProcess;
+            const data = historicalData[processName];
+            
+            // If we don't have data or the index is out of bounds, show the raw value
+            if (!data || !data[dataIndex]) {
+                return `${context.dataset.label}: ${context.raw}`;
+            }
+            
+            const count = data[dataIndex].count;
+            
+            // If this is the latest period, show "Current data"
+            if (dataIndex === data.length - 1) {
+                const currentTime = formatDate(new Date());
+                return `${context.dataset.label}: ${count} (Current data as of ${currentTime})`;
+            }
+            
+            return `${context.dataset.label}: ${count}`;
+        },
+        title: function(context) {
+            const dataIndex = context[0].dataIndex;
+            
+            // Try to get timestamp from primary data first
+            const primaryData = historicalData[primaryProcess];
+            if (primaryData && primaryData[dataIndex]) {
+                const timestamp = primaryData[dataIndex].timestamp - 1; // Apply -1 fix
+                const date = new Date(timestamp);
+                
+                if (UTC_TIMESTAMP_PROCESSES.includes(primaryProcess)) {
+                    return formatDateUTCWithLocalTime(date);
+                } else {
+                    return formatDate(date, TIME_FORMAT.tooltip);
+                }
+            }
+            
+            // Fall back to secondary data if needed
+            const secondaryData = historicalData[secondaryProcess];
+            if (secondaryData && secondaryData[dataIndex]) {
+                const timestamp = secondaryData[dataIndex].timestamp - 1; // Apply -1 fix
+                const date = new Date(timestamp);
+                
+                if (UTC_TIMESTAMP_PROCESSES.includes(secondaryProcess)) {
+                    return formatDateUTCWithLocalTime(date);
+                } else {
+                    return formatDate(date, TIME_FORMAT.tooltip);
+                }
+            }
+            
+            // If no data is available, use the default formatting
+            return context[0].label;
+        }
+    };
+}
+
+
+function createStargridMatchesTooltipCallbacks() {
+    return {
+        label: function(context) {
+            const datasetLabel = context.dataset.label || '';
+            const value = context.parsed.y;
+            const dataIndex = context.dataIndex;
+            const currentDataLength = context.chart.data.labels.length;
+
+            // Check if this is the latest entry
+            if (dataIndex === currentDataLength - 1) {
+                const currentTime = formatDate(new Date());
+                return `${datasetLabel}: ${value.toLocaleString()} (Current data as of ${currentTime})`;
+            }
+
+            return `${datasetLabel}: ${value.toLocaleString()}`;
+        },
+        title: function(context) {
+            const dataIndex = context[0].dataIndex;
+            
+            // Use the displayed data instead of the complete dataset
+            const displayedData = historicalData['stargridMatches_displayed'] || historicalData['stargridMatches'];
+            const dataPoint = displayedData[dataIndex];
+            
+            if (!dataPoint) return '';
+            
+            // Create date directly from timestamp and format it
+            const date = new Date(dataPoint.timestamp);
+            
+            // Check if this is the latest entry in the displayed data
+            if (dataIndex === displayedData.length - 1) {
+                const currentTime = formatDate(new Date());
+                return `${formatDateUTCWithLocalTime(date)}`;
+            }
+            
+            return formatDateUTCWithLocalTime(date);
+        }
+    };
+}
+
+
+/**
+ * Gets a chart instance by process name
+ * @param {string} processName - The process name
+ * @returns {Object|null} Chart instance or null if not found
+ */
+export function getChart(processName) {
+    return charts[processName] || null;
+}
+
+/**
+ * Updates the chart for a specific process based on time range
+ * @param {string} processName - The process name
+ * @param {string} timeRange - The selected time range
+ */
+export function updateChartTimeRange(processName, timeRange) {
+    // Special handling: arweaveTransactions uses daily buckets keyed by `date`, not `timestamp`.
+    // Using the standard time-range filtering would blank the chart and can overwrite labels.
+    if (processName === 'arweaveTransactions') {
+        const dataPoints = historicalData[processName] || [];
+        if (!Array.isArray(dataPoints) || dataPoints.length === 0) {
+            console.warn('No arweaveTransactions data available for time range update');
+            return;
+        }
+
+        const sorted = [...dataPoints].sort((a, b) => new Date(a.date) - new Date(b.date));
+        const days = timeRange === '1W' ? 7 : timeRange === '1M' ? 30 : timeRange === '3M' ? 90 : null;
+        const filtered = days ? sorted.slice(-days) : sorted;
+
+        updateArweaveTransactionsChart(processName, filtered);
+        return;
+    }
+
+    // Get a consistent reference to the data
+    let data = historicalData[processName] || [];
+    
+    // Make sure data is properly sorted (this is crucial to prevent duplicates)
+    data = [...data].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+    
+    // Filter out any duplicate data points based on date or week
+    const filteredData = removeDuplicateDates(data, processName.includes('weekly'));
+    
+    // Store back the cleaned data
+    historicalData[processName] = filteredData;
+    
+    // Handle special combined charts
+    if (processName === 'wUSDCTransfer') {
+        updateCombinedChart('wUSDCTransfer', 'USDATransfer', timeRange);
+    } else if (processName === 'wARTotalSupply') {
+        updateSupplyChart(historicalData[processName], timeRange);
+    } else if (processName === 'stargridMatches') {
+        const filteredByTimeRange = filterDataByTimeRange(filteredData, timeRange);
+        updateStargridMatchesChart(processName, filteredByTimeRange);
+    } else {
+        const filteredByTimeRange = filterDataByTimeRange(filteredData, timeRange);
+        updateStandardChart(processName, filteredByTimeRange);
+    }
+}
+
+/**
+ * Removes duplicate date entries from a dataset but preserves today's entries
+ * @param {Array} data - The dataset to clean
+ * @param {boolean} isWeekly - Whether this is weekly data
+ * @returns {Array} Cleaned dataset
+ */
+function removeDuplicateDates(data, isWeekly = false) {
+    if (!data || data.length === 0) return [];
+    
+    // Get today's date in UTC
+    const today = new Date();
+    const todayUTC = `${today.getUTCFullYear()}-${String(today.getUTCMonth() + 1).padStart(2, '0')}-${String(today.getUTCDate()).padStart(2, '0')}`;
+    console.log("Today's UTC date:", todayUTC);
+    
+    // Separate today's entries from other entries
+    const todayEntries = [];
+    const otherEntries = [];
+    
+    data.forEach(item => {
+        if (!item || !item.timestamp) return;
+        
+        const date = new Date(item.timestamp);
+        const dateKey = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-${String(date.getUTCDate()).padStart(2, '0')}`;
+        
+        if (dateKey === todayUTC) {
+            todayEntries.push(item);
+        } else {
+            otherEntries.push(item);
+        }
+    });
+    
+    // For today's entries, keep both the earliest (00:00:00) and the latest timestamp
+    let earliestToday = null;
+    let latestToday = null;
+    
+    todayEntries.forEach(item => {
+        const timestamp = new Date(item.timestamp);
+        
+        // Check if it's a midnight entry (00:00:00)
+        const isMidnight = timestamp.getUTCHours() === 0 && 
+                           timestamp.getUTCMinutes() === 0 && 
+                           timestamp.getUTCSeconds() === 0;
+        
+        if (isMidnight) {
+            // Keep the midnight entry
+            earliestToday = item;
+        } else if (!latestToday || new Date(item.timestamp) > new Date(latestToday.timestamp)) {
+            // Keep the latest non-midnight entry
+            latestToday = item;
+        }
+    });
+    
+    // For other entries, deduplicate by date
+    const seen = new Map();
+    
+    otherEntries.forEach(item => {
+        let key;
+        if (isWeekly) {
+            // For weekly data, use week start
+            const date = new Date(item.timestamp);
+            const day = date.getUTCDay();
+            const weekStart = new Date(date);
+            weekStart.setUTCDate(date.getUTCDate() - day);
+            weekStart.setUTCHours(0, 0, 0, 0);
+            key = weekStart.toISOString().split('T')[0];
+        } else {
+            // For daily data, use YYYY-MM-DD
+            const date = new Date(item.timestamp);
+            key = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-${String(date.getUTCDate()).padStart(2, '0')}`;
+        }
+        
+        // Keep the latest entry for each day/week
+        if (!seen.has(key) || new Date(item.timestamp) > new Date(seen.get(key).timestamp)) {
+            seen.set(key, item);
+        }
+    });
+    
+    // Build the final result
+    const result = Array.from(seen.values());
+    
+    // Add today's entries
+    if (earliestToday) {
+        result.push(earliestToday);
+    }
+    
+    if (latestToday) {
+        result.push(latestToday);
+    }
+    
+    // Sort chronologically
+    const sortedResult = result.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+    
+    return sortedResult;
+}
+
+// Chart Modal Functionality
+let modalChart = null;
+let originalChart = null;
+
+function cloneChartConfigForModal(chart) {
+    // Chart.js stores resolved option objects that can include non-cloneable references.
+    // Use JSON cloning for the plain data/options, then reattach function callbacks.
+    const data = JSON.parse(JSON.stringify(chart.data));
+    const options = JSON.parse(JSON.stringify(chart.options));
+
+    // Preserve tooltip callbacks (functions)
+    const originalTooltipCallbacks = chart.options?.plugins?.tooltip?.callbacks;
+    if (originalTooltipCallbacks) {
+        options.plugins = options.plugins || {};
+        options.plugins.tooltip = options.plugins.tooltip || {};
+        options.plugins.tooltip.callbacks = originalTooltipCallbacks;
+    }
+
+    // Preserve tick callbacks (functions)
+    const originalScales = chart.options?.scales;
+    if (originalScales) {
+        options.scales = options.scales || {};
+        for (const axisKey of Object.keys(originalScales)) {
+            const originalAxis = originalScales[axisKey];
+            const originalTickCallback = originalAxis?.ticks?.callback;
+            if (typeof originalTickCallback === 'function') {
+                options.scales[axisKey] = options.scales[axisKey] || {};
+                options.scales[axisKey].ticks = options.scales[axisKey].ticks || {};
+                options.scales[axisKey].ticks.callback = originalTickCallback;
+            }
+        }
+    }
+
+    return {
+        type: chart.config.type,
+        data,
+        options
+    };
+}
+
+export function openChartModal(processName) {
+    const originalCanvas = document.getElementById(`${processName}Chart`);
+    const originalChart = charts[processName];
+    
+    if (!originalChart || !originalCanvas) {
+        console.error(`Chart not found: ${processName}`);
+        return;
+    }
+    
+    // Show modal
+    const modal = document.getElementById('chartModal');
+    const modalTitle = document.getElementById('chartModalTitle');
+    const modalCanvas = document.getElementById('chartModalCanvas');
+    const modalActions = document.getElementById('chartModalActions');
+    
+    // Use the chart's display name, not the first dataset label (stacked charts would show "Redstone", etc.)
+    modalTitle.textContent = getProcessDisplayName(processName);
+    
+    // Clone chart action buttons
+    const originalChartCard = originalCanvas.closest('.chart-card');
+    const originalActions = originalChartCard?.querySelector('.chart-actions');
+    
+    if (originalActions) {
+        // Clear existing modal actions
+        modalActions.innerHTML = '';
+        
+        // Clone each button
+        const buttons = originalActions.querySelectorAll('.chart-action-btn');
+        buttons.forEach((button, index) => {
+            const clonedButton = button.cloneNode(true);
+            
+            // Simple click handler that triggers the original button
+            clonedButton.addEventListener('click', async () => {
+                toggleModalLoader(true);
+
+                // Update button state
+                modalActions.querySelectorAll('.chart-action-btn').forEach(btn =>
+                    btn.classList.remove('active')
+                );
+                clonedButton.classList.add('active');
+
+                // Determine selected time range
+                const timeRange = clonedButton.textContent.trim();
+                chartTimeRanges[processName] = timeRange;
+
+                try {
+                    // Fetch data just like in dashboard
+                    if (['1M', '3M'].includes(timeRange)) {
+                        await fetchChartData(processName, timeRange);
+                    } else {
+                        await updateChartTimeRange(processName, timeRange);
+                    }
+
+                    // Update modal chart
+                    if (modalChart) modalChart.destroy();
+                    const ctx = modalCanvas.getContext('2d');
+                    const config = cloneChartConfigForModal(originalChart);
+                    modalChart = new Chart(ctx, config);
+                } catch (e) {
+                    console.error(`Error updating modal chart for ${processName}:`, e);
+                } finally {
+                    toggleModalLoader(false);
+                }
+            });
+
+            
+            modalActions.appendChild(clonedButton);
+        });
+        
+        // Set active button in modal to match original
+        const activeButton = originalActions.querySelector('.chart-action-btn.active');
+        if (activeButton) {
+            const activeIndex = Array.from(buttons).indexOf(activeButton);
+            const modalButtons = modalActions.querySelectorAll('.chart-action-btn');
+            if (modalButtons[activeIndex]) {
+                modalButtons[activeIndex].classList.add('active');
+            }
+        }
+    }
+    
+    modal.classList.add('active');
+    
+    // Create new chart instance in modal
+    const ctx = modalCanvas.getContext('2d');
+    
+    const config = cloneChartConfigForModal(originalChart);
+    modalChart = new Chart(ctx, config);
+    
+    // Prevent body scrolling
+    document.body.style.overflow = 'hidden';
+}
+
+export function closeChartModal() {
+    const modal = document.getElementById('chartModal');
+    modal.classList.remove('active');
+    
+    // Destroy modal chart
+    if (modalChart) {
+        modalChart.destroy();
+        modalChart = null;
+    }
+    
+    // Restore body scrolling
+    document.body.style.overflow = '';
+}
+
+// Add to global scope for onclick handlers
+window.openChartModal = openChartModal;
+window.closeChartModal = closeChartModal;
+
+// Handle escape key
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && document.getElementById('chartModal').classList.contains('active')) {
+        closeChartModal();
+    }
+});
+
+// Handle modal backdrop click
+document.getElementById('chartModal')?.addEventListener('click', (e) => {
+    if (e.target.classList.contains('chart-modal')) {
+        closeChartModal();
+    }
+});

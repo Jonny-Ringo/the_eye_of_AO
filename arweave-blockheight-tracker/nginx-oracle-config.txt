@@ -1,0 +1,37 @@
+server {
+    listen 80;
+    server_name oracle.jonny-ringo.xyz;
+
+    # Redirect HTTP to HTTPS
+    return 301 https://$server_name$request_uri;
+}
+
+server {
+    server_name oracle.jonny-ringo.xyz;
+
+    # Block all other routes - only expose API
+    location / {
+        return 404;
+    }
+
+    # Only expose blockheights API endpoints (publicly accessible)
+    location /api/blockheights/ {
+        proxy_pass http://127.0.0.1:3001/api/blockheights/;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # CORS headers REMOVED - Node.js handles CORS based on ALLOW_LOCALHOST setting
+        # This fixes the duplicate CORS headers conflict
+
+        # No need for OPTIONS handling - Node.js handles preflight
+    }
+
+    listen 443 ssl;
+    ssl_certificate /etc/letsencrypt/live/oracle.jonny-ringo.xyz/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/oracle.jonny-ringo.xyz/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+}

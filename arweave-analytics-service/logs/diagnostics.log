@@ -1,0 +1,407 @@
+[2026-02-22T17:32:40.503Z] ========== BLOCK HEIGHT DIAGNOSTICS START ==========
+[2026-02-22T17:32:40.504Z] Last indexed heights from DB: redstone=1857703, ardrive=1857703, ario=1857703, kyve=1857703
+[2026-02-22T17:32:40.884Z] Chain tip height (arweave.net/info): 1862911
+[2026-02-22T17:32:40.885Z] Indexed tip height (GraphQL): 1862911
+[2026-02-22T17:32:40.885Z] Calculated: endHeightAvailable=1862911 (min of chain/indexed), safeEndHeight=1862911 (minus lagBlocks=0)
+[2026-02-22T17:32:40.886Z] Config: overlapBlocks=1500, recountOverlapBlocks=100, replayBlocks=0
+[2026-02-22T17:32:40.886Z] ario: rawLast=1857703, effectiveLast=1857703, plannedStart=1856204, plannedEnd=1862911, blocksToProcess=6708
+[2026-02-22T17:32:40.886Z] ⚠️  WARNING: ario will process 6708 blocks! This is abnormally high!
+[2026-02-22T17:36:25.641Z] kyve: rawLast=1857703, effectiveLast=1857703, plannedStart=1856204, plannedEnd=1862911, blocksToProcess=6708
+[2026-02-22T17:36:25.642Z] ⚠️  WARNING: kyve will process 6708 blocks! This is abnormally high!
+[2026-02-22T17:36:26.813Z] ardrive: rawLast=1857703, effectiveLast=1857703, plannedStart=1856204, plannedEnd=1862911, blocksToProcess=6708
+[2026-02-22T17:36:26.814Z] ⚠️  WARNING: ardrive will process 6708 blocks! This is abnormally high!
+[2026-02-22T17:43:18.568Z] redstone: rawLast=1857703, effectiveLast=1857703, plannedStart=1856204, plannedEnd=1862911, blocksToProcess=6708
+[2026-02-22T17:43:18.569Z] ⚠️  WARNING: redstone will process 6708 blocks! This is abnormally high!
+[2026-02-25T15:48:36.340Z] ========== BLOCK HEIGHT DIAGNOSTICS START ==========
+[2026-02-25T15:48:36.341Z] Last indexed heights from DB: redstone=1862911, ardrive=1862911, ario=1862911, kyve=1862911
+[2026-02-25T15:48:36.814Z] Chain tip height (arweave.net/info): 1864881
+[2026-02-25T15:48:36.814Z] Indexed tip height (GraphQL): 1864880
+[2026-02-25T15:48:36.814Z] Calculated: endHeightAvailable=1864880 (min of chain/indexed), safeEndHeight=1864880 (minus lagBlocks=0)
+[2026-02-25T15:48:36.815Z] Config: overlapBlocks=1500, recountOverlapBlocks=100, replayBlocks=0
+[2026-02-25T15:48:36.815Z] ario: rawLast=1862911, effectiveLast=1862911, plannedStart=1861412, plannedEnd=1864880, blocksToProcess=3469
+[2026-02-25T15:48:36.815Z] ⚠️  WARNING: ario will process 3469 blocks! This is abnormally high!
+[2026-02-25T15:50:35.266Z] kyve: rawLast=1862911, effectiveLast=1862911, plannedStart=1861412, plannedEnd=1864880, blocksToProcess=3469
+[2026-02-25T15:50:35.266Z] ⚠️  WARNING: kyve will process 3469 blocks! This is abnormally high!
+[2026-02-25T15:50:35.890Z] ardrive: rawLast=1862911, effectiveLast=1862911, plannedStart=1861412, plannedEnd=1864880, blocksToProcess=3469
+[2026-02-25T15:50:35.891Z] ⚠️  WARNING: ardrive will process 3469 blocks! This is abnormally high!
+[2026-02-25T15:53:36.047Z] redstone: rawLast=1862911, effectiveLast=1862911, plannedStart=1861412, plannedEnd=1864880, blocksToProcess=3469
+[2026-02-25T15:53:36.047Z] ⚠️  WARNING: redstone will process 3469 blocks! This is abnormally high!
+[2026-03-01T00:04:28.292Z] ========== BLOCK HEIGHT DIAGNOSTICS START ==========
+[2026-03-01T00:04:28.293Z] Last indexed heights from DB: redstone=1864880, ardrive=1864880, ario=1864880, kyve=1864880
+[2026-03-01T00:04:28.754Z] Chain tip height (arweave.net/info): 1867146
+[2026-03-01T00:04:28.755Z] Indexed tip height (GraphQL): 1867147
+[2026-03-01T00:04:28.755Z] Calculated: endHeightAvailable=1867146 (min of chain/indexed), safeEndHeight=1867146 (minus lagBlocks=0)
+[2026-03-01T00:04:28.756Z] Config: overlapBlocks=1500, recountOverlapBlocks=100, replayBlocks=0
+[2026-03-01T00:04:28.756Z] ario: rawLast=1864880, effectiveLast=1864880, plannedStart=1863381, plannedEnd=1867146, blocksToProcess=3766
+[2026-03-01T00:04:28.756Z] ⚠️  WARNING: ario will process 3766 blocks! This is abnormally high!
+[2026-03-01T00:06:03.277Z] kyve: rawLast=1864880, effectiveLast=1864880, plannedStart=1863381, plannedEnd=1867146, blocksToProcess=3766
+[2026-03-01T00:06:03.281Z] ⚠️  WARNING: kyve will process 3766 blocks! This is abnormally high!
+[2026-03-01T00:06:03.846Z] ardrive: rawLast=1864880, effectiveLast=1864880, plannedStart=1863381, plannedEnd=1867146, blocksToProcess=3766
+[2026-03-01T00:06:03.848Z] ⚠️  WARNING: ardrive will process 3766 blocks! This is abnormally high!
+[2026-03-01T00:09:30.564Z] redstone: rawLast=1864880, effectiveLast=1864880, plannedStart=1863381, plannedEnd=1867146, blocksToProcess=3766
+[2026-03-01T00:09:30.565Z] ⚠️  WARNING: redstone will process 3766 blocks! This is abnormally high!
+[2026-03-01T16:58:47.436Z] ========== BLOCK HEIGHT DIAGNOSTICS START ==========
+[2026-03-01T16:58:47.436Z] Last indexed heights from DB: redstone=1867146, ardrive=1867146, ario=1867146, kyve=1867146
+[2026-03-01T16:58:49.403Z] Chain tip height (arweave.net/info): 1867613
+[2026-03-01T16:58:49.404Z] Indexed tip height (GraphQL): 1867614
+[2026-03-01T16:58:49.404Z] Calculated: endHeightAvailable=1867613 (min of chain/indexed), safeEndHeight=1867613 (minus lagBlocks=0)
+[2026-03-01T16:58:49.405Z] Config: overlapBlocks=1500, recountOverlapBlocks=100, replayBlocks=0
+[2026-03-01T16:58:49.405Z] ario: rawLast=1867146, effectiveLast=1867146, plannedStart=1865647, plannedEnd=1867613, blocksToProcess=1967
+[2026-03-01T17:00:12.108Z] kyve: rawLast=1867146, effectiveLast=1867146, plannedStart=1865647, plannedEnd=1867613, blocksToProcess=1967
+[2026-03-01T17:00:21.696Z] ardrive: rawLast=1867146, effectiveLast=1867146, plannedStart=1865647, plannedEnd=1867613, blocksToProcess=1967
+[2026-03-01T17:05:17.625Z] redstone: rawLast=1867146, effectiveLast=1867146, plannedStart=1865647, plannedEnd=1867613, blocksToProcess=1967
+[2026-03-02T01:18:58.804Z] ========== BLOCK HEIGHT DIAGNOSTICS START ==========
+[2026-03-02T01:18:58.805Z] Last indexed heights from DB: redstone=1867613, ardrive=1867613, ario=1867613, kyve=1867613
+[2026-03-02T01:18:59.195Z] Chain tip height (arweave.net/info): 1867843
+[2026-03-02T01:18:59.196Z] Indexed tip height (GraphQL): 1867843
+[2026-03-02T01:18:59.196Z] Calculated: endHeightAvailable=1867843 (min of chain/indexed), safeEndHeight=1867843 (minus lagBlocks=0)
+[2026-03-02T01:18:59.197Z] Config: overlapBlocks=1500, recountOverlapBlocks=100, replayBlocks=0
+[2026-03-02T01:18:59.197Z] ario: rawLast=1867613, effectiveLast=1867613, plannedStart=1866114, plannedEnd=1867843, blocksToProcess=1730
+[2026-03-02T01:19:14.908Z] kyve: rawLast=1867613, effectiveLast=1867613, plannedStart=1866114, plannedEnd=1867843, blocksToProcess=1730
+[2026-03-02T01:19:15.498Z] ardrive: rawLast=1867613, effectiveLast=1867613, plannedStart=1866114, plannedEnd=1867843, blocksToProcess=1730
+[2026-03-02T01:23:38.862Z] redstone: rawLast=1867613, effectiveLast=1867613, plannedStart=1866114, plannedEnd=1867843, blocksToProcess=1730
+[2026-03-04T05:12:42.765Z] ========== BLOCK HEIGHT DIAGNOSTICS START ==========
+[2026-03-04T05:12:42.766Z] Last indexed heights from DB: redstone=1867843, ardrive=1867843, ario=1867843, kyve=1867843
+[2026-03-04T05:12:43.189Z] Chain tip height (arweave.net/info): 1869319
+[2026-03-04T05:12:43.190Z] Indexed tip height (GraphQL): 1869319
+[2026-03-04T05:12:43.190Z] Calculated: endHeightAvailable=1869319 (min of chain/indexed), safeEndHeight=1869319 (minus lagBlocks=0)
+[2026-03-04T05:12:43.190Z] Config: overlapBlocks=1500, recountOverlapBlocks=100, replayBlocks=0
+[2026-03-04T05:12:43.191Z] ario: rawLast=1867843, effectiveLast=1867843, plannedStart=1866344, plannedEnd=1869319, blocksToProcess=2976
+[2026-03-04T05:12:43.191Z] ⚠️  WARNING: ario will process 2976 blocks! This is abnormally high!
+[2026-03-04T05:13:21.101Z] ========== BLOCK HEIGHT DIAGNOSTICS START ==========
+[2026-03-04T05:13:21.102Z] Last indexed heights from DB: redstone=1867843, ardrive=1867843, ario=1867843, kyve=1867843
+[2026-03-04T05:13:21.461Z] Chain tip height (arweave.net/info): 1869319
+[2026-03-04T05:13:21.462Z] Indexed tip height (GraphQL): 1869320
+[2026-03-04T05:13:21.462Z] Calculated: endHeightAvailable=1869319 (min of chain/indexed), safeEndHeight=1869319 (minus lagBlocks=0)
+[2026-03-04T05:13:21.462Z] Config: overlapBlocks=1500, recountOverlapBlocks=100, replayBlocks=0
+[2026-03-04T05:13:21.463Z] ario: rawLast=1867843, effectiveLast=1867843, plannedStart=1866344, plannedEnd=1869319, blocksToProcess=2976
+[2026-03-04T05:13:21.463Z] ⚠️  WARNING: ario will process 2976 blocks! This is abnormally high!
+[2026-03-04T19:48:34.590Z] ========== BLOCK HEIGHT DIAGNOSTICS START ==========
+[2026-03-04T19:48:34.590Z] Last indexed heights from DB: redstone=1867843, ardrive=1867843, ario=1867843, kyve=1867843
+[2026-03-04T19:48:34.974Z] Chain tip height (arweave.net/info): 1869736
+[2026-03-04T19:48:34.974Z] Indexed tip height (GraphQL): 1869737
+[2026-03-04T19:48:34.974Z] Calculated: endHeightAvailable=1869736 (min of chain/indexed), safeEndHeight=1869736 (minus lagBlocks=0)
+[2026-03-04T19:48:34.975Z] Config: overlapBlocks=1500, recountOverlapBlocks=100, replayBlocks=0
+[2026-03-04T19:48:34.975Z] ario: rawLast=1867843, effectiveLast=1867843, plannedStart=1866344, plannedEnd=1869736, blocksToProcess=3393
+[2026-03-04T19:48:34.975Z] ⚠️  WARNING: ario will process 3393 blocks! This is abnormally high!
+[2026-03-04T19:48:57.475Z] kyve: rawLast=1867843, effectiveLast=1867843, plannedStart=1866344, plannedEnd=1869736, blocksToProcess=3393
+[2026-03-04T19:48:57.476Z] ⚠️  WARNING: kyve will process 3393 blocks! This is abnormally high!
+[2026-03-04T19:48:58.028Z] ardrive: rawLast=1867843, effectiveLast=1867843, plannedStart=1866344, plannedEnd=1869736, blocksToProcess=3393
+[2026-03-04T19:48:58.029Z] ⚠️  WARNING: ardrive will process 3393 blocks! This is abnormally high!
+[2026-03-04T19:49:10.860Z] ========== BLOCK HEIGHT DIAGNOSTICS START ==========
+[2026-03-04T19:49:10.860Z] Last indexed heights from DB: redstone=1867843, ardrive=1867843, ario=1869736, kyve=1869736
+[2026-03-04T19:49:11.233Z] Chain tip height (arweave.net/info): 1869736
+[2026-03-04T19:49:11.233Z] Indexed tip height (GraphQL): 1869737
+[2026-03-04T19:49:11.234Z] Calculated: endHeightAvailable=1869736 (min of chain/indexed), safeEndHeight=1869736 (minus lagBlocks=0)
+[2026-03-04T19:49:11.234Z] Config: overlapBlocks=1500, recountOverlapBlocks=100, replayBlocks=0
+[2026-03-04T19:49:11.234Z] ario: rawLast=1869736, effectiveLast=1869736, plannedStart=1868237, plannedEnd=1869736, blocksToProcess=1500
+[2026-03-04T19:49:11.718Z] kyve: rawLast=1869736, effectiveLast=1869736, plannedStart=1868237, plannedEnd=1869736, blocksToProcess=1500
+[2026-03-04T19:49:12.176Z] ardrive: rawLast=1867843, effectiveLast=1867843, plannedStart=1866344, plannedEnd=1869736, blocksToProcess=3393
+[2026-03-04T19:49:12.177Z] ⚠️  WARNING: ardrive will process 3393 blocks! This is abnormally high!
+[2026-03-04T22:07:36.233Z] ========== BLOCK HEIGHT DIAGNOSTICS START ==========
+[2026-03-04T22:07:36.233Z] Last indexed heights from DB: redstone=1867843, ardrive=1867843, ario=1869736, kyve=1869736
+[2026-03-04T22:07:36.623Z] Chain tip height (arweave.net/info): 1869803
+[2026-03-04T22:07:36.624Z] Indexed tip height (GraphQL): 1869803
+[2026-03-04T22:07:36.624Z] Calculated: endHeightAvailable=1869803 (min of chain/indexed), safeEndHeight=1869803 (minus lagBlocks=0)
+[2026-03-04T22:07:36.624Z] Config: overlapBlocks=1500, recountOverlapBlocks=100, replayBlocks=0
+[2026-03-04T22:07:36.625Z] ario: rawLast=1869736, effectiveLast=1869736, plannedStart=1868237, plannedEnd=1869803, blocksToProcess=1567
+[2026-03-04T22:07:37.143Z] kyve: rawLast=1869736, effectiveLast=1869736, plannedStart=1868237, plannedEnd=1869803, blocksToProcess=1567
+[2026-03-04T22:07:37.614Z] ardrive: rawLast=1867843, effectiveLast=1867843, plannedStart=1866344, plannedEnd=1869803, blocksToProcess=3460
+[2026-03-04T22:07:37.614Z] ⚠️  WARNING: ardrive will process 3460 blocks! This is abnormally high!
+[2026-03-04T22:08:51.743Z] ========== BLOCK HEIGHT DIAGNOSTICS START ==========
+[2026-03-04T22:08:51.744Z] Last indexed heights from DB: redstone=1867843, ardrive=1867843, ario=1869803, kyve=1869803
+[2026-03-04T22:08:52.128Z] Chain tip height (arweave.net/info): 1869803
+[2026-03-04T22:08:52.129Z] Indexed tip height (GraphQL): 1869803
+[2026-03-04T22:08:52.129Z] Calculated: endHeightAvailable=1869803 (min of chain/indexed), safeEndHeight=1869803 (minus lagBlocks=0)
+[2026-03-04T22:08:52.129Z] Config: overlapBlocks=1500, recountOverlapBlocks=100, replayBlocks=0
+[2026-03-04T22:08:52.130Z] ario: rawLast=1869803, effectiveLast=1869803, plannedStart=1868304, plannedEnd=1869803, blocksToProcess=1500
+[2026-03-04T22:08:52.605Z] kyve: rawLast=1869803, effectiveLast=1869803, plannedStart=1868304, plannedEnd=1869803, blocksToProcess=1500
+[2026-03-04T22:08:53.049Z] ardrive: rawLast=1867843, effectiveLast=1867843, plannedStart=1866344, plannedEnd=1869803, blocksToProcess=3460
+[2026-03-04T22:08:53.049Z] ⚠️  WARNING: ardrive will process 3460 blocks! This is abnormally high!
+[2026-03-05T21:53:52.423Z] ========== BLOCK HEIGHT DIAGNOSTICS START ==========
+[2026-03-05T21:53:52.424Z] Last indexed heights from DB: redstone=1867843, ardrive=1867843, ario=1869803, kyve=1869803
+[2026-03-05T21:53:52.835Z] Chain tip height (arweave.net/info): 1870467
+[2026-03-05T21:53:52.836Z] Indexed tip height (GraphQL): 1870468
+[2026-03-05T21:53:52.836Z] Calculated: endHeightAvailable=1870467 (min of chain/indexed), safeEndHeight=1870467 (minus lagBlocks=0)
+[2026-03-05T21:53:52.836Z] Config: overlapBlocks=1500, recountOverlapBlocks=100, replayBlocks=0
+[2026-03-05T21:53:52.837Z] ario: rawLast=1869803, effectiveLast=1869803, plannedStart=1868304, plannedEnd=1870467, blocksToProcess=2164
+[2026-03-05T21:53:53.322Z] kyve: rawLast=1869803, effectiveLast=1869803, plannedStart=1868304, plannedEnd=1870467, blocksToProcess=2164
+[2026-03-05T21:53:53.818Z] ardrive: rawLast=1867843, effectiveLast=1867843, plannedStart=1866344, plannedEnd=1870467, blocksToProcess=4124
+[2026-03-05T21:53:53.818Z] ⚠️  WARNING: ardrive will process 4124 blocks! This is abnormally high!
+[2026-03-05T21:57:16.331Z] ========== BLOCK HEIGHT DIAGNOSTICS START ==========
+[2026-03-05T21:57:16.332Z] Last indexed heights from DB: redstone=1867843, ardrive=1867843, ario=1870467, kyve=1870467
+[2026-03-05T21:57:16.738Z] Chain tip height (arweave.net/info): 1870471
+[2026-03-05T21:57:16.739Z] Indexed tip height (GraphQL): 1870471
+[2026-03-05T21:57:16.739Z] Calculated: endHeightAvailable=1870471 (min of chain/indexed), safeEndHeight=1870471 (minus lagBlocks=0)
+[2026-03-05T21:57:16.739Z] Config: overlapBlocks=1500, recountOverlapBlocks=100, replayBlocks=0
+[2026-03-05T21:57:16.740Z] ario: rawLast=1870467, effectiveLast=1870467, plannedStart=1868968, plannedEnd=1870471, blocksToProcess=1504
+[2026-03-05T21:57:17.204Z] kyve: rawLast=1870467, effectiveLast=1870467, plannedStart=1868968, plannedEnd=1870471, blocksToProcess=1504
+[2026-03-05T21:57:17.675Z] ardrive: rawLast=1867843, effectiveLast=1867843, plannedStart=1866344, plannedEnd=1870471, blocksToProcess=4128
+[2026-03-05T21:57:17.676Z] ⚠️  WARNING: ardrive will process 4128 blocks! This is abnormally high!
+[2026-03-05T23:13:55.084Z] ========== BLOCK HEIGHT DIAGNOSTICS START ==========
+[2026-03-05T23:13:55.084Z] Last indexed heights from DB: redstone=1867843, ardrive=1867843, ario=1870471, kyve=1870471
+[2026-03-05T23:13:55.590Z] Chain tip height (arweave.net/info): 1870510
+[2026-03-05T23:13:55.590Z] Indexed tip height (GraphQL): 1870510
+[2026-03-05T23:13:55.590Z] Calculated: endHeightAvailable=1870510 (min of chain/indexed), safeEndHeight=1870510 (minus lagBlocks=0)
+[2026-03-05T23:13:55.591Z] Config: overlapBlocks=1500, recountOverlapBlocks=100, replayBlocks=0
+[2026-03-05T23:13:55.591Z] ario: rawLast=1870471, effectiveLast=1870471, plannedStart=1868972, plannedEnd=1870510, blocksToProcess=1539
+[2026-03-05T23:13:56.131Z] kyve: rawLast=1870471, effectiveLast=1870471, plannedStart=1868972, plannedEnd=1870510, blocksToProcess=1539
+[2026-03-05T23:13:56.617Z] ardrive: rawLast=1867843, effectiveLast=1867843, plannedStart=1866344, plannedEnd=1870510, blocksToProcess=4167
+[2026-03-05T23:13:56.617Z] ⚠️  WARNING: ardrive will process 4167 blocks! This is abnormally high!
+[2026-03-05T23:46:36.567Z] ========== BLOCK HEIGHT DIAGNOSTICS START ==========
+[2026-03-05T23:46:36.568Z] Last indexed heights from DB: redstone=1867843, ardrive=1867843, ario=1870510, kyve=1870510
+[2026-03-05T23:46:36.920Z] Chain tip height (arweave.net/info): 1870520
+[2026-03-05T23:46:36.921Z] Indexed tip height (GraphQL): 1870520
+[2026-03-05T23:46:36.921Z] Calculated: endHeightAvailable=1870520 (min of chain/indexed), safeEndHeight=1870520 (minus lagBlocks=0)
+[2026-03-05T23:46:36.921Z] Config: overlapBlocks=1500, recountOverlapBlocks=100, replayBlocks=0
+[2026-03-05T23:46:36.922Z] ario: rawLast=1870510, effectiveLast=1870510, plannedStart=1869011, plannedEnd=1870520, blocksToProcess=1510
+[2026-03-05T23:46:37.454Z] kyve: rawLast=1870510, effectiveLast=1870510, plannedStart=1869011, plannedEnd=1870520, blocksToProcess=1510
+[2026-03-05T23:46:37.908Z] ardrive: rawLast=1867843, effectiveLast=1867843, plannedStart=1866344, plannedEnd=1870520, blocksToProcess=4177
+[2026-03-05T23:46:37.908Z] ⚠️  WARNING: ardrive will process 4177 blocks! This is abnormally high!
+[2026-03-06T00:35:15.674Z] ========== BLOCK HEIGHT DIAGNOSTICS START ==========
+[2026-03-06T00:35:15.675Z] Last indexed heights from DB: redstone=1867843, ardrive=1867843, ario=1870520, kyve=1870520
+[2026-03-06T00:35:16.089Z] Chain tip height (arweave.net/info): 1870544
+[2026-03-06T00:35:16.089Z] Indexed tip height (GraphQL): 1870544
+[2026-03-06T00:35:16.090Z] Calculated: endHeightAvailable=1870544 (min of chain/indexed), safeEndHeight=1870544 (minus lagBlocks=0)
+[2026-03-06T00:35:16.090Z] Config: overlapBlocks=1500, recountOverlapBlocks=100, replayBlocks=0
+[2026-03-06T00:35:16.090Z] ario: rawLast=1870520, effectiveLast=1870520, plannedStart=1869021, plannedEnd=1870544, blocksToProcess=1524
+[2026-03-06T00:35:16.687Z] kyve: rawLast=1870520, effectiveLast=1870520, plannedStart=1869021, plannedEnd=1870544, blocksToProcess=1524
+[2026-03-06T00:35:17.308Z] ardrive: rawLast=1867843, effectiveLast=1867843, plannedStart=1866344, plannedEnd=1870544, blocksToProcess=4201
+[2026-03-06T00:35:17.308Z] ⚠️  WARNING: ardrive will process 4201 blocks! This is abnormally high!
+[2026-03-06T16:03:30.371Z] ========== BLOCK HEIGHT DIAGNOSTICS START ==========
+[2026-03-06T16:03:30.371Z] Last indexed heights from DB: redstone=1867843, ardrive=1867843, ario=1870544, kyve=1870544
+[2026-03-06T16:03:30.773Z] Chain tip height (arweave.net/info): 1870989
+[2026-03-06T16:03:30.774Z] Indexed tip height (GraphQL): 1870989
+[2026-03-06T16:03:30.774Z] Calculated: endHeightAvailable=1870989 (min of chain/indexed), safeEndHeight=1870989 (minus lagBlocks=0)
+[2026-03-06T16:03:30.774Z] Config: overlapBlocks=1500, recountOverlapBlocks=100, replayBlocks=0
+[2026-03-06T16:03:30.775Z] ario: rawLast=1870544, effectiveLast=1870544, plannedStart=1869045, plannedEnd=1870989, blocksToProcess=1945
+[2026-03-06T16:03:31.140Z] kyve: rawLast=1870544, effectiveLast=1870544, plannedStart=1869045, plannedEnd=1870989, blocksToProcess=1945
+[2026-03-06T16:03:31.521Z] ardrive: rawLast=1867843, effectiveLast=1867843, plannedStart=1866344, plannedEnd=1870989, blocksToProcess=4646
+[2026-03-06T16:03:31.521Z] ⚠️  WARNING: ardrive will process 4646 blocks! This is abnormally high!
+[2026-03-06T21:59:03.815Z] ========== BLOCK HEIGHT DIAGNOSTICS START ==========
+[2026-03-06T21:59:03.816Z] Last indexed heights from DB: redstone=1867843, ardrive=1867843, ario=1870989, kyve=1870989
+[2026-03-06T21:59:04.262Z] Chain tip height (arweave.net/info): 1871159
+[2026-03-06T21:59:04.263Z] Indexed tip height (GraphQL): 1871159
+[2026-03-06T21:59:04.263Z] Calculated: endHeightAvailable=1871159 (min of chain/indexed), safeEndHeight=1871159 (minus lagBlocks=0)
+[2026-03-06T21:59:04.264Z] Config: overlapBlocks=1500, recountOverlapBlocks=100, replayBlocks=0
+[2026-03-06T21:59:04.264Z] ario: rawLast=1870989, effectiveLast=1870989, plannedStart=1869490, plannedEnd=1871159, blocksToProcess=1670
+[2026-03-06T21:59:04.687Z] kyve: rawLast=1870989, effectiveLast=1870989, plannedStart=1869490, plannedEnd=1871159, blocksToProcess=1670
+[2026-03-06T21:59:05.127Z] ardrive: rawLast=1867843, effectiveLast=1867843, plannedStart=1866344, plannedEnd=1871159, blocksToProcess=4816
+[2026-03-06T21:59:05.127Z] ⚠️  WARNING: ardrive will process 4816 blocks! This is abnormally high!
+[2026-03-07T00:23:52.951Z] ========== BLOCK HEIGHT DIAGNOSTICS START ==========
+[2026-03-07T00:23:52.951Z] Last indexed heights from DB: redstone=1867843, ardrive=1867843, ario=1871159, kyve=1871159
+[2026-03-07T00:23:53.270Z] Chain tip height (arweave.net/info): 1871227
+[2026-03-07T00:23:53.270Z] Indexed tip height (GraphQL): 1871230
+[2026-03-07T00:23:53.271Z] Calculated: endHeightAvailable=1871227 (min of chain/indexed), safeEndHeight=1871227 (minus lagBlocks=0)
+[2026-03-07T00:23:53.271Z] Config: overlapBlocks=1500, recountOverlapBlocks=100, replayBlocks=0
+[2026-03-07T00:23:53.271Z] ario: rawLast=1871159, effectiveLast=1871159, plannedStart=1869660, plannedEnd=1871227, blocksToProcess=1568
+[2026-03-07T00:23:53.683Z] kyve: rawLast=1871159, effectiveLast=1871159, plannedStart=1869660, plannedEnd=1871227, blocksToProcess=1568
+[2026-03-07T00:23:54.123Z] ardrive: rawLast=1867843, effectiveLast=1867843, plannedStart=1866344, plannedEnd=1871227, blocksToProcess=4884
+[2026-03-07T00:23:54.123Z] ⚠️  WARNING: ardrive will process 4884 blocks! This is abnormally high!
+[2026-03-07T16:01:47.664Z] ========== BLOCK HEIGHT DIAGNOSTICS START ==========
+[2026-03-07T16:01:47.664Z] Last indexed heights from DB: redstone=1867843, ardrive=1867843, ario=1871227, kyve=1871227
+[2026-03-07T16:01:48.136Z] Chain tip height (arweave.net/info): 1871672
+[2026-03-07T16:01:48.136Z] Indexed tip height (GraphQL): 1871672
+[2026-03-07T16:01:48.136Z] Calculated: endHeightAvailable=1871672 (min of chain/indexed), safeEndHeight=1871672 (minus lagBlocks=0)
+[2026-03-07T16:01:48.137Z] Config: overlapBlocks=1500, recountOverlapBlocks=100, replayBlocks=0
+[2026-03-07T16:01:48.137Z] ario: rawLast=1871227, effectiveLast=1871227, plannedStart=1869728, plannedEnd=1871672, blocksToProcess=1945
+[2026-03-07T16:01:48.686Z] kyve: rawLast=1871227, effectiveLast=1871227, plannedStart=1869728, plannedEnd=1871672, blocksToProcess=1945
+[2026-03-07T16:01:49.154Z] ardrive: rawLast=1867843, effectiveLast=1867843, plannedStart=1866344, plannedEnd=1871672, blocksToProcess=5329
+[2026-03-07T16:01:49.155Z] ⚠️  WARNING: ardrive will process 5329 blocks! This is abnormally high!
+[2026-03-07T17:12:41.573Z] ========== BLOCK HEIGHT DIAGNOSTICS START ==========
+[2026-03-07T17:12:41.573Z] Last indexed heights from DB: redstone=1867843, ardrive=1867843, ario=1871672, kyve=1871672
+[2026-03-07T17:12:41.933Z] Chain tip height (arweave.net/info): 1871711
+[2026-03-07T17:12:41.934Z] Indexed tip height (GraphQL): 1871711
+[2026-03-07T17:12:41.934Z] Calculated: endHeightAvailable=1871711 (min of chain/indexed), safeEndHeight=1871711 (minus lagBlocks=0)
+[2026-03-07T17:12:41.935Z] Config: overlapBlocks=1500, recountOverlapBlocks=100, replayBlocks=0
+[2026-03-07T17:12:41.935Z] ario: rawLast=1871672, effectiveLast=1871672, plannedStart=1870173, plannedEnd=1871711, blocksToProcess=1539
+[2026-03-07T17:12:42.300Z] kyve: rawLast=1871672, effectiveLast=1871672, plannedStart=1870173, plannedEnd=1871711, blocksToProcess=1539
+[2026-03-07T17:12:42.738Z] ardrive: rawLast=1867843, effectiveLast=1867843, plannedStart=1866344, plannedEnd=1871711, blocksToProcess=5368
+[2026-03-07T17:12:42.738Z] ⚠️  WARNING: ardrive will process 5368 blocks! This is abnormally high!
+[2026-03-07T22:54:43.580Z] ========== BLOCK HEIGHT DIAGNOSTICS START ==========
+[2026-03-07T22:54:43.581Z] Last indexed heights from DB: redstone=1867843, ardrive=1867843, ario=1871711, kyve=1871711
+[2026-03-07T22:54:44.001Z] Chain tip height (arweave.net/info): 1871863
+[2026-03-07T22:54:44.002Z] Indexed tip height (GraphQL): 1871864
+[2026-03-07T22:54:44.002Z] Calculated: endHeightAvailable=1871863 (min of chain/indexed), safeEndHeight=1871863 (minus lagBlocks=0)
+[2026-03-07T22:54:44.002Z] Config: overlapBlocks=1500, recountOverlapBlocks=100, replayBlocks=0
+[2026-03-07T22:54:44.002Z] ario: rawLast=1871711, effectiveLast=1871711, plannedStart=1870212, plannedEnd=1871863, blocksToProcess=1652
+[2026-03-07T22:54:44.602Z] kyve: rawLast=1871711, effectiveLast=1871711, plannedStart=1870212, plannedEnd=1871863, blocksToProcess=1652
+[2026-03-07T22:54:45.069Z] ardrive: rawLast=1867843, effectiveLast=1867843, plannedStart=1866344, plannedEnd=1871863, blocksToProcess=5520
+[2026-03-07T22:54:45.069Z] ⚠️  WARNING: ardrive will process 5520 blocks! This is abnormally high!
+[2026-03-08T03:48:01.181Z] ========== BLOCK HEIGHT DIAGNOSTICS START ==========
+[2026-03-08T03:48:01.182Z] Last indexed heights from DB: redstone=1867843, ardrive=1867843, ario=1871863, kyve=1871863
+[2026-03-08T03:48:01.584Z] Chain tip height (arweave.net/info): 1872007
+[2026-03-08T03:48:01.584Z] Indexed tip height (GraphQL): 1872007
+[2026-03-08T03:48:01.584Z] Calculated: endHeightAvailable=1872007 (min of chain/indexed), safeEndHeight=1872007 (minus lagBlocks=0)
+[2026-03-08T03:48:01.585Z] Config: overlapBlocks=1500, recountOverlapBlocks=100, replayBlocks=0
+[2026-03-08T03:48:01.585Z] ario: rawLast=1871863, effectiveLast=1871863, plannedStart=1870364, plannedEnd=1872007, blocksToProcess=1644
+[2026-03-08T03:48:02.012Z] kyve: rawLast=1871863, effectiveLast=1871863, plannedStart=1870364, plannedEnd=1872007, blocksToProcess=1644
+[2026-03-08T03:48:02.445Z] ardrive: rawLast=1867843, effectiveLast=1867843, plannedStart=1866344, plannedEnd=1872007, blocksToProcess=5664
+[2026-03-08T03:48:02.445Z] ⚠️  WARNING: ardrive will process 5664 blocks! This is abnormally high!
+[2026-03-08T03:49:07.395Z] ========== BLOCK HEIGHT DIAGNOSTICS START ==========
+[2026-03-08T03:49:07.396Z] Last indexed heights from DB: redstone=1867843, ardrive=1867843, ario=1872007, kyve=1872007
+[2026-03-08T03:49:07.754Z] Chain tip height (arweave.net/info): 1872007
+[2026-03-08T03:49:07.754Z] Indexed tip height (GraphQL): 1872008
+[2026-03-08T03:49:07.754Z] Calculated: endHeightAvailable=1872007 (min of chain/indexed), safeEndHeight=1872007 (minus lagBlocks=0)
+[2026-03-08T03:49:07.755Z] Config: overlapBlocks=1500, recountOverlapBlocks=100, replayBlocks=0
+[2026-03-08T03:49:07.755Z] ario: rawLast=1872007, effectiveLast=1872007, plannedStart=1870508, plannedEnd=1872007, blocksToProcess=1500
+[2026-03-08T03:49:08.195Z] kyve: rawLast=1872007, effectiveLast=1872007, plannedStart=1870508, plannedEnd=1872007, blocksToProcess=1500
+[2026-03-08T03:49:08.602Z] ardrive: rawLast=1867843, effectiveLast=1867843, plannedStart=1866344, plannedEnd=1872007, blocksToProcess=5664
+[2026-03-08T03:49:08.602Z] ⚠️  WARNING: ardrive will process 5664 blocks! This is abnormally high!
+[2026-03-08T06:21:43.428Z] ========== BLOCK HEIGHT DIAGNOSTICS START ==========
+[2026-03-08T06:21:43.428Z] Last indexed heights from DB: redstone=1867843, ardrive=1867843, ario=1872007, kyve=1872007
+[2026-03-08T06:21:43.815Z] Chain tip height (arweave.net/info): 1872077
+[2026-03-08T06:21:43.816Z] Indexed tip height (GraphQL): 1872077
+[2026-03-08T06:21:43.816Z] Calculated: endHeightAvailable=1872077 (min of chain/indexed), safeEndHeight=1872077 (minus lagBlocks=0)
+[2026-03-08T06:21:43.816Z] Config: overlapBlocks=1500, recountOverlapBlocks=100, replayBlocks=0
+[2026-03-08T06:21:43.816Z] ario: rawLast=1872007, effectiveLast=1872007, plannedStart=1870508, plannedEnd=1872077, blocksToProcess=1570
+[2026-03-08T06:21:44.314Z] kyve: rawLast=1872007, effectiveLast=1872007, plannedStart=1870508, plannedEnd=1872077, blocksToProcess=1570
+[2026-03-08T06:21:44.806Z] ardrive: rawLast=1867843, effectiveLast=1867843, plannedStart=1866344, plannedEnd=1872077, blocksToProcess=5734
+[2026-03-08T06:21:44.806Z] ⚠️  WARNING: ardrive will process 5734 blocks! This is abnormally high!
+[2026-03-08T06:28:19.965Z] ========== BLOCK HEIGHT DIAGNOSTICS START ==========
+[2026-03-08T06:28:19.966Z] Last indexed heights from DB: redstone=1867843, ardrive=1867843, ario=1872077, kyve=1872077
+[2026-03-08T06:28:20.362Z] Chain tip height (arweave.net/info): 1872078
+[2026-03-08T06:28:20.363Z] Indexed tip height (GraphQL): 1872079
+[2026-03-08T06:28:20.363Z] Calculated: endHeightAvailable=1872078 (min of chain/indexed), safeEndHeight=1872078 (minus lagBlocks=0)
+[2026-03-08T06:28:20.363Z] Config: overlapBlocks=1500, recountOverlapBlocks=100, replayBlocks=0
+[2026-03-08T06:28:20.364Z] ario: rawLast=1872077, effectiveLast=1872077, plannedStart=1870578, plannedEnd=1872078, blocksToProcess=1501
+[2026-03-08T06:28:20.798Z] kyve: rawLast=1872077, effectiveLast=1872077, plannedStart=1870578, plannedEnd=1872078, blocksToProcess=1501
+[2026-03-08T06:28:21.170Z] ardrive: rawLast=1867843, effectiveLast=1867843, plannedStart=1866344, plannedEnd=1872078, blocksToProcess=5735
+[2026-03-08T06:28:21.171Z] ⚠️  WARNING: ardrive will process 5735 blocks! This is abnormally high!
+[2026-03-08T06:31:16.931Z] ========== BLOCK HEIGHT DIAGNOSTICS START ==========
+[2026-03-08T06:31:16.931Z] Last indexed heights from DB: redstone=1867843, ardrive=1867843, ario=1872078, kyve=1872078
+[2026-03-08T06:31:17.207Z] Chain tip height (arweave.net/info): 1872080
+[2026-03-08T06:31:17.208Z] Indexed tip height (GraphQL): 1872080
+[2026-03-08T06:31:17.208Z] Calculated: endHeightAvailable=1872080 (min of chain/indexed), safeEndHeight=1872080 (minus lagBlocks=0)
+[2026-03-08T06:31:17.208Z] Config: overlapBlocks=1500, recountOverlapBlocks=100, replayBlocks=0
+[2026-03-08T06:31:17.209Z] ario: rawLast=1872078, effectiveLast=1872078, plannedStart=1870579, plannedEnd=1872080, blocksToProcess=1502
+[2026-03-08T06:31:17.687Z] kyve: rawLast=1872078, effectiveLast=1872078, plannedStart=1870579, plannedEnd=1872080, blocksToProcess=1502
+[2026-03-08T06:31:18.158Z] ardrive: rawLast=1867843, effectiveLast=1867843, plannedStart=1866344, plannedEnd=1872080, blocksToProcess=5737
+[2026-03-08T06:31:18.158Z] ⚠️  WARNING: ardrive will process 5737 blocks! This is abnormally high!
+[2026-03-08T06:32:20.045Z] ========== BLOCK HEIGHT DIAGNOSTICS START ==========
+[2026-03-08T06:32:20.046Z] Last indexed heights from DB: redstone=1867843, ardrive=1867843, ario=1872080, kyve=1872080
+[2026-03-08T06:32:20.462Z] Chain tip height (arweave.net/info): 1872081
+[2026-03-08T06:32:20.463Z] Indexed tip height (GraphQL): 1872081
+[2026-03-08T06:32:20.463Z] Calculated: endHeightAvailable=1872081 (min of chain/indexed), safeEndHeight=1872081 (minus lagBlocks=0)
+[2026-03-08T06:32:20.463Z] Config: overlapBlocks=1500, recountOverlapBlocks=100, replayBlocks=0
+[2026-03-08T06:32:20.464Z] ario: rawLast=1872080, effectiveLast=1872080, plannedStart=1870581, plannedEnd=1872081, blocksToProcess=1501
+[2026-03-08T06:32:21.045Z] kyve: rawLast=1872080, effectiveLast=1872080, plannedStart=1870581, plannedEnd=1872081, blocksToProcess=1501
+[2026-03-08T06:32:21.422Z] ardrive: rawLast=1867843, effectiveLast=1867843, plannedStart=1866344, plannedEnd=1872081, blocksToProcess=5738
+[2026-03-08T06:32:21.422Z] ⚠️  WARNING: ardrive will process 5738 blocks! This is abnormally high!
+[2026-03-08T06:50:52.011Z] redstone: rawLast=1867843, effectiveLast=1867843, plannedStart=1866344, plannedEnd=1872081, blocksToProcess=5738
+[2026-03-08T06:50:52.011Z] ⚠️  WARNING: redstone will process 5738 blocks! This is abnormally high!
+[2026-03-08T16:21:03.737Z] ========== BLOCK HEIGHT DIAGNOSTICS START ==========
+[2026-03-08T16:21:03.738Z] Last indexed heights from DB: redstone=1872081, ardrive=1872081, ario=1872081, kyve=1872081
+[2026-03-08T16:21:04.116Z] Chain tip height (arweave.net/info): 1872362
+[2026-03-08T16:21:04.117Z] Indexed tip height (GraphQL): 1872361
+[2026-03-08T16:21:04.117Z] Calculated: endHeightAvailable=1872361 (min of chain/indexed), safeEndHeight=1872361 (minus lagBlocks=0)
+[2026-03-08T16:21:04.117Z] Config: overlapBlocks=1500, recountOverlapBlocks=100, replayBlocks=0
+[2026-03-08T16:21:04.117Z] ario: rawLast=1872081, effectiveLast=1872081, plannedStart=1870582, plannedEnd=1872361, blocksToProcess=1780
+[2026-03-08T16:21:04.470Z] kyve: rawLast=1872081, effectiveLast=1872081, plannedStart=1870582, plannedEnd=1872361, blocksToProcess=1780
+[2026-03-08T16:21:04.900Z] ardrive: rawLast=1872081, effectiveLast=1872081, plannedStart=1870582, plannedEnd=1872361, blocksToProcess=1780
+[2026-03-08T16:22:24.725Z] redstone: rawLast=1872081, effectiveLast=1872081, plannedStart=1870582, plannedEnd=1872361, blocksToProcess=1780
+[2026-03-08T17:07:56.389Z] ========== BLOCK HEIGHT DIAGNOSTICS START ==========
+[2026-03-08T17:07:56.390Z] Last indexed heights from DB: redstone=1872361, ardrive=1872361, ario=1872361, kyve=1872361
+[2026-03-08T17:07:56.838Z] Chain tip height (arweave.net/info): 1872386
+[2026-03-08T17:07:56.839Z] Indexed tip height (GraphQL): 1872386
+[2026-03-08T17:07:56.839Z] Calculated: endHeightAvailable=1872386 (min of chain/indexed), safeEndHeight=1872386 (minus lagBlocks=0)
+[2026-03-08T17:07:56.840Z] Config: overlapBlocks=1500, recountOverlapBlocks=100, replayBlocks=0
+[2026-03-08T17:07:56.840Z] ario: rawLast=1872361, effectiveLast=1872361, plannedStart=1870862, plannedEnd=1872386, blocksToProcess=1525
+[2026-03-08T17:07:57.394Z] kyve: rawLast=1872361, effectiveLast=1872361, plannedStart=1870862, plannedEnd=1872386, blocksToProcess=1525
+[2026-03-08T17:07:57.878Z] ardrive: rawLast=1872361, effectiveLast=1872361, plannedStart=1870862, plannedEnd=1872386, blocksToProcess=1525
+[2026-03-08T17:08:49.241Z] redstone: rawLast=1872361, effectiveLast=1872361, plannedStart=1870862, plannedEnd=1872386, blocksToProcess=1525
+[2026-03-08T17:12:02.137Z] ========== BLOCK HEIGHT DIAGNOSTICS START ==========
+[2026-03-08T17:12:02.138Z] Last indexed heights from DB: redstone=1872386, ardrive=1872386, ario=1872386, kyve=1872386
+[2026-03-08T17:12:02.562Z] Chain tip height (arweave.net/info): 1872388
+[2026-03-08T17:12:02.562Z] Indexed tip height (GraphQL): 1872387
+[2026-03-08T17:12:02.562Z] Calculated: endHeightAvailable=1872387 (min of chain/indexed), safeEndHeight=1872387 (minus lagBlocks=0)
+[2026-03-08T17:12:02.563Z] Config: overlapBlocks=1500, recountOverlapBlocks=100, replayBlocks=0
+[2026-03-08T17:12:02.563Z] ario: rawLast=1872386, effectiveLast=1872386, plannedStart=1870887, plannedEnd=1872387, blocksToProcess=1501
+[2026-03-08T17:12:02.971Z] kyve: rawLast=1872386, effectiveLast=1872386, plannedStart=1870887, plannedEnd=1872387, blocksToProcess=1501
+[2026-03-08T17:12:03.395Z] ardrive: rawLast=1872386, effectiveLast=1872386, plannedStart=1870887, plannedEnd=1872387, blocksToProcess=1501
+[2026-03-08T17:20:55.855Z] redstone: rawLast=1872386, effectiveLast=1872386, plannedStart=1870887, plannedEnd=1872387, blocksToProcess=1501
+[2026-03-13T21:33:09.777Z] ========== BLOCK HEIGHT DIAGNOSTICS START ==========
+[2026-03-13T21:33:09.778Z] Last indexed heights from DB: redstone=1872387, ardrive=1872387, ario=1872387, kyve=1872387
+[2026-03-13T21:33:10.199Z] Chain tip height (arweave.net/info): 1875896
+[2026-03-13T21:33:10.199Z] Indexed tip height (GraphQL): 1875896
+[2026-03-13T21:33:10.200Z] Calculated: endHeightAvailable=1875896 (min of chain/indexed), safeEndHeight=1875896 (minus lagBlocks=0)
+[2026-03-13T21:33:10.200Z] Config: overlapBlocks=1500, recountOverlapBlocks=100, replayBlocks=0
+[2026-03-13T21:33:10.200Z] ario: rawLast=1872387, effectiveLast=1872387, plannedStart=1870888, plannedEnd=1875896, blocksToProcess=5009
+[2026-03-13T21:33:10.201Z] ⚠️  WARNING: ario will process 5009 blocks! This is abnormally high!
+[2026-03-13T21:33:10.691Z] kyve: rawLast=1872387, effectiveLast=1872387, plannedStart=1870888, plannedEnd=1875896, blocksToProcess=5009
+[2026-03-13T21:33:10.691Z] ⚠️  WARNING: kyve will process 5009 blocks! This is abnormally high!
+[2026-03-13T21:33:16.391Z] ardrive: rawLast=1872387, effectiveLast=1872387, plannedStart=1870888, plannedEnd=1875896, blocksToProcess=5009
+[2026-03-13T21:33:16.391Z] ⚠️  WARNING: ardrive will process 5009 blocks! This is abnormally high!
+[2026-03-13T22:02:20.351Z] redstone: rawLast=1872387, effectiveLast=1872387, plannedStart=1870888, plannedEnd=1875896, blocksToProcess=5009
+[2026-03-13T22:02:20.352Z] ⚠️  WARNING: redstone will process 5009 blocks! This is abnormally high!
+[2026-03-25T00:31:01.300Z] ========== BLOCK HEIGHT DIAGNOSTICS START ==========
+[2026-03-25T00:31:01.302Z] Last indexed heights from DB: redstone=1875896, ardrive=1875896, ario=1875896, kyve=1875896
+[2026-03-25T00:31:01.633Z] Chain tip height (arweave.net/info): 1883442
+[2026-03-25T00:31:01.634Z] Indexed tip height (GraphQL): 1883442
+[2026-03-25T00:31:01.634Z] Calculated: endHeightAvailable=1883442 (min of chain/indexed), safeEndHeight=1883442 (minus lagBlocks=0)
+[2026-03-25T00:31:01.634Z] Config: overlapBlocks=1500, recountOverlapBlocks=100, replayBlocks=0
+[2026-03-25T00:31:01.635Z] ario: rawLast=1875896, effectiveLast=1875896, plannedStart=1874397, plannedEnd=1883442, blocksToProcess=9046
+[2026-03-25T00:31:01.635Z] ⚠️  WARNING: ario will process 9046 blocks! This is abnormally high!
+[2026-03-25T00:31:01.978Z] kyve: rawLast=1875896, effectiveLast=1875896, plannedStart=1874397, plannedEnd=1883442, blocksToProcess=9046
+[2026-03-25T00:31:01.979Z] ⚠️  WARNING: kyve will process 9046 blocks! This is abnormally high!
+[2026-03-25T00:31:07.124Z] ardrive: rawLast=1875896, effectiveLast=1875896, plannedStart=1874397, plannedEnd=1883442, blocksToProcess=9046
+[2026-03-25T00:31:07.124Z] ⚠️  WARNING: ardrive will process 9046 blocks! This is abnormally high!
+[2026-03-25T00:51:57.150Z] redstone: rawLast=1875896, effectiveLast=1875896, plannedStart=1874397, plannedEnd=1883442, blocksToProcess=9046
+[2026-03-25T00:51:57.151Z] ⚠️  WARNING: redstone will process 9046 blocks! This is abnormally high!
+[2026-03-31T19:02:47.946Z] ========== BLOCK HEIGHT DIAGNOSTICS START ==========
+[2026-03-31T19:02:47.948Z] Last indexed heights from DB: redstone=1883442, ardrive=1883442, ario=1883442, kyve=1883442
+[2026-03-31T19:02:48.259Z] Chain tip height (arweave.net/info): 1888033
+[2026-03-31T19:02:48.260Z] Indexed tip height (GraphQL): 1888032
+[2026-03-31T19:02:48.260Z] Calculated: endHeightAvailable=1888032 (min of chain/indexed), safeEndHeight=1888032 (minus lagBlocks=0)
+[2026-03-31T19:02:48.260Z] Config: overlapBlocks=1500, recountOverlapBlocks=100, replayBlocks=0
+[2026-03-31T19:02:48.260Z] ario: rawLast=1883442, effectiveLast=1883442, plannedStart=1881943, plannedEnd=1888032, blocksToProcess=6090
+[2026-03-31T19:02:48.261Z] ⚠️  WARNING: ario will process 6090 blocks! This is abnormally high!
+[2026-03-31T19:02:48.641Z] kyve: rawLast=1883442, effectiveLast=1883442, plannedStart=1881943, plannedEnd=1888032, blocksToProcess=6090
+[2026-03-31T19:02:48.642Z] ⚠️  WARNING: kyve will process 6090 blocks! This is abnormally high!
+[2026-03-31T19:02:48.994Z] ardrive: rawLast=1883442, effectiveLast=1883442, plannedStart=1881943, plannedEnd=1888032, blocksToProcess=6090
+[2026-03-31T19:02:48.995Z] ⚠️  WARNING: ardrive will process 6090 blocks! This is abnormally high!
+[2026-03-31T19:11:05.828Z] redstone: rawLast=1883442, effectiveLast=1883442, plannedStart=1881943, plannedEnd=1888032, blocksToProcess=6090
+[2026-03-31T19:11:05.833Z] ⚠️  WARNING: redstone will process 6090 blocks! This is abnormally high!
+[2026-03-31T19:49:03.516Z] ========== BLOCK HEIGHT DIAGNOSTICS START ==========
+[2026-03-31T19:49:03.516Z] Last indexed heights from DB: redstone=1888032, ardrive=1888032, ario=1888032, kyve=1888032
+[2026-03-31T19:49:03.835Z] Chain tip height (arweave.net/info): 1888056
+[2026-03-31T19:49:03.836Z] Indexed tip height (GraphQL): 1888056
+[2026-03-31T19:49:03.836Z] Calculated: endHeightAvailable=1888056 (min of chain/indexed), safeEndHeight=1888056 (minus lagBlocks=0)
+[2026-03-31T19:49:03.837Z] Config: overlapBlocks=1500, recountOverlapBlocks=100, replayBlocks=0
+[2026-03-31T19:49:03.838Z] ario: rawLast=1888032, effectiveLast=1888032, plannedStart=1886533, plannedEnd=1888056, blocksToProcess=1524
+[2026-03-31T19:49:04.207Z] kyve: rawLast=1888032, effectiveLast=1888032, plannedStart=1886533, plannedEnd=1888056, blocksToProcess=1524
+[2026-03-31T19:49:04.546Z] ardrive: rawLast=1888032, effectiveLast=1888032, plannedStart=1886533, plannedEnd=1888056, blocksToProcess=1524
+[2026-03-31T19:50:24.146Z] redstone: rawLast=1888032, effectiveLast=1888032, plannedStart=1886533, plannedEnd=1888056, blocksToProcess=1524
+[2026-03-31T22:22:31.568Z] ========== BLOCK HEIGHT DIAGNOSTICS START ==========
+[2026-03-31T22:22:31.569Z] Last indexed heights from DB: redstone=1888056, ardrive=1888056, ario=1888056, kyve=1888056
+[2026-03-31T22:22:31.905Z] Chain tip height (arweave.net/info): 1888124
+[2026-03-31T22:22:31.905Z] Indexed tip height (GraphQL): 1888123
+[2026-03-31T22:22:31.906Z] Calculated: endHeightAvailable=1888123 (min of chain/indexed), safeEndHeight=1888123 (minus lagBlocks=0)
+[2026-03-31T22:22:31.906Z] Config: overlapBlocks=1500, recountOverlapBlocks=100, replayBlocks=0
+[2026-03-31T22:22:31.906Z] ario: rawLast=1888056, effectiveLast=1888056, plannedStart=1886557, plannedEnd=1888123, blocksToProcess=1567
+[2026-03-31T22:22:32.282Z] kyve: rawLast=1888056, effectiveLast=1888056, plannedStart=1886557, plannedEnd=1888123, blocksToProcess=1567
+[2026-03-31T22:22:32.585Z] ardrive: rawLast=1888056, effectiveLast=1888056, plannedStart=1886557, plannedEnd=1888123, blocksToProcess=1567
+[2026-03-31T22:23:04.695Z] ========== BLOCK HEIGHT DIAGNOSTICS START ==========
+[2026-03-31T22:23:04.696Z] Last indexed heights from DB: redstone=1888056, ardrive=1888056, ario=1888123, kyve=1888123
+[2026-03-31T22:23:05.003Z] Chain tip height (arweave.net/info): 1888124
+[2026-03-31T22:23:05.004Z] Indexed tip height (GraphQL): 1888125
+[2026-03-31T22:23:05.004Z] Calculated: endHeightAvailable=1888124 (min of chain/indexed), safeEndHeight=1888124 (minus lagBlocks=0)
+[2026-03-31T22:23:05.005Z] Config: overlapBlocks=1500, recountOverlapBlocks=100, replayBlocks=0
+[2026-03-31T22:23:05.005Z] ario: rawLast=1888123, effectiveLast=1888123, plannedStart=1886624, plannedEnd=1888124, blocksToProcess=1501
+[2026-03-31T22:23:05.408Z] kyve: rawLast=1888123, effectiveLast=1888123, plannedStart=1886624, plannedEnd=1888124, blocksToProcess=1501
+[2026-03-31T22:23:05.728Z] ardrive: rawLast=1888056, effectiveLast=1888056, plannedStart=1886557, plannedEnd=1888124, blocksToProcess=1568
+[2026-03-31T22:23:09.010Z] redstone: rawLast=1888056, effectiveLast=1888056, plannedStart=1886557, plannedEnd=1888124, blocksToProcess=1568
+[2026-04-15T20:41:44.641Z] ========== BLOCK HEIGHT DIAGNOSTICS START ==========
+[2026-04-15T20:41:44.642Z] Last indexed heights from DB: redstone=1888124, ardrive=1888124, ario=1888124, kyve=1888124
+[2026-04-15T20:41:44.994Z] Chain tip height (arweave.net/info): 1898291
+[2026-04-15T20:41:44.994Z] Indexed tip height (GraphQL): 1898291
+[2026-04-15T20:41:44.995Z] Calculated: endHeightAvailable=1898291 (min of chain/indexed), safeEndHeight=1898291 (minus lagBlocks=0)
+[2026-04-15T20:41:44.995Z] Config: overlapBlocks=1500, recountOverlapBlocks=100, replayBlocks=0
+[2026-04-15T20:41:44.995Z] ario: rawLast=1888124, effectiveLast=1888124, plannedStart=1886625, plannedEnd=1898291, blocksToProcess=11667
+[2026-04-15T20:41:44.996Z] ⚠️  WARNING: ario will process 11667 blocks! This is abnormally high!
+[2026-04-15T20:41:45.325Z] kyve: rawLast=1888124, effectiveLast=1888124, plannedStart=1886625, plannedEnd=1898291, blocksToProcess=11667
+[2026-04-15T20:41:45.326Z] ⚠️  WARNING: kyve will process 11667 blocks! This is abnormally high!
+[2026-04-15T20:41:45.609Z] ardrive: rawLast=1888124, effectiveLast=1888124, plannedStart=1886625, plannedEnd=1898291, blocksToProcess=11667
+[2026-04-15T20:41:45.609Z] ⚠️  WARNING: ardrive will process 11667 blocks! This is abnormally high!
+[2026-04-15T21:11:32.700Z] redstone: rawLast=1888124, effectiveLast=1888124, plannedStart=1886625, plannedEnd=1898291, blocksToProcess=11667
+[2026-04-15T21:11:32.702Z] ⚠️  WARNING: redstone will process 11667 blocks! This is abnormally high!

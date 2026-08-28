@@ -1,0 +1,38 @@
+Start Powershell te enter
+wsl.exe -d Ubuntu
+
+
+
+
+# Upload the new SQLite DB
+scp arweave-analytics-service/data/ArweaveAnalytics.sqlite* root@157.230.168.227:~/arweave-analytics-service/data/
+
+# Upload updated server
+scp .\arweave-analytics-service\server.js root@157.230.168.227:~/arweave-analytics-service/server.js
+
+# Upload db helper
+scp .\arweave-analytics-service\db.js root@157.230.168.227:~/arweave-analytics-service/db.js
+
+
+
+Start Server for API(catches up on blocks/bundles here to)
+
+screen -S arweave-api
+
+node server.js
+Detach from screen: Press Ctrl+A, then D
+
+start the Cron
+
+
+
+
+
+
+
+
+
+
+
+
+

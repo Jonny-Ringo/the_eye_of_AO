@@ -1,0 +1,27 @@
+{
+  "name": "arweave-blockheight-tracker",
+  "version": "1.0.0",
+  "description": "Tracks Arweave block heights at UTC 00:00 daily",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "cron": "node server.js --cron"
+  },
+  "keywords": [
+    "arweave",
+    "blockchain",
+    "blockheight",
+    "tracker"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7"
+  }
+}
