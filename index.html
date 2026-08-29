@@ -65,22 +65,12 @@
                     </div>
                 </div>
         
-                <!-- Legacynet Uptime -->
+                <!-- HyperBEAM network views -->
                 <div class="nav-dropdown">
-                    <a href="legacynet/uptime.html" class="nav-item dropdown-toggle">Legacynet Uptime ▾</a>
+                    <a href="hyperbeam/hyperbeam-uptime.html" class="nav-item dropdown-toggle">HyperBEAM ▾</a>
                     <div class="dropdown-menu">
-                        <a href="/legacynet/uptime.html#theFirst150" class="nav-item">The First 150</a>
-                        <a href="/legacynet/uptime.html#hundredThouNodes" class="nav-item">100k Nodes</a>
-                        <a href="/legacynet/uptime.html#lCustomNodes" class="nav-item">Custom Node Dashboard</a>
-                    </div>
-                </div>
-        
-                <!-- HyperBEAM Uptime -->
-                <div class="nav-dropdown">
-                    <a href="hyperbeam/hyperbeam-uptime.html" class="nav-item dropdown-toggle">HyperBEAM Uptime ▾</a>
-                    <div class="dropdown-menu">
-                        <a href="/hyperbeam/3D-Globe/globe.html" class="nav-item">🌏3D Hyperbeam Network</a>
-                        <a href="/hyperbeam/hyperbeam-uptime.html#hbMainnetNodes" class="nav-item">HyperBEAM Nodes</a>
+                        <a href="hyperbeam/hyperbeam-uptime.html" class="nav-item">Live Node Monitor</a>
+                        <a href="hyperbeam/3D-Globe/globe.html" class="nav-item">&#x1F30F; 3D Network Globe</a>
                     </div>
                 </div>
         
@@ -111,7 +101,7 @@
                 <h1>Arweave & AO Network Stats</h1>
             </div>
 
-        <div class="stats-row">
+        <div class="stats-row stats-row-two-column">
             <div class="stat-card" title="Number of active developer addresses on the Arweave/AO networks">
                 <img src="/images/happy-lean.png" alt="Leaning Character" class="leaning-character">
                 <div class="stat-title">Active Developer Addresses</div>
@@ -123,10 +113,14 @@
             </div>
 
 
-            <div class="stat-card" title="Total number of AO Mainnet nodes currently listed">
-                <div class="stat-title">HyperBEAM Mainnet Nodes</div>
-                <div class="stat-value" id="nodeCount">--</div>
+            <!-- Disabled live-node header stat placeholder.
+            <div class="stat-card" title="HyperBEAM nodes with a successful response in the shared browser cache">
+                <div class="stat-title">Live HyperBEAM Nodes</div>
+                <div class="stat-value stat-value-loading" id="nodeCount" aria-live="polite" aria-label="Loading live HyperBEAM node count">
+                    <span class="stat-loading-spinner" aria-hidden="true"></span>
+                </div>
             </div>
+            -->
 
             <div class="stat-card" title="Total count of all AO protocol messages (all-time)">
                 <div class="stat-title">Total AO Messages</div>
@@ -203,7 +197,7 @@
                     </div>
                 </div>
 
-
+                <!-- Disabled stablecoin chart placeholders: retain these cards for future integrations.
                 <div class="chart-card">
                     <div class="chart-header">
                         <h3 class="chart-title">wUSDC/USDA Daily Transfer Count</h3>
@@ -245,100 +239,8 @@
                         </div>
                     </div>
                 </div>
-
-
-
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <h3 class="chart-title">wAR Daily Transfer Count</h3>
-                    </div>
-                    <div class="chart-body">
-                        <div id="wARTransferLoader" class="chart-loader">
-                            <div class="loader"></div>
-                            <div class="loader-text">Fetching Transaction History...</div>
-                        </div>
-                        <div class="chart-container">
-                            <canvas id="wARTransferChart"></canvas>
-                        </div>
-                        <a href="#" class="chart-fullscreen-link" onclick="openChartModal('wARTransfer'); return false;">Fullscreen view</a>
-                        <div class="chart-actions">
-                            <button class="chart-action-btn">1W</button>
-                            <button class="chart-action-btn">1M</button>
-                            <button class="chart-action-btn">3M</button>
-                        </div>
-                    </div>
-                </div>
-
-
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <h3 class="chart-title">wAR Daily Volume</h3>
-                    </div>
-                    <div class="chart-body">
-                        <div id="wARVolumeLoader" class="chart-loader">
-                            <div class="loader"></div>
-                            <div class="loader-text">Fetching Transaction History...</div>
-                        </div>
-                        <div class="chart-container">
-                            <canvas id="wARVolumeChart"></canvas>
-                        </div>
-                        <a href="#" class="chart-fullscreen-link" onclick="openChartModal('wARVolume'); return false;">Fullscreen view</a>
-                        <div class="chart-actions">
-                            <button class="chart-action-btn">1W</button>
-                            <button class="chart-action-btn">1M</button>
-                            <button class="chart-action-btn">3M</button>
-                        </div>
-                    </div>
-                </div>
-
-
-
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <h3 class="chart-title">wAR Weekly Transfer Count</h3>
-                    </div>
-                    <div class="chart-body">
-                        <div id="wARweeklyTransferLoader" class="chart-loader">
-                            <div class="loader"></div>
-                            <div class="loader-text">Fetching Transaction History...</div>
-                        </div>
-                        <div class="chart-container">
-                            <canvas id="wARweeklyTransferChart"></canvas>
-                        </div>
-                        <a href="#" class="chart-fullscreen-link" onclick="openChartModal('wARweeklyTransfer'); return false;">Fullscreen view</a>
-                        <div class="chart-actions">
-                            <button class="chart-action-btn">1W</button>
-                            <button class="chart-action-btn">1M</button>
-                            <button class="chart-action-btn">3M</button>
-                            <button class="chart-action-btn">6M</button>
-                            <button class="chart-action-btn">9M</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <h3 class="chart-title">wAR Daily Total Supply</h3>
-                    </div>
-                    <div class="chart-body">
-                        <div id="wARTotalSupplyLoader" class="chart-loader">
-                            <div class="loader"></div>
-                            <div class="loader-text">Fetching Supply History...</div>
-                        </div>
-                        <div class="chart-container">
-                            <canvas id="wARTotalSupplyChart"></canvas>
-                        </div>
-                        <a href="#" class="chart-fullscreen-link" onclick="openChartModal('wARTotalSupply'); return false;">Fullscreen view</a>
-                        <div class="chart-actions">
-                            <button class="chart-action-btn">1W</button>
-                            <button class="chart-action-btn">1M</button>
-                            <button class="chart-action-btn">3M</button>
-                            <button class="chart-action-btn">6M</button>
-                            <button class="chart-action-btn">9M</button>
-                        </div>
-                    </div>
-                </div>
-
+                -->
+                <!-- Disabled DEX chart placeholders: retain these cards for future integrations.
                 <div class="chart-card">
                     <div class="chart-header">
                         <h3 class="chart-title">Permaswap Daily Swap Volume</h3>
@@ -380,10 +282,11 @@
                         </div>
                     </div>
                 </div>
+                -->
 
                 <div class="chart-card">
                     <div class="chart-header">
-                        <h3 class="chart-title">Atomic Asset Daily Creation Tracking on Bazar</h3>
+                        <h3 class="chart-title">Bazar 2.0 Atomic Asset Creations</h3>
                     </div>
                     <div class="chart-body">
                         <div id="bazarAADailyLoader" class="chart-loader">
@@ -404,12 +307,12 @@
 
                 <div class="chart-card">
                     <div class="chart-header">
-                        <h3 class="chart-title">Atomic Asset Daily Sales on Bazar(UCM)</h3>
+                        <h3 class="chart-title">Bazar 2.0 Daily Completed Sales</h3>
                     </div>
                     <div class="chart-body">
                         <div id="bazarSalesDailyLoader" class="chart-loader">
                             <div class="loader"></div>
-                            <div class="loader-text">Fetching Transaction History...</div>
+                            <div class="loader-text">Matching Completed Sales...</div>
                         </div>
                         <div class="chart-container">
                             <canvas id="bazarSalesDailyChart"></canvas>
@@ -520,10 +423,16 @@
         <div class="container footer-content">
             <div class="footer-brand">
                 <div class="footer-text">2026 The Eye</div>
-                <a class="footer-attribution" href="https://goldsky.com" target="_blank" rel="noopener">
-                    <img class="footer-attribution-icon" src="images/goldsky.png" alt="Goldsky">
-                    <span>Data Provided By Goldsky.com</span>
-                </a>
+                <div class="footer-attributions">
+                    <a class="footer-attribution footer-attribution-dao" href="https://dao-academy.arweave.net/" target="_blank" rel="noopener">
+                        <img class="footer-attribution-icon footer-attribution-icon-dao" src="DA-logo.png" alt="DAO Academy">
+                        <span>Built By DAO Academy</span>
+                    </a>
+                    <a class="footer-attribution" href="https://goldsky.com" target="_blank" rel="noopener">
+                        <img class="footer-attribution-icon" src="images/goldsky.png" alt="Goldsky">
+                        <span>Data Provided By Goldsky.com</span>
+                    </a>
+                </div>
             </div>
         </div>
     </footer>

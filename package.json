@@ -6,7 +6,9 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "deploy": "npm run build && permaweb-deploy --arns-name dev-eye-of-ao"
+    "deploy": "npm run build && permaweb-deploy --arns-name dev-eye-of-ao",
+    "deploy:arweave": "npm run build && node scripts/deploy-arweave.mjs",
+    "deploy:arweave:dry-run": "npm run build && node scripts/deploy-arweave.mjs --dry-run"
   },
   "keywords": [],
   "author": "",
@@ -17,6 +19,8 @@
     "vite": "^7.1.2"
   },
   "dependencies": {
+    "arbundles": "^0.11.2",
+    "arweave": "^1.15.7",
     "permaweb-deploy": "^2.5.1"
   }
 }

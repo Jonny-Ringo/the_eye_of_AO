@@ -4,7 +4,6 @@
 import { DEFAULT_TIME_RANGE } from './config.js';
 import { formatDate, debounce } from './utils.js';
 import { updateChartTimeRange } from './charts.js';
-import { updateVolumeChart } from './index.js';
 
 // Store time range state for each chart
 export const chartTimeRanges = {};
@@ -30,16 +29,14 @@ export function updateNetworkInfoDisplay(currentHeight, latestPeriod) {
  * @param {boolean} show - Whether to show or hide the loader
  */
 export function toggleChartLoader(processName, show = true) {
-    let loaderId;
-    
-    // Handle special cases for various chart loaders
+    /* Disabled stablecoin shared-loader placeholder:
     if (processName === 'USDATransfer') {
         // USDATransfer shares the same loader as wUSDCTransfer
         loaderId = 'wUSDCTransferLoader';
-    } else {
-        loaderId = `${processName}Loader`;
     }
-    
+    */
+    const loaderId = `${processName}Loader`;
+
     // Check if modal is open
     const modalOpen = document.getElementById('chartModal').classList.contains('active');
     
@@ -121,18 +118,18 @@ export function hideAllChartLoaders() {
 /**
  * Sets up event listeners for time range buttons on all charts
  * @param {Function} fetchDataCallback - Callback for regular data fetching
- * @param {Function} fetchWeeklyCallback - Callback for weekly data fetching
  */
-export function setupTimeRangeButtons(fetchDataCallback, fetchWeeklyCallback) {
+export function setupTimeRangeButtons(fetchDataCallback) {
     // Get all chart cards
     const chartCards = document.querySelectorAll('.chart-card');
     
     // Initialize chartTimeRanges for each process
     const processNames = [
-         'wARTransfer', 'wUSDCTransfer', 'USDATransfer',
-        'AOTransfer', 'permaswap', 'botega', 'llamaLand',
-         'wARweeklyTransfer', 'wARTotalSupply', 'stargrid',
-         'AOVolume', 'wARVolume', 'wUSDCVolume', 'bazarAADaily', 'bazarSalesDaily',
+         // Disabled stablecoin UI placeholders: 'wUSDCTransfer', 'USDATransfer',
+        // Disabled DEX UI placeholders: 'permaswap', 'botega',
+        'AOTransfer', 'llamaLand',
+         // Disabled stablecoin UI placeholder: 'wUSDCVolume',
+         'stargrid', 'AOVolume', 'bazarAADaily', 'bazarSalesDaily',
          'stargridMatches', 'aoMessages', 'arweaveTransactions'
     ];
     
@@ -151,12 +148,7 @@ export function setupTimeRangeButtons(fetchDataCallback, fetchWeeklyCallback) {
         }
         
         // Get process name from canvas ID
-        let processName;
-        if (canvas.id === 'wARTotalSupplyChart') {
-            processName = 'wARTotalSupply';
-        } else {
-            processName = canvas.id.replace('Chart', '');
-        }
+        const processName = canvas.id.replace('Chart', '');
         
         // Set default time range for this chart
         chartTimeRanges[processName] = processName === 'arweaveTransactions' ? '1M' : DEFAULT_TIME_RANGE;
@@ -193,38 +185,22 @@ export function setupTimeRangeButtons(fetchDataCallback, fetchWeeklyCallback) {
                 chartTimeRanges[processName] = timeRange;
                 
                 try {
-                    // Special handling for wAR chart
-                    if (processName === 'wARTransfer') {
-                        // Make sure we update both datasets
-                        if (timeRange === '1M' || timeRange === '3M') {
-                            await fetchDataCallback(processName, timeRange);
-                        } else {
-                            // For 1W, just update the chart display
-                            updateChartTimeRange(processName, timeRange);
-                        }
-                    }
-                    // Special handling for wUSDC/USDA combined chart
-                    else if (processName === 'wUSDCTransfer') {
+                    /* Disabled stablecoin range placeholder:
+                    if (processName === 'wUSDCTransfer') {
                         if (timeRange === '1M' || timeRange === '3M') {
                             await fetchDataCallback(processName, timeRange);
                         } else {
                             updateChartTimeRange(processName, timeRange);
                         }
                     }
+                    */
                     // Check if we need more data for longer time ranges for specific charts
-                    else if (['AOVolume', 'wARVolume', 'wUSDCVolume','AOTransfer', 'permaswap', 'botega', 'llamaLand', 'stargrid', 'bazarAADaily', 'bazarSalesDaily', 'aoMessages', 'arweaveTransactions'].includes(processName) &&
+                    // Disabled DEX range placeholders: 'permaswap', 'botega'
+                    // Disabled stablecoin range placeholder: 'wUSDCVolume'
+                    if (['AOVolume', 'AOTransfer', 'llamaLand', 'stargrid', 'bazarAADaily', 'bazarSalesDaily', 'aoMessages', 'arweaveTransactions'].includes(processName) &&
                         (timeRange === '1M' || timeRange === '3M')) {
 
                         await fetchDataCallback(processName, timeRange);
-                    } 
-                    // For weekly charts
-                    // Special handling for wAR weekly combined chart
-                    else if (processName === 'wARweeklyTransfer') {
-                        if (timeRange === '1M' || timeRange === '3M' || timeRange === '6M' || timeRange === '9M' || timeRange === '1Y') {
-                            await fetchWeeklyCallback(processName, timeRange);
-                        } else {
-                            updateChartTimeRange(processName, timeRange);
-                        }
                     }
                     // For all other cases, just update the chart display
                     else {

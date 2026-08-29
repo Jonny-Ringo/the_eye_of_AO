@@ -4,6 +4,7 @@
 
 // Define processes with their query parameters
 export const PROCESSES = {
+    /* Disabled DEX process placeholders. Reuse these blocks for future DEX integrations.
     permaswap: {
         description: "Permaswap Order Notice Processes",
         protocol: "ao",
@@ -28,18 +29,8 @@ export const PROCESSES = {
         spawnerProcess: "3XBGLrygs11K63F_7mldWz4veNx6Llg6hI2yZs8LKHo",
         displayName: "Botega Swaps"
     },
-    wARTransfer: {
-        description: "wAR Token Transfer",
-        fromProcess: ["xU9zFkq3X2ZQ6olwNVvr1vUWIjc3kXTWr7xKQD6dh10"],
-        action: "Credit-Notice",
-        displayName: "wAR Transfers"
-    },
-    wARweeklyTransfer: {
-        description: "wAR Weekly Token Transfer",
-        fromProcess: ["xU9zFkq3X2ZQ6olwNVvr1vUWIjc3kXTWr7xKQD6dh10"],
-        action: "Credit-Notice",
-        displayName: "wAR Weekly Transfers"
-    },
+    */
+    /* Disabled stablecoin process placeholders. Reuse these blocks for future integrations.
     wUSDCTransfer: {
         description: "wUSDC Token Transfer",
         fromProcess: ["7zH9dlMNoxprab9loshv3Y7WG45DOny_Vrq9KrXObdQ"],
@@ -52,16 +43,12 @@ export const PROCESSES = {
         action: "Credit-Notice",
         displayName: "USDA Transfers"
     },
+    */
     AOTransfer: {
         description: "AO Token Transfer",
         fromProcess: ["0syT13r0s0tgPmIed95bJnuSqaD29HQNN8D3ElLSrsc"],
         action: "Credit-Notice",
         displayName: "AO Transfers"
-    },
-    wARTotalSupply: {
-        description: "wAR Total Supply",
-        wARProcess: "Bi6bSPz-IyOCX9ZNedmLzv7Z6yxsrj9nHE1TnZzm_ks",
-        action: "SupplyHistory"
     },
     llamaLand: {
         description: "LlamaLand Login Info",
@@ -71,20 +58,16 @@ export const PROCESSES = {
         displayName: "LlamaLand"
     },
     bazarAADaily: {
-        description: "Atomic Asset Creation Tracking",
-        displayName: "Atomic Assets Creation Daily",
-        ticker: "ATOMIC",
-        action: "Bootloader-Ticker",
-        displayName: "Atomic Assets"
+        description: "Bazar 2.0 Atomic Asset Process Creations",
+        displayName: "Bazar Atomic Asset Creations"
     },
     bazarSalesDaily: {
-        description: "Bazar Sales Tracking - Update Executed Orders",
-        displayName: "Bazar Sales Daily",
-        action: "Update-Executed-Orders"
+        description: "Bazar 2.0 Completed Settlement Payments",
+        displayName: "Bazar Completed Sales"
     }
 };
 
-// Cache for process addresses to avoid repeated fetching
+// DEX discovery helper retained for future integrations; currently has no active callers.
 const processAddressCache = new Map();
 
 /**
@@ -222,6 +205,7 @@ export async function generateQuery(processType, startHeight, endHeight, current
         : `block: { min: ${startHeight}, max: ${endHeight} }`;
 
     switch(processType) {
+        /* Disabled DEX query placeholders. Adapt these cases for future DEX integrations.
         case 'permaswap': {
             // Fetch addresses for Permaswap
             const addresses = await fetchProcessAddresses(
@@ -263,11 +247,12 @@ export async function generateQuery(processType, startHeight, endHeight, current
                 }
             }`;
         }
+        */
             
-        case 'wARTransfer':
-        case 'wARweeklyTransfer':
+        /* Disabled stablecoin query placeholders.
         case 'wUSDCTransfer':
         case 'USDATransfer':
+        */
         case 'AOTransfer':
             return `query {
                 transactions (
@@ -297,11 +282,21 @@ export async function generateQuery(processType, startHeight, endHeight, current
             }`;
 
         case 'bazarAADaily':
+            // Mirrors Bazar 2.0's mintProcessTags/isBazarMintTags process shape.
             return `query {
                 transactions(
                     ${blockRange}
                     tags: [
-                        { name: "${process.action}", values: ["${process.ticker}"] }
+                        { name: "device", values: ["process@1.0"] }
+                        { name: "execution-device", values: ["token@1.0"] }
+                        { name: "swap-device", values: ["arweave-swap@1.0"] }
+                        { name: "scheduler-device", values: ["arweave-scheduler@1.0"] }
+                        { name: "hint-ui-style", values: ["non-fungible"] }
+                        { name: "scheduler-mode", values: ["all"] }
+                        { name: "type", values: ["Process"] }
+                        { name: "total-supply", values: ["1"] }
+                        { name: "denomination", values: ["0"] }
+                        { name: "ticker", values: ["ASSET"] }
                     ]
                 ) {
                     count
@@ -309,16 +304,9 @@ export async function generateQuery(processType, startHeight, endHeight, current
             }`;
 
         case 'bazarSalesDaily':
-            return `query {
-                transactions(
-                    ${blockRange}
-                    tags: [
-                        { name: "Action", values: ["${process.action}"] }
-                    ]
-                ) {
-                    count
-                }
-            }`;
+            // Completed Bazar sales require correlating register-interest records with
+            // their later settlement payments. api.js handles this multi-query metric.
+            throw new Error('Bazar completed sales use the settlement correlation query');
 
         case 'aoMessages':
             return `query {

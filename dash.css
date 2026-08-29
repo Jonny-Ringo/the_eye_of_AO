@@ -1,9 +1,10 @@
 /* Base Variables */
 :root {
-    --primary: #6366f1;
-    --primary-dark: #4f46e5;
-    --primary-light: #818cf8;
-    --secondary: #8b5cf6;
+    --primary: #3e507a;
+    --primary-dark: #24245d;
+    --primary-light: #8bd0d1;
+    --secondary: #8bd0d1;
+    --brand-gradient: linear-gradient(135deg, #8bd0d1 0%, #24245d 100%);
     --accent: #3b82f6;
     --background: #f8fafc;
     --card-bg: #ffffff;
@@ -78,7 +79,7 @@
   
   /* Header */
   header {
-    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    background: var(--brand-gradient);
     color: white;
     padding: 1.5rem 0;
     position: sticky;
@@ -208,7 +209,7 @@
     top: 100%;
     left: 50%;
     transform: translateX(-50%);
-    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    background: var(--brand-gradient);
     box-shadow: var(--shadow);
     border-radius: var(--radius-lg);
     padding: 0.5rem 0;
@@ -416,7 +417,7 @@
     content: '';
     position: absolute;
     inset: 0;
-    background: var(--primary-dark);
+    background: #4f46e5;
     clip-path: ellipse(48% 49% at 50% 50%);
   }
   
@@ -436,7 +437,7 @@
     height: 32px;
     margin-top: -16px;
     margin-left: -16px;
-    background: var(--secondary);
+    background: #8b5cf6;
     border-radius: 9999px;
     box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.2);
     z-index: 10;
@@ -476,7 +477,7 @@
   .eyelid {
     position: absolute;
     inset: 0;
-    background: var(--primary);
+    background: #6366f1;
     border-radius: 9999px;
     transform-origin: bottom;
     animation: blink 3s infinite ease-in-out;
@@ -489,7 +490,7 @@
     left: 0;
     right: 0;
     height: 33.333333%;
-    background: var(--primary);
+    background: #6366f1;
     clip-path: ellipse(77% 100% at 50% 100%);
     transform-origin: top;
     z-index: 20;
@@ -510,6 +511,10 @@
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 1rem;
     margin-bottom: 1.5rem;
+  }
+
+  .stats-row-two-column {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   
   .stat-card {
@@ -532,6 +537,22 @@
     font-size: 1.5rem;
     font-weight: 600;
     color: var(--text-primary);
+  }
+
+  .stat-value-loading {
+    display: flex;
+    min-height: 1.8rem;
+    align-items: center;
+  }
+
+  .stat-loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(148, 163, 184, 0.35);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
   }
   
   .stat-trend {
@@ -637,6 +658,13 @@
     gap: 0.35rem;
   }
 
+  .footer-attributions {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+  }
+
   .footer-attribution {
     display: inline-flex;
     align-items: center;
@@ -658,6 +686,17 @@
     border-radius: 9999px;
     object-fit: cover;
     flex: 0 0 auto;
+  }
+
+  .footer-attribution-dao {
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+
+  .footer-attribution-icon-dao {
+    width: 32px;
+    height: 32px;
+    border-radius: 0.5rem;
   }
   
   /* Responsive adjustments */

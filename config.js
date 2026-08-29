@@ -4,20 +4,19 @@
 
 // Process colors for consistent chart styling
 export const CHART_COLORS = {
-    permaswap: 'rgb(54, 162, 235)',
-    botega: 'rgb(255, 99, 132)',
-    wARTransfer: 'rgb(255, 159, 64)',
-    wARVolume: 'rgb(255, 159, 64)',
-    wARweeklyTransfer: 'rgb(255, 159, 64)',
+    // Disabled DEX color placeholders:
+    // permaswap: 'rgb(54, 162, 235)',
+    // botega: 'rgb(255, 99, 132)',
     llamaLand: 'rgb(255, 205, 86)',
     stargrid: 'rgb(131, 86, 255)',
     stargridRanked: 'rgb(45, 142, 142)',
     stargridTotal: 'rgb(75, 48, 150)',
     AOTransfer: 'rgb(47, 243, 8)',
     AOVolume: 'rgb(47, 243, 8)',
-    wUSDCTransfer: 'rgb(19, 62, 252)',
-    wUSDCVolume: 'rgb(19, 62, 252)',
-    USDATransfer: 'rgb(51, 139, 0)',
+    // Disabled stablecoin color placeholders:
+    // wUSDCTransfer: 'rgb(19, 62, 252)',
+    // wUSDCVolume: 'rgb(19, 62, 252)',
+    // USDATransfer: 'rgb(51, 139, 0)',
     bazarAADaily:'rgb(249, 110, 70)',
     bazarSalesDaily: 'rgb(249, 110, 70)',
     arweaveTxRedstone: 'rgb(255, 99, 132)',
@@ -42,23 +41,13 @@ export const TIME_RANGES = {
 export const UTC_TIMESTAMP_PROCESSES = [
     'stargrid',
     'stargridMatches',
-    'wARVolume',
     'AOVolume',
-    'wUSDCVolume',
-    'wARTransfer',
-    'wUSDCTransfer',
-    'USDATransfer',
+    // Disabled stablecoin timestamp placeholders: 'wUSDCVolume', 'wUSDCTransfer', 'USDATransfer',
     'AOTransfer',
-    'permaswap',
-    'botega',
+    // Disabled DEX timestamp placeholders: 'permaswap', 'botega',
     'llamaLand',
     'bazarAADaily',
-    'bazarSalesDaily',
-    'wARweeklyTransfer'
-];
-
-export const NON_UTC_TIMESTAMP_PROCESSES = [
-    'wARTotalSupply'
+    'bazarSalesDaily'
 ];
 
 
@@ -77,15 +66,6 @@ export const BLOCK_TRACKING_PROCESS = 'V5Pm1eScgJo1Ue6R0NL_qVUM53leE_B3zavwf1Z5z
 
 // Data refresh interval in milliseconds (20 minutes)
 export const DATA_REFRESH_INTERVAL = 20 * 60 * 1000;
-
-// Node list cache configuration (5 minutes)
-export const NODES_LIST_CACHE_TTL = 5 * 60 * 1000;
-
-// Feature flag: Use server-sourced node list instead of bundled
-export const USE_SERVER_NODES_LIST = true;
-
-// Nodes API endpoint
-export const NODES_API_ENDPOINT = 'https://hyperbeam-uptime.xyz/status';
 
 // Time format settings for consistent date formatting across the app
 export const TIME_FORMAT = {

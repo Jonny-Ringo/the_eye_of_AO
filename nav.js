@@ -6,11 +6,6 @@ document.addEventListener('DOMContentLoaded', function () {
             default: 'networkStats'
         },
         {
-            links: ['theFirst150Link', 'hundredThouNodesLink', 'lCustomNodesLink'],
-            contents: ['theFirst150Content', 'hundredThouNodesContent', 'lCustomNodesContent'],
-            default: 'theFirst150'
-        },
-        {
             links: ['mainnetNodesLink'],
             contents: ['mainnetNodesContent'],
             default: 'mainnetNodes'

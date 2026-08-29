@@ -1,4 +1,4 @@
--- Enhanced Lua Script to Track wAR Total Supply Daily
+-- Enhanced Lua Script to Track qAR Total Supply Daily
 local json = require('json')
 local sqlite = require('lsqlite3')
 
@@ -95,7 +95,7 @@ Handlers.add('info',
     end
 )
 
--- Handler for responses from wAR contract
+-- Handler for responses from qAR contract
 Handlers.add('supply',
     function(m) return m.From == QAR_CONTRACT end,
     function(msg)
@@ -174,7 +174,7 @@ Handlers.add('cron',
             return
         end
 
-        -- Send Total-Supply request to wAR contract
+        -- Send Total-Supply request to qAR contract
         Send({
             Target = QAR_CONTRACT,
             Action = "Total-Supply"

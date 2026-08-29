@@ -1,63 +1,18 @@
 /**
  * Chart creation and management for the Eye of AO dashboard
  */
-import { CHART_COLORS, CHART_DEFAULTS, TIME_FORMAT, UTC_TIMESTAMP_PROCESSES, NON_UTC_TIMESTAMP_PROCESSES } from './config.js';
+import { CHART_COLORS, CHART_DEFAULTS, TIME_FORMAT, UTC_TIMESTAMP_PROCESSES } from './config.js';
 import { formatDate, formatDateUTCWithLocalTime, filterDataByTimeRange } from './utils.js';
 import { getProcessDisplayName } from './processes.js';
 import { setupTimeRangeButtons, toggleChartLoader, getChartTimeRange, toggleModalLoader, chartTimeRanges } from './ui.js';
-import { fetchStargridStats, fetchVolumeData, fetchArweaveTransactionAnalytics } from './api.js'
-import { fetchAdditionalData, updateVolumeChart, updateSupplyChart } from './index.js'
+import { fetchStargridStats, fetchArweaveTransactionAnalytics } from './api.js'
+import { fetchAdditionalData, updateVolumeChart } from './index.js'
 
 // Store all chart instances
 export const charts = {};
 
 // Historical data for each chart
 export const historicalData = {};
-
-/**
- * Creates tooltip callbacks for weekly charts
- * @returns {Object} Tooltip callback functions
- */
-function createWeeklyTooltipCallbacks() {
-    return {
-        label: function(context) {
-            // Get the current dataset index and data index
-            const datasetIndex = context.datasetIndex;
-            const dataIndex = context.dataIndex;
-            
-            // Determine which process data to use based on dataset index
-            const processName = 'wARweeklyTransfer';
-            const data = historicalData[processName];
-            
-            // If we don't have data or the index is out of bounds, show the raw value
-            if (!data || !data[dataIndex]) {
-                return `${context.dataset.label}: ${context.raw}`;
-            }
-            
-            const count = data[dataIndex].count;
-            
-            // If this is the latest period, show "Current data"
-            if (dataIndex === data.length - 1) {
-                const currentTime = formatDate(new Date());
-                return `${context.dataset.label}: ${count} (Current data as of ${currentTime})`;
-            }
-            
-            return `${context.dataset.label}: ${count}`;
-        },
-        title: function(context) {
-            const dataIndex = context[0].dataIndex;
-            
-            const wARData = historicalData['wARweeklyTransfer'];
-            if (wARData && wARData[dataIndex]) {
-                const date = new Date(wARData[dataIndex].timestamp);
-                return formatDate(date, TIME_FORMAT.tooltip);
-            }
-            
-            // If no data is available, use the default formatting
-            return context[0].label;
-        }
-    };
-}
 
 /**
  * Returns the color for a specific process
@@ -84,7 +39,7 @@ function createStandardTooltipCallbacks(processName) {
             const dataPoint = historicalData[processName][dataIndex];
             
             // For volume charts, handle the value differently
-            if (['AOVolume', 'wARVolume', 'wUSDCVolume'].includes(processName)) {
+            if (processName === 'AOVolume') {
                 // Ensure we have a numeric value
                 const rawValue = Number(dataPoint.value || dataPoint.count || context.raw || 0);
                 
@@ -95,14 +50,13 @@ function createStandardTooltipCallbacks(processName) {
 
                 let formattedValue;
                 // Format based on token type
-                if (['AOVolume', 'wARVolume'].includes(processName)) {
-                    const value = Math.floor(rawValue / Math.pow(10, 12));
-                    const tokenName = processName.replace('Volume', '');
-                    formattedValue = `Volume: ${value.toLocaleString()} ${tokenName}`;
-                } else {
-                    const value = Math.floor(rawValue / Math.pow(10, 6));
-                    formattedValue = `Volume: ${value.toLocaleString()} wUSDC`;
-                }
+                const value = Math.floor(rawValue / Math.pow(10, 12));
+                const tokenName = processName.replace('Volume', '');
+                formattedValue = `Volume: ${value.toLocaleString()} ${tokenName}`;
+                /* Disabled stablecoin tooltip placeholder:
+                const stablecoinValue = Math.floor(rawValue / Math.pow(10, 6));
+                formattedValue = `Volume: ${stablecoinValue.toLocaleString()} wUSDC`;
+                */
 
                 if (dataIndex === historicalData[processName].length - 1) {
                     const currentTime = formatDate(new Date());
@@ -135,33 +89,17 @@ function createStandardTooltipCallbacks(processName) {
             if (!dataPoint) return context[0].label;
             
             // Don't apply the -1 fix to volume charts
-            const timestamp = ['stargrid', 'wARVolume', 'AOVolume', 'wUSDCVolume'].includes(processName)
+            // Disabled stablecoin timestamp placeholder: 'wUSDCVolume'
+            const timestamp = ['stargrid', 'AOVolume'].includes(processName)
                 ? dataPoint.timestamp
                 : dataPoint.timestamp - 1;
             
             const date = new Date(timestamp);
-            if (NON_UTC_TIMESTAMP_PROCESSES.includes(processName)) {
-                const adjustedDate = new Date(date.getTime());
-                return formatDate(adjustedDate, TIME_FORMAT.dateYear);
-            } else if (UTC_TIMESTAMP_PROCESSES.includes(processName)) {
+            if (UTC_TIMESTAMP_PROCESSES.includes(processName)) {
                 return formatDateUTCWithLocalTime(date);
             } else {
                 return formatDate(date, TIME_FORMAT.dateYear);
             }
-        }
-    };
-}
-
-
-/**
- * Creates tooltip callbacks for a supply chart
- * @returns {Object} Tooltip callback functions
- */
-function createSupplyTooltipCallbacks() {
-    return {
-        label: function(context) {
-            const value = context.raw;
-            return `Supply: ${Math.round(value).toLocaleString()}`;
         }
     };
 }
@@ -288,7 +226,7 @@ function createCombinedChart(primaryProcess, secondaryProcess) {
     // Determine correct display names and colors
     let displayName1, displayName2, color1, color2;
     
-    // For weekly charts, use the non-weekly process colors
+    // Use each process's configured display name and color.
     displayName1 = getProcessDisplayName(primaryProcess);
     displayName2 = getProcessDisplayName(secondaryProcess);
     color1 = getProcessColor(primaryProcess);
@@ -322,9 +260,7 @@ function createCombinedChart(primaryProcess, secondaryProcess) {
             plugins: {
                 legend: createLegendConfig(),
                 tooltip: {
-                    callbacks: primaryProcess === 'wARweeklyTransfer' ? 
-                        createWeeklyTooltipCallbacks() : 
-                        createCombinedTooltipCallbacks(primaryProcess, secondaryProcess)
+                    callbacks: createCombinedTooltipCallbacks(primaryProcess, secondaryProcess)
                 }
             }
         }
@@ -386,67 +322,6 @@ function createStargridMatchesChart() {
     });
 }
 
-
-/**
- * Creates a supply chart for wAR
- * @returns {Object} Chart instance
- */
-function createSupplyChart() {
-    const canvasId = 'wARTotalSupplyChart';
-    const ctx = document.getElementById(canvasId)?.getContext('2d');
-    
-    if (!ctx) {
-        console.error(`Cannot create chart: Canvas element ${canvasId} not found`);
-        return null;
-    }
-    
-    return new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: [],
-            datasets: [
-                {
-                    label: 'wAR Total Supply',
-                    data: [],
-                    borderColor: getProcessColor('wARTransfer'),
-                    tension: CHART_DEFAULTS.tension,
-                    pointRadius: CHART_DEFAULTS.pointRadius
-                }
-            ]
-        },
-        options: {
-            responsive: CHART_DEFAULTS.responsive,
-            maintainAspectRatio: CHART_DEFAULTS.maintainAspectRatio,
-            plugins: {
-                legend: createLegendConfig(),
-                tooltip: {
-                    callbacks: createSupplyTooltipCallbacks()
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function(value) {
-                            return Number(value).toLocaleString();
-                        }
-                    }
-                },
-                x: {
-                    ticks: {
-                        sampleSize: 30,
-                        maxRotation: 45,
-                        minRotation: 45,
-                        callback: function(value, index, ticks) {
-                            const date = new Date(this.getLabelForValue(value));
-                            return formatDate(date, TIME_FORMAT.dateOnly);
-                        }
-                    }
-                }
-            }
-        }
-    });
-}
 
 /**
  * Creates a stacked bar chart for Arweave transaction analytics
@@ -567,7 +442,8 @@ function createArweaveTransactionsChart() {
 }
 
 export async function fetchChartData(processName, timeRange) {
-    if (['stargrid', 'AOVolume', 'wARVolume', 'wUSDCVolume'].includes(processName)) {
+    // Disabled stablecoin stats placeholder: 'wUSDCVolume'
+    if (['stargrid', 'AOVolume'].includes(processName)) {
         await updateChartWithStats(processName);
     } else if (['stargridMatches'].includes(processName)) {
         await updateStargridMatchesChart(processName);
@@ -586,7 +462,8 @@ export async function updateChartWithStats(processName) {
         let data;
         if (processName === 'stargrid') {
             data = await fetchStargridStats();
-        } else if (['AOVolume', 'wARVolume', 'wUSDCVolume'].includes(processName)) {
+        // Disabled stablecoin stats placeholder: 'wUSDCVolume'
+        } else if (processName === 'AOVolume') {
             const volumeData = await updateVolumeChart(processName);
             const tokenType = processName.replace('Volume', '');
             // Use the full dataset
@@ -698,12 +575,10 @@ export function initializeCharts() {
         }
     });
     
-    // Special case: wUSDC/USDA combined chart
+    /* Disabled stablecoin combined-chart placeholder:
     charts['wUSDCTransfer'] = createCombinedChart('wUSDCTransfer', 'USDATransfer');
+    */
     
-    // Special case: wAR total supply chart
-    charts['wARTotalSupply'] = createSupplyChart();
-
     // Add Stargrid matches chart
     charts['stargridMatches'] = createStargridMatchesChart();
 
@@ -711,7 +586,9 @@ export function initializeCharts() {
     charts['arweaveTransactions'] = createArweaveTransactionsChart();
 
     // Standard charts for remaining processes
-    ['wUSDCVolume', 'wARweeklyTransfer', 'wARTransfer', 'wARVolume', 'AOTransfer','AOVolume', 'permaswap', 'botega', 'llamaLand', 'stargrid', 'bazarAADaily', 'bazarSalesDaily'].forEach(processName => {
+    // Disabled DEX chart placeholders: 'permaswap', 'botega'
+    // Disabled stablecoin chart placeholder: 'wUSDCVolume'
+    ['AOTransfer', 'AOVolume', 'llamaLand', 'stargrid', 'bazarAADaily', 'bazarSalesDaily'].forEach(processName => {
         charts[processName] = createStandardChart(processName);
     });
 
@@ -744,14 +621,16 @@ export function updateStandardChart(processName, dataPoints) {
     // Create labels from timestamps
     const labels = sortedData.map(d => {
         // Don't apply the -1 fix to volume charts
-        const timestamp = ['stargrid', 'wARVolume', 'AOVolume', 'wUSDCVolume'].includes(processName) 
+        // Disabled stablecoin timestamp placeholder: 'wUSDCVolume'
+        const timestamp = ['stargrid', 'AOVolume'].includes(processName)
             ? d.timestamp 
             : d.timestamp - 1;
         
         const date = new Date(timestamp);
         
         // Volume charts use the original hardcoded logic, others use the new config-based logic
-        return ['AOVolume', 'wARVolume', 'wUSDCVolume'].includes(processName)
+        // Disabled stablecoin volume placeholder: 'wUSDCVolume'
+        return processName === 'AOVolume'
             ? formatDateUTCWithLocalTime(date)  // ← Original working logic for volume charts
             : (UTC_TIMESTAMP_PROCESSES.includes(processName)  // ← New logic for other charts
                 ? formatDateUTCWithLocalTime(date) 
@@ -763,10 +642,12 @@ export function updateStandardChart(processName, dataPoints) {
         const rawValue = d.count || d.value || 0;
         
         // Format based on token type
-        if (['AOVolume', 'wARVolume'].includes(processName)) {
-            return rawValue / 1000000000000; // Remove 12 zeros for AO and wAR
+        if (processName === 'AOVolume') {
+            return rawValue / 1000000000000; // Remove 12 decimal places for AO
+        /* Disabled stablecoin decimal placeholder:
         } else if (processName === 'wUSDCVolume') {
             return rawValue / 1000000; // Remove 6 zeros for wUSDC
+        */
         }
         return rawValue;
     });
@@ -811,7 +692,7 @@ export function updateCombinedChart(primaryProcess, secondaryProcess, timeRange)
 }
 
 /**
- * Updates a standard combined chart (non-weekly)
+ * Updates a standard combined chart
  * @param {Object} chart - The chart instance
  * @param {string} primaryProcess - Primary process name
  * @param {string} secondaryProcess - Secondary process name
@@ -967,7 +848,7 @@ async function updateArweaveTransactionsData(processName, timeRange) {
 }
 
 /**
- * Creates tooltip callbacks for a combined chart (non-weekly)
+ * Creates tooltip callbacks for a combined chart
  * @param {string} primaryProcess - Primary process name
  * @param {string} secondaryProcess - Secondary process name
  * @returns {Object} Tooltip callback functions
@@ -1112,17 +993,18 @@ export function updateChartTimeRange(processName, timeRange) {
     data = [...data].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
     
     // Filter out any duplicate data points based on date or week
-    const filteredData = removeDuplicateDates(data, processName.includes('weekly'));
+    const filteredData = removeDuplicateDates(data);
     
     // Store back the cleaned data
     historicalData[processName] = filteredData;
     
     // Handle special combined charts
+    /* Disabled stablecoin combined-chart placeholder:
     if (processName === 'wUSDCTransfer') {
         updateCombinedChart('wUSDCTransfer', 'USDATransfer', timeRange);
-    } else if (processName === 'wARTotalSupply') {
-        updateSupplyChart(historicalData[processName], timeRange);
-    } else if (processName === 'stargridMatches') {
+    } else
+    */
+    if (processName === 'stargridMatches') {
         const filteredByTimeRange = filterDataByTimeRange(filteredData, timeRange);
         updateStargridMatchesChart(processName, filteredByTimeRange);
     } else {
@@ -1134,10 +1016,9 @@ export function updateChartTimeRange(processName, timeRange) {
 /**
  * Removes duplicate date entries from a dataset but preserves today's entries
  * @param {Array} data - The dataset to clean
- * @param {boolean} isWeekly - Whether this is weekly data
  * @returns {Array} Cleaned dataset
  */
-function removeDuplicateDates(data, isWeekly = false) {
+function removeDuplicateDates(data) {
     if (!data || data.length === 0) return [];
     
     // Get today's date in UTC
@@ -1187,22 +1068,11 @@ function removeDuplicateDates(data, isWeekly = false) {
     const seen = new Map();
     
     otherEntries.forEach(item => {
-        let key;
-        if (isWeekly) {
-            // For weekly data, use week start
-            const date = new Date(item.timestamp);
-            const day = date.getUTCDay();
-            const weekStart = new Date(date);
-            weekStart.setUTCDate(date.getUTCDate() - day);
-            weekStart.setUTCHours(0, 0, 0, 0);
-            key = weekStart.toISOString().split('T')[0];
-        } else {
-            // For daily data, use YYYY-MM-DD
-            const date = new Date(item.timestamp);
-            key = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-${String(date.getUTCDate()).padStart(2, '0')}`;
-        }
+        // For daily data, use YYYY-MM-DD
+        const date = new Date(item.timestamp);
+        const key = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-${String(date.getUTCDate()).padStart(2, '0')}`;
         
-        // Keep the latest entry for each day/week
+        // Keep the latest entry for each day
         if (!seen.has(key) || new Date(item.timestamp) > new Date(seen.get(key).timestamp)) {
             seen.set(key, item);
         }

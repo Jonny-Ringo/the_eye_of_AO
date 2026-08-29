@@ -1,23 +1,20 @@
-import { DATA_REFRESH_INTERVAL, USE_SERVER_NODES_LIST } from './config.js';
+import { DATA_REFRESH_INTERVAL } from './config.js';
 import { PROCESSES } from './processes.js';
-import { mainnetNodes } from './hyperbeam/mainnet-node-list.js';
+import { warmHyperbeamNodeCache } from './hyperbeam/node-discovery.js';
 import {
     fetchNetworkInfo,
     fetchBlockHistory,
     fetchProcessData,
-    fetchSupplyHistory,
     fetchStargridStats,
     fetchVolumeData,
-    fetchNodesList,
     fetchArweaveTransactionAnalytics
 } from './api.js';
 import {
     initializeCharts,
     historicalData,
     updateChartTimeRange,
-    updateCombinedChart,
+    // Disabled stablecoin chart placeholder: updateCombinedChart,
     fetchChartData,
-    charts,
     updateArweaveTransactionsChart
 } from './charts.js';
 import { 
@@ -30,174 +27,15 @@ import {
 } from './ui.js';
 import { 
     getDailyPeriods, 
-    getWeeklyPeriods,
     getLastDailyCheckpoint,
-    getLastSundayCheckpoint,
-    findBlockNearDate,
-    filterDataByTimeRange,
-    formatDate
+    findBlockNearDate
 } from './utils.js';
 
-/**
- * Fetches additional weekly data for time range changes
- * @param {string} processName - The process name
- * @param {string} timeRange - The selected time range
- * @returns {Promise<void>}
- */
-async function fetchAdditionalWeeklyData(processName, timeRange) {
-    if (!processName.includes('weekly')) return;
-    
-    try {
-        // Fetch network info and block history if not already available
-        const networkInfo = window.currentNetworkInfo || await fetchNetworkInfo();
-        window.currentNetworkInfo = networkInfo;
-        
-        const blockData = window.currentBlockData || await fetchBlockHistory();
-        window.currentBlockData = blockData;
-        
-        const currentHeight = networkInfo.height;
-        
-        if (timeRange === '1M' && historicalData[processName]?.length > 0) {
-            // Check if we already have enough data for 1M
-            const hasEnoughDataFor1M = historicalData[processName].some(item => {
-                const age = new Date() - new Date(item.timestamp);
-                // If we have data that's at least 25 days old, we probably have enough for 1M
-                return age >= (25 * 24 * 60 * 60 * 1000);
-            });
-            
-            if (hasEnoughDataFor1M) {
-                updateChartTimeRange(processName, timeRange);
-                return true;
-            }
-        }
-        
-        // Generate more historical weekly periods based on the selected time range
-        let extendedPeriods;
-        if (timeRange === '1M') {
-            // For 1 month, we need around 4 weeks of data
-            extendedPeriods = generateWeeklyPeriods(currentHeight, blockData, 4);
-        } else if (timeRange === '3M') {
-            // For 3 months, we need around 12 weeks of data
-            extendedPeriods = generateWeeklyPeriods(currentHeight, blockData, 12);
-        } else if (timeRange === '6M') {
-            // For 6 months, we need around 26 weeks of data
-            extendedPeriods = generateWeeklyPeriods(currentHeight, blockData, 26);
-        } else if (timeRange === '9M') {
-            // For 9 months, we need around 39 weeks of data
-            extendedPeriods = generateWeeklyPeriods(currentHeight, blockData, 39);
-        } else {
-            // For shorter time ranges, use the current periods
-            return; // No additional data needed
-        }
-        
-        // Get the existing data
-        const existingData = historicalData[processName] || [];
-        
-        // Filter out periods we already have data for
-        const newPeriods = extendedPeriods.filter(period => {
-            // Check if we already have data for this week
-            return !existingData.some(item => isSameWeek(item.timestamp, period.endTime));
-        });
-        
-        if (newPeriods.length === 0) {
-            return;
-        }
-        
-        // Fetch the data for new periods
-        const newData = await fetchProcessData(processName, newPeriods, currentHeight);
-        
-        if (newData.length > 0) {
-            // Merge new data with existing data, preventing duplicates
-            const mergedData = [...existingData]; // Start with existing data
-            
-            newData.forEach(newItem => {
-                // Check if we already have data for this week
-                const existingIndex = mergedData.findIndex(item => 
-                    isSameWeek(item.timestamp, newItem.timestamp)
-                );
-                
-                if (existingIndex >= 0) {
-                    // Update existing entry instead of adding a duplicate
-                    // Only update if the new entry is more recent or has different data
-                    const existingTime = new Date(mergedData[existingIndex].timestamp).getTime();
-                    const newTime = new Date(newItem.timestamp).getTime();
-                    
-                    if (newTime >= existingTime || mergedData[existingIndex].count !== newItem.count) {
-                        mergedData[existingIndex] = newItem;
-                    }
-                } else {
-                    // Add new entry if we don't have data for this week yet
-                    mergedData.push(newItem);
-                }
-            });
-            
-            // Sort chronologically
-            const sortedData = mergedData.sort((a, b) => 
-                new Date(a.timestamp) - new Date(b.timestamp)
-            );
-            
-            // Update historical data
-            historicalData[processName] = sortedData;
-            
-            updateChartTimeRange(processName, timeRange);
-            return true; // Return success
-        } else {
-            console.log(`No new data points found for ${processName}`);
-        }
-        
-    } catch (error) {
-        console.error(`Error fetching additional weekly data for ${processName}:`, error);
-    }
-}
-
-
-/**
- * Generates weekly periods for time series data
- * @param {number} currentHeight - The current block height
- * @param {Array} blockData - Array of block data
- * @param {number} weeks - Number of weeks to generate
- * @returns {Array} Array of weekly time periods
- */
-function generateWeeklyPeriods(currentHeight, blockData, weeks = 12) {
-    // Find the most recent Sunday at 0:00 UTC
-    const lastCheckpoint = getLastSundayCheckpoint(new Date());
-
-    // For the current period, we need to find the block at the start of this week
-    const currentWeekStartBlock = findBlockNearDate(blockData, lastCheckpoint);
-    
-    // Add current period (from last Sunday to now)
-    const periods = [{
-        endTime: new Date(),
-        startTime: lastCheckpoint,
-        endHeight: currentHeight,
-        startHeight: currentWeekStartBlock ? currentWeekStartBlock.blockHeight : blockData[0].blockHeight
-    }];
-
-    // Then add historical periods 
-    for (let i = 1; i < weeks; i++) {
-        const endDate = new Date(lastCheckpoint);
-        endDate.setDate(endDate.getDate() - (i - 1) * 7);
-
-        const startDate = new Date(endDate);
-        startDate.setDate(startDate.getDate() - 7);
-
-        // Find blocks closest to these dates
-        const endBlock = findBlockNearDate(blockData, endDate);
-        const startBlock = findBlockNearDate(blockData, startDate);
-
-        if (endBlock && startBlock) {
-            periods.push({
-                endTime: endDate,
-                startTime: startDate,
-                endHeight: endBlock.blockHeight,
-                startHeight: startBlock.blockHeight
-            });
-        }
-    }
-
-    // Sort periods chronologically
-    return periods.sort((a, b) => a.startTime - b.startTime);
-}
+// Begin filling the shared roster before the rest of the dashboard has loaded.
+// Every completed node probe and geolocation is persisted for the node and globe views.
+warmHyperbeamNodeCache().catch(error => {
+    console.error('HyperBEAM background warmup failed:', error);
+});
 
 /**
  * Fetches additional historical data for a specific process when a longer time range is selected
@@ -230,6 +68,7 @@ export async function fetchAdditionalData(processName, timeRange) {
             return; // No additional data needed
         }
         
+        /* Disabled stablecoin history placeholder:
         if (processName === 'wUSDCTransfer') {
             // Similar handling for wUSDC/USDA
             await fetchAndUpdateProcessData('wUSDCTransfer', extendedPeriods, currentHeight);
@@ -237,6 +76,7 @@ export async function fetchAdditionalData(processName, timeRange) {
             updateChartTimeRange('wUSDCTransfer', timeRange);
             return;
         }
+        */
         
         // For single-process charts
         await fetchAndUpdateProcessData(processName, extendedPeriods, currentHeight);
@@ -335,7 +175,7 @@ export function generateExtendedDailyPeriods(currentHeight, blockData, days) {
     });
     
     // Then add historical periods
-    // Use the same (i - 1) alignment as weekly periods / getDailyPeriods so we include "yesterday".
+    // Use the same (i - 1) alignment as getDailyPeriods so we include "yesterday".
     for (let i = 1; i < days; i++) {
         const endDate = new Date(lastCheckpoint);
         endDate.setUTCDate(endDate.getUTCDate() - (i - 1));
@@ -361,45 +201,6 @@ export function generateExtendedDailyPeriods(currentHeight, blockData, days) {
     return periods.sort((a, b) => a.startTime - b.startTime);
 }
 
-
-/**
- * Updates the supply chart with wAR supply data
- * @param {Array} supplyData - Array of supply data points
- * @param {string} timeRange - The selected time range
- */
-export function updateSupplyChart(supplyData, timeRange) {
-    console.log(`Updating supply chart with time range: ${timeRange}`);
-    const chart = charts['wARTotalSupply'];
-    if (!chart) {
-        console.error('No supply chart found');
-        return;
-    }
-    
-    if (!supplyData || supplyData.length === 0) {
-        console.warn('No supply data available');
-        return;
-    }
-    
-    // Filter by time range
-    const filteredData = filterDataByTimeRange(supplyData, timeRange);
-    
-    // Sort data by timestamp to ensure chronological order
-    const sortedData = [...filteredData].sort((a, b) => {
-        return new Date(a.timestamp) - new Date(b.timestamp);
-    });
-    
-    // Create labels and datasets (just wAR now)
-    const labels = sortedData.map(d => formatDate(new Date(d.timestamp)));
-    const wARSupply = sortedData.map(d => d.wARSupply);
-    
-    // Update chart with only wAR data
-    chart.data.labels = labels;
-    chart.data.datasets[0].data = wARSupply;
-    chart.data.datasets[0].label = 'wAR Total Supply';
-    
-    // Update the chart
-    chart.update('none');
-}
 
 /**
  * Updates the Stargrid chart with data 
@@ -433,7 +234,7 @@ export async function updateStargridChart() {
 
 /**
  * Updates volume charts with data from cache
- * @param {string} processName - The chart to update ('AOVolume', 'wARVolume', or 'wUSDCVolume')
+ * @param {string} processName - The chart to update ('AOVolume')
  * @returns {Promise<Object>} The volume data
  */
 export async function updateVolumeChart(processName) {
@@ -470,27 +271,6 @@ export async function updateVolumeChart(processName) {
 
 
 /**
- * Checks if two dates are in the same week
- * @param {Date} date1 - First date
- * @param {Date} date2 - Second date
- * @returns {boolean} True if dates are in the same week
- */
-function isSameWeek(date1, date2) {
-    // Get the week start (Sunday) for both dates
-    const getWeekStart = (date) => {
-        const result = new Date(date);
-        const day = result.getDay();
-        result.setDate(result.getDate() - day); // Go back to Sunday
-        result.setHours(0, 0, 0, 0);
-        return result;
-    };
-    
-    const week1 = getWeekStart(date1);
-    const week2 = getWeekStart(date2);
-    
-    return week1.getTime() === week2.getTime();
-}
-/**
  * Initializes the dashboard with improved loader removal
  */
 async function initializeDashboard() {
@@ -502,7 +282,7 @@ async function initializeDashboard() {
         initializeCharts();
         
         // Set up time range button handlers
-        setupTimeRangeButtons(fetchChartData, fetchAdditionalWeeklyData);
+        setupTimeRangeButtons(fetchChartData);
         
         // First fetch critical data - network info and block history
         console.log("Fetching network info and block history...");
@@ -529,16 +309,15 @@ async function initializeDashboard() {
         // Generate periods
         const dailyPeriods = getDailyPeriods(currentHeight, blockData);
         const oneWeekPeriods = generateExtendedDailyPeriods(currentHeight, blockData, 7);
-        const weeklyPeriods = generateWeeklyPeriods(currentHeight, blockData, 12);
         
         // Update network info display
         const latestPeriod = dailyPeriods[dailyPeriods.length - 1];
         updateNetworkInfoDisplay(currentHeight, latestPeriod);
         
-        // Load a high-priority chart first (wAR transfers) and wait for it
+        // Load a high-priority chart first and wait for it
         // This ensures users see meaningful data before removing the main loader
         try {
-            await loadProcessChart('wARTransfer', dailyPeriods, currentHeight);
+            await loadProcessChart('AOTransfer', oneWeekPeriods, currentHeight);
         } catch (error) {
             console.error("Error loading primary chart:", error);
             // Continue even if primary chart fails - we'll still try to remove the loader
@@ -547,17 +326,12 @@ async function initializeDashboard() {
         // Now we can remove the main loader since at least one chart is loaded (or attempted)
         toggleMainLoader(false);
         
-        // Start loading the supply chart
-        loadSupplyChart().catch(error => {
-            console.error("Error loading supply chart:", error);
-            toggleChartLoader('wARTotalSupply', false);
-        });
-        
         // Load remaining standard daily process charts
         Object.keys(PROCESSES).forEach(processName => {
-            if (!processName.includes('weekly') && processName !== 'wARTotalSupply' && processName !== 'wARTransfer') {
+            if (processName !== 'AOTransfer') {
                 // Use appropriate periods based on chart type
-                const periods = ['AOTransfer', 'permaswap', 'botega', 'llamaLand','bazarAADaily', 'bazarSalesDaily'].includes(processName)
+                // Disabled DEX period placeholders: 'permaswap', 'botega'
+                const periods = ['AOTransfer', 'llamaLand','bazarAADaily', 'bazarSalesDaily'].includes(processName)
                     ? oneWeekPeriods
                     : dailyPeriods;
 
@@ -569,21 +343,9 @@ async function initializeDashboard() {
             }
         });
         
-        // Weekly process charts - load independently
-        Object.keys(PROCESSES).forEach(processName => {
-            if (processName.includes('weekly')) {
-                loadProcessChart(processName, weeklyPeriods, currentHeight).catch(error => {
-                    console.error(`Error loading ${processName} chart:`, error);
-                    toggleChartLoader(processName, false);
-                });
-            }
-        });
-
         // Fetch all-time total AO messages count
         updateTotalAoMessagesCount();
 
-        // 1. Populate mainnet node count
-        updateNodeCount();
         loadDevAddressCount();
         
         loadStargridChart().catch(error => {
@@ -601,15 +363,12 @@ async function initializeDashboard() {
             toggleChartLoader('AOVolume', false);
         });
 
-        loadVolumeChart('wARVolume').catch(error => {
-            console.error("Error loading wAR Volume chart:", error);
-            toggleChartLoader('wARVolume', false);
-        });
-
+        /* Disabled stablecoin volume chart placeholder:
         loadVolumeChart('wUSDCVolume').catch(error => {
             console.error("Error loading wUSDC Volume chart:", error);
             toggleChartLoader('wUSDCVolume', false);
         });
+        */
 
         loadArweaveTransactionsChart().catch(error => {
             console.error("Error loading Arweave transaction analytics:", error);
@@ -674,36 +433,6 @@ async function updateTotalAoMessagesCount() {
 }
 
 /**
- * Updates the node count display using server-sourced or bundled node list
- * @returns {Promise<void>}
- */
-async function updateNodeCount() {
-    try {
-        let nodes;
-
-        if (USE_SERVER_NODES_LIST) {
-            // Fetch from server with caching
-            nodes = await fetchNodesList();
-        } else {
-            // Use bundled list (fallback)
-            nodes = mainnetNodes;
-        }
-
-        document.getElementById('nodeCount').textContent = nodes.length;
-    } catch (error) {
-        console.error('Failed to load node count:', error);
-
-        // Fallback to bundled list on error
-        if (mainnetNodes) {
-            console.warn('Using bundled node list as fallback');
-            document.getElementById('nodeCount').textContent = mainnetNodes.length;
-        } else {
-            document.getElementById('nodeCount').textContent = '--';
-        }
-    }
-}
-
-/**
  * Loads the Stargrid chart with data from AO
  * @returns {Promise<void>} Resolves when chart is loaded
  */
@@ -759,8 +488,8 @@ async function loadStargridMatchesChart() {
 
 
 /**
- * Loads volume charts (AO, wAR, wUSDC) with data from the API
- * @param {string} processName - The chart to load ('AOVolume', 'wARVolume', or 'wUSDCVolume')
+ * Loads AO volume data from the API
+ * @param {string} processName - The chart to load ('AOVolume')
  * @returns {Promise<void>} Resolves when chart is loaded
  */
 async function loadVolumeChart(processName) {
@@ -772,9 +501,8 @@ async function loadVolumeChart(processName) {
                
         // Map process names to their data keys
         const dataKeys = {
-            'AOVolume': 'AO',
-            'wARVolume': 'wAR',
-            'wUSDCVolume': 'wUSDC'
+            'AOVolume': 'AO'
+            // Disabled stablecoin volume placeholder: 'wUSDCVolume': 'wUSDC'
         };
         
         const dataKey = dataKeys[processName];
@@ -842,11 +570,10 @@ async function loadArweaveTransactionsChart() {
  */
 async function loadProcessChart(processName, periods, currentHeight) {
     try {
+        /* Disabled stablecoin combined-chart placeholder:
         // Skip if this is USDATransfer (handled with wUSDC)
         if (processName === 'USDATransfer') return;
-        
-        toggleChartLoader(processName, true);
-        
+
         // Special handling for wUSDC/USDA combined chart
         if (processName === 'wUSDCTransfer') {
             // Fetch data for both wUSDC and USDA transfers
@@ -877,60 +604,23 @@ async function loadProcessChart(processName, periods, currentHeight) {
             const timeRange = getChartTimeRange('wUSDCTransfer');
             updateCombinedChart('wUSDCTransfer', 'USDATransfer', timeRange);
             toggleChartLoader(processName, false);
-            
-        } else {
-            // Standard chart
-            const data = await fetchProcessData(processName, periods, currentHeight);
+        }
+        */
 
-            // Update historical data
-            if (data.length > 0) {
-                historicalData[processName] = data;
+        toggleChartLoader(processName, true);
 
-                // Update the chart
-                const timeRange = getChartTimeRange(processName);
-                updateChartTimeRange(processName, timeRange);
-                toggleChartLoader(processName, false);
-            }
+        const data = await fetchProcessData(processName, periods, currentHeight);
+
+        if (data.length > 0) {
+            historicalData[processName] = data;
+
+            const timeRange = getChartTimeRange(processName);
+            updateChartTimeRange(processName, timeRange);
+            toggleChartLoader(processName, false);
         }
     } catch (error) {
         console.error(`Error loading ${processName} chart:`, error);
         throw error; // Rethrow to allow caller to handle
-    }
-}
-
-/**
- * Loads the supply chart
- */
-async function loadSupplyChart() {
-    try {
-        toggleChartLoader('wARTotalSupply', true);
-        
-        const supplyData = await fetchSupplyHistory();
-        if (!supplyData) throw new Error('Failed to fetch supply data');
-        
-        // Process only wAR supply data
-        const processedData = supplyData.wAR.map(d => ({
-            timestamp: d.date,
-            wARSupply: Number(d.totalSupply) / 1e12
-        }));
-        
-        // Ensure timestamps are properly formatted as date strings
-        const formattedData = processedData.map(entry => ({
-            ...entry,
-            timestamp: new Date(entry.timestamp).toISOString()
-        }));
-        
-        // Update historical data
-        historicalData['wARTotalSupply'] = formattedData;
-        
-        // Update chart
-        const timeRange = getChartTimeRange('wARTotalSupply');
-        updateChartTimeRange('wARTotalSupply', timeRange);
-    } catch (error) {
-        console.error('Error updating supply chart:', error);
-        throw error; // Rethrow to allow the caller to handle it
-    } finally {
-        toggleChartLoader('wARTotalSupply', false);
     }
 }
 

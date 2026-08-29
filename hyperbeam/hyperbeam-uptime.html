@@ -1,154 +1,203 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>The Eye of AO</title>
-        <meta name="description" content="The Eye of AO is a data dashboard for monitoring the AO Compute Network.">
-        <meta name="keywords" content="Arweave, AO, data, dashboard, blockchain, graphs, charts, analytics, monitoring, HyperBEAM">
-        <meta name="robots" content="index, follow">
-        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <meta name="language" content="English">
-        <meta name="author" content="Jonny Ringo">
-        <link rel="icon" href="../images/eyecon.png">
-        
-        <!-- Open Graph / Facebook -->
-        <meta property="og:type" content="website">
-        <meta property="og:url" content="https://eye-of-ao.arweave.net/">
-        <meta property="og:title" content="The Eye of AO">
-        <meta property="og:description" content="Data dashboard for monitoring the AO Compute Network">
-        <meta property="og:image" content="../images/preview.png">
-        <meta property="og:image:width" content="1200">
-        <meta property="og:image:height" content="630">
-        <meta property="og:site_name" content="The Eye of AO">
-        
-        <!-- Twitter -->
-        <meta name="twitter:card" content="summary_large_image">
-        <meta name="twitter:url" content="https://eye-of-ao.arweave.net/">
-        <meta name="twitter:title" content="The Eye of AO">
-        <meta name="twitter:description" content="Data dashboard for monitoring the AO Compute Network">
-        <meta name="twitter:image" content="../images/preview.png">
-        <meta name="twitter:creator" content="Jonny Ringo">
- 
-    <!-- Fonts -->
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#24245d">
+    <meta name="description" content="The Eye's browser-only view of HyperBEAM nodes discovered from AO location records.">
+    <meta name="keywords" content="Arweave, AO, HyperBEAM, nodes, uptime, telemetry">
+    <meta name="author" content="Jonny Ringo">
+    <title>The Eye of AO | HyperBEAM Network Status</title>
+    <link rel="icon" href="../images/eyecon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Custom styles -->
-    <link rel="stylesheet" href="../dash.css">
-    <link rel="stylesheet" href="hyperbeam-uptime.css">
-    
-    <!-- Icons (optional) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-</head>
-<body>
-    <header>
-        <div class="container header-content">
-            <div class="logo">
-                <div>
-                    <h1>The Eye of AO</h1>
-                </div>
-            </div>
-            <div class="header-info">
-                <div class="network-badge">HyperBEAM Mainnet</div>
-            </div>
+    <link rel="stylesheet" href="./hyperbeam-uptime.css">
+    <script type="module" src="./hyperbeam-uptime.js"></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-content">
+        <div class="logo">
+          <h1>The Eye</h1>
         </div>
-        <nav class="navbar">
-            <div class="navbar-container">
-        
-                <!-- Network Stats -->
-                <div class="nav-dropdown">
-                    <a href="/index.html" class="nav-item dropdown-toggle">Network Stats ▾</a>
-                    <div class="dropdown-menu">
-                        <a href="/index.html#networkStats" class="nav-item">AO Network Stats</a>
-                        <a href="/index.html#gamingStats" class="nav-item">Gaming Stats</a>
-                    </div>
-                </div>
-        
-                <!-- Legacynet Uptime -->
-                <div class="nav-dropdown">
-                    <a href="../legacynet/uptime.html" class="nav-item dropdown-toggle">Legacynet Uptime ▾</a>
-                    <div class="dropdown-menu">
-                        <a href="/legacynet/uptime.html#theFirst150" class="nav-item">The First 150</a>
-                        <a href="/legacynet/uptime.html#hundredThouNodes" class="nav-item">100k Nodes</a>
-                        <a href="/legacynet/uptime.html#lCustomNodes" class="nav-item">Custom Node Dashboard</a>
-                    </div>
-                </div>
-        
-                <!-- HyperBEAM Uptime -->
-                <div class="nav-dropdown">
-                    <a href="hyperbeam-uptime.html" class="nav-item dropdown-toggle">HyperBEAM Uptime ▾</a>
-                    <div class="dropdown-menu">
-                        <a href="3D-Globe/globe.html" class="nav-item">🌏3D Hyperbeam Network</a>
-                        <a href="#mainnetNodes" class="nav-item" id="hbMainnetNodesLink">HyperBEAM Nodes</a>
-                    </div>
-                </div>
-        
+        <div class="header-info">
+          <div class="block-info">HyperBEAM Mainnet</div>
+        </div>
+      </div>
+      <nav class="navbar" aria-label="Primary navigation">
+        <div class="navbar-container">
+          <div class="nav-dropdown">
+            <a href="../index.html" class="nav-item dropdown-toggle">Network Stats ▾</a>
+            <div class="dropdown-menu">
+              <a href="../index.html#networkStats" class="nav-item">Arweave &amp; AO Network Stats</a>
             </div>
-        </nav>
+          </div>
+          <div class="nav-dropdown">
+            <a href="./hyperbeam-uptime.html" class="nav-item dropdown-toggle active">HyperBEAM ▾</a>
+            <div class="dropdown-menu">
+              <a href="./hyperbeam-uptime.html" class="nav-item">Live Node Monitor</a>
+              <a href="./3D-Globe/globe.html" class="nav-item">&#x1F30F; 3D Network Globe</a>
+            </div>
+          </div>
+        </div>
+      </nav>
     </header>
-    
-    <div class="container">
-        <div class="page-header">
-            <h1>HyperBEAM Network Status</h1>
-            <h2>Real-time Availability Monitor</h2>
-        </div>
-         
-        <div class="summary">
-            <h2>Network Status</h2>
-            <p id="summaryText">Checking node availability...</p>
-        </div>
 
+    <main class="container shell">
+      <div class="page-header">
+        <h1>HyperBEAM Network Status</h1>
+        <h2>Live node discovery, availability, and telemetry</h2>
+      </div>
 
-        <section id="mainnetNodesContent" class="active">
-            <h2 class="page-header">HyperBEAM Mainnet Nodes</h2>
-            <div class="status-container" id="mainnetStatusContainer">
-                <!-- Node status cards will be added here dynamically -->
-            </div>
-            <div class="last-updated" id="mainnetLastUpdated">Last update: Waiting for first scan...</div>
-        </section>
-    </div>
-
-    <footer>
-        <div class="container footer-content">
-            <div class="footer-brand">
-                <div class="footer-text">2026 The Eye of AO</div>
-                <a class="footer-attribution" href="https://goldsky.com" target="_blank" rel="noopener">
-                    <img class="footer-attribution-icon" src="../images/goldsky.png" alt="Goldsky">
-                    <span>Data Provided By Goldsky.com</span>
-                </a>
-            </div>
-            <div class="footer-text">Data refreshes automatically every 20 minutes</div>
+      <div class="topbar" aria-label="Network sampling controls">
+        <div>
+          <h2>Real-time Availability Monitor</h2>
         </div>
+        <div class="top-actions">
+          <span class="scan-state" id="scan-state"><i></i><span>Starting</span></span>
+          <button class="button quiet" id="refresh-button" type="button">Refresh</button>
+          <button class="button dark" id="add-peer-button" type="button">Add peer</button>
+        </div>
+      </div>
+
+      <section class="summary-grid" aria-label="Network summary">
+        <article>
+          <span class="stat-help" data-stat-help="publicNodes" tabindex="0">Publicly accessible nodes</span>
+          <strong id="stat-online">0</strong>
+          <small id="stat-online-note">of 0 candidates</small>
+        </article>
+        <article>
+          <span class="stat-help" data-stat-help="locationRecords" tabindex="0">Location records</span>
+          <strong id="stat-records">0</strong>
+          <small id="stat-record-note">on-chain + peer caches</small>
+        </article>
+        <article>
+          <span class="stat-help" data-stat-help="publicActivity" tabindex="0">Public activity</span>
+          <strong id="stat-activity">—</strong>
+          <small>events / second</small>
+        </article>
+        <article>
+          <span class="stat-help" data-stat-help="localHistory" tabindex="0">Local history</span>
+          <strong id="stat-samples">0</strong>
+          <small>samples in this browser</small>
+        </article>
+      </section>
+
+      <section class="control-bar" aria-label="Peer filters and sampling">
+        <label class="search-field">
+          <span class="sr-only">Filter peers</span>
+          <input id="peer-filter" type="search" autocomplete="off" placeholder="Filter nodes, owners, workloads…">
+        </label>
+        <label class="select-field">
+          <span class="stat-help" data-stat-help="scrapeInterval" tabindex="0">Scrape</span>
+          <select id="poll-interval">
+            <option value="30000">30 sec</option>
+            <option value="60000">1 min</option>
+            <option value="120000" selected>2 min</option>
+          </select>
+        </label>
+        <label class="toggle-field">
+          <input id="auto-refresh" type="checkbox" checked>
+          <span>Live</span>
+        </label>
+        <label class="toggle-field">
+          <input id="show-unreachable" type="checkbox">
+          <span>All records</span>
+        </label>
+        <span class="discovery-note" id="discovery-note">Finding location records…</span>
+      </section>
+
+      <section class="peer-section" aria-labelledby="peer-heading">
+        <div class="section-head">
+          <div>
+            <h2 id="peer-heading">Accessible Nodes</h2>
+          </div>
+          <span id="last-sampled">No samples yet</span>
+        </div>
+        <div class="node-grid" id="node-grid">
+          <div class="empty-state">Discovering peers from the network…</div>
+        </div>
+      </section>
+
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-content">
+        <div class="footer-brand">
+          <div class="footer-text">2026 The Eye</div>
+          <div class="footer-attributions">
+            <a class="footer-attribution footer-attribution-dao" href="https://dao-academy.arweave.net/" target="_blank" rel="noopener">
+              <img class="footer-attribution-icon footer-attribution-icon-dao" src="../DA-logo.png" alt="DAO Academy">
+              <span>Built By DAO Academy</span>
+            </a>
+            <a class="footer-attribution" href="https://goldsky.com/" target="_blank" rel="noopener">
+              <img class="footer-attribution-icon" src="../images/goldsky.png" alt="Goldsky">
+              <span>Data Provided By Goldsky.com</span>
+            </a>
+          </div>
+        </div>
+      </div>
     </footer>
 
-    <script type="module" src="hyperbeam-uptime.js"></script>
-    <script type="module" src="../nav.js"></script>
-    
-    <!-- Add this just before the closing body tag -->
-    <script>
-        // Add support for FontAwesome fallback
-        document.addEventListener('DOMContentLoaded', function() {
-            // Check if FontAwesome failed to load
-            const fontAwesomeFailed = document.querySelector('.fas.fa-sync-alt') && 
-                                     window.getComputedStyle(document.querySelector('.fas.fa-sync-alt')).fontFamily !== 'Font Awesome 6 Free';
-            
-            if (fontAwesomeFailed) {
-                // Replace icons with simple text
-                document.querySelector('.add-node-btn').textContent = '+ Add Node';
-                document.querySelector('.remove-node-btn').textContent = '- Remove Node';
-                
-                // Replace all node action icons
-                document.querySelectorAll('.node-actions a').forEach(link => {
-                    if (link.title === 'Visit Node') {
-                        link.textContent = '→';
-                    } else if (link.title === 'View Metadata') {
-                        link.textContent = 'ℹ';
-                    }
-                });
-            }
-        });
-    </script>
-</body>
+    <dialog class="peer-dialog" id="add-peer-dialog" aria-labelledby="add-peer-title">
+      <form method="dialog" id="add-peer-form">
+        <div class="dialog-head">
+          <div>
+            <p class="eyebrow">Local peer</p>
+            <h2 id="add-peer-title">Add a HyperBEAM node</h2>
+          </div>
+          <button class="icon-button" type="button" data-close-dialog aria-label="Close">×</button>
+        </div>
+        <label>
+          <span>Node URL</span>
+          <input id="peer-url" name="url" type="text" inputmode="url" required placeholder="https://node.example">
+        </label>
+        <label>
+          <span>Label <em>optional</em></span>
+          <input id="peer-label" name="label" type="text" maxlength="64" placeholder="My node">
+        </label>
+        <p class="form-note" id="peer-form-note">
+          Manual peers and their samples are saved alongside discovered peers in localStorage.
+        </p>
+        <div class="dialog-actions">
+          <button class="button quiet" value="cancel" type="button" data-close-dialog>Cancel</button>
+          <button class="button dark" value="default" type="submit">Add and sample</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="node-dialog" id="node-dialog" aria-labelledby="node-detail-title">
+      <div class="node-detail" id="node-detail"></div>
+    </dialog>
+
+    <template id="node-card-template">
+      <article class="node-card">
+        <div class="node-card-head">
+          <div>
+            <div class="node-title-row">
+              <i class="status-dot"></i>
+              <h3></h3>
+            </div>
+            <p class="node-url"></p>
+          </div>
+          <span class="source-badge"></span>
+        </div>
+        <div class="node-kpis">
+          <div><span class="stat-help" data-stat-help="scrapeTime" tabindex="0">Scrape</span><strong data-kpi="latency">—</strong></div>
+          <div><span class="stat-help" data-stat-help="events" tabindex="0">Event rate</span><strong data-kpi="events">—</strong></div>
+          <div><span class="stat-help" data-stat-help="memory" tabindex="0">Memory</span><strong data-kpi="memory">—</strong></div>
+        </div>
+        <div class="sparkline" aria-hidden="true"></div>
+        <div class="workload-pills"></div>
+        <div class="node-card-foot">
+          <span class="last-check">Not sampled</span>
+          <button class="text-button" type="button">Open dashboard →</button>
+        </div>
+      </article>
+    </template>
+
+    <div class="stat-tooltip" id="stat-tooltip" role="tooltip" hidden></div>
+  </body>
 </html>

@@ -1,215 +1,47 @@
-Here’s a Jira-style story for the new Bazar chart, wired to your existing patterns.
+# STORY-003: Bazar 2.0 Activity Metrics
 
----
+Updated: 2026-08-28
 
-## Story: Add “Bazar Daily Sales” Chart (Update-Executed-Orders per Day)
+The original Bazar/UCM metrics in this story are obsolete. The dashboard now follows the transaction shapes used by the local Bazar 2.0 repository.
 
-**Summary**
-Add a new Bazar chart that tracks daily sales across all Bazar order books by counting `Update-Executed-Orders` transactions per day, using block heights to define daily buckets. The new chart should visually and behaviorally match the existing `bazarAADaily` chart (same color, loaders, time-range controls, modal, caching).
+## Atomic asset creations
 
----
+`bazarAADaily` counts new one-unit, non-fungible Bazar-compatible process transactions in each Arweave block range. The GraphQL predicate mirrors Bazar's `mintProcessTags`, `isBazarMintTags`, and atomic-process discovery filters:
 
-### User Story
-
-As a **Bazar product/ops analyst**,
-I want to see **daily Bazar sales across order books** (based on `Update-Executed-Orders`)
-so that I can **monitor execution activity trends and compare them to other AO/Bazar metrics**.
-
----
-
-### Context / Existing Patterns
-
-* Processes are defined in `PROCESSES` (`processes.js`) and used to generate GraphQL queries via `generateQuery(processType, startHeight, endHeight, currentHeight)`.
-* The existing Bazar chart is `bazarAADaily`, defined in `PROCESSES` with `ticker: "ATOMIC"` and `action: "Bootloader-Ticker"`, and its query uses a custom tag `{ name: process.action, values: [process.ticker] }`.
-* GraphQL queries are executed through `fetchProcessData(processName, periods, currentHeight)` which uses `generateQuery` and applies `block` min/max ranges for each period. 
-* Block heights → time periods are derived from `fetchBlockHistory` + `getDailyPeriods` / extended daily periods in `index.js` and `utils.js`. `getDailyPeriods` maps block dates to daily buckets using the nearest blocks to each UTC day boundary.
-* `initializeCharts()` registers `bazarAADaily` as a standard chart using `createStandardChart(processName)`.
-* Chart colors are driven via `CHART_COLORS`, which already includes `bazarAADaily: 'rgb(249, 110, 70)'`.
-* Time-range buttons and loader behavior for charts (including `bazarAADaily`) are set up via `setupTimeRangeButtons(fetchChartData, fetchAdditionalWeeklyData)` in `ui.js`.
-* On dashboard init, `bazarAADaily` uses the same “extended daily” period logic as AOTransfer/permaswap/botega/llamaLand, by being explicitly included in the `oneWeekPeriods` list.
-
-The new chart should plug into these same mechanisms.
-
----
-
-### Proposed New Process
-
-**New process name (internal):** `bazarSalesDaily`
-**Chart label:** “Bazar Daily Sales” (or similar, final wording up to UX/PO)
-**GQL filter:**
-
-```graphql
-tags: [
-  { name: "Action", values: ["Update-Executed-Orders"] }
-  # (Optionally add Bazar-specific tags later if needed, e.g. From-Process)
-]
+```text
+device=process@1.0
+execution-device=token@1.0
+swap-device=arweave-swap@1.0
+scheduler-device=arweave-scheduler@1.0
+hint-ui-style=non-fungible
+scheduler-mode=all
+type=Process
+total-supply=1
+denomination=0
+ticker=ASSET
 ```
 
----
+## Completed sales
 
-### Functional Requirements
+`bazarSalesDaily` is retained as the internal chart key for compatibility, but its visible label is **Bazar Completed Sales**. It does not count every submitted purchase. Instead, it first discovers all indexed transactions with:
 
-1. **New chart card in UI**
+```text
+action=register-interest
+```
 
-   * A new chart card is added to the dashboard for `bazarSalesDaily`, using a `canvas` element with id `bazarSalesDailyChart`, mirroring the structure of the existing `bazarAADaily` chart card (header, time-range buttons, loader, enlarge-to-modal icon).
+It then correlates each registration's `order-id`, buyer, and target asset process with Bazar's later native-AR settlement transaction. A transaction is counted once when it has the same `order-id`, was signed by the registering buyer, and contains `assign-to=<asset process ID>` while targeting the seller. Daily buckets use the settlement payment's block height, not the earlier submission height.
 
-2. **Data definition**
+This follows the two-transaction purchase flow in Bazar 2.0 and avoids both false positives from abandoned registrations and false negatives caused by the Activity tab's compute-proof lookup window. Settlement transaction IDs are deduplicated. Goldsky cursor pagination is not supported, so the implementation walks non-overlapping descending block windows until the full result count has been retrieved.
 
-   * The chart’s data represents **daily counts of Bazar executions**, where:
+## Dashboard behavior
 
-     * Each data point corresponds to a **single UTC day** derived from block height ranges (startHeight/endHeight) defined via your existing daily/extended-daily period builders (`getDailyPeriods`/`generateExtendedDailyPeriods`).
-     * For each day’s block range, a GQL query counts `transactions.count` where `Action = "Update-Executed-Orders"`.
-     * Returned data is in the same `{ timestamp: period.endTime, count }` shape used by `fetchProcessData`.
+Both metrics use the dashboard's standard daily block buckets, response cache, loaders, time-range controls, and fullscreen chart behavior. The creation predicate lives in `processes.js`; completed-sale discovery and settlement correlation live in `api.js`. Chart registration and loading retain the existing `bazarAADaily` and `bazarSalesDaily` keys.
 
-3. **GraphQL query behavior**
+## Source of truth
 
-   * `generateQuery('bazarSalesDaily', startHeight, endHeight, currentHeight)` must:
+The predicates were derived from these Bazar 2.0 modules:
 
-     * Use the existing `blockRange` pattern (`block: { min: X, max: Y }`, or only `min` when `endHeight === currentHeight`).
-     * Generate a `transactions` query against the Goldsky endpoint with:
-
-       * `block` set to the computed range.
-       * `tags` including at least `{ name: "Action", values: ["Update-Executed-Orders"] }`.
-     * Return `transactions { count }` so `fetchProcessData` can map to `{ timestamp, count }` as it does for other processes.
-
-4. **Time-range behavior**
-
-   * The chart supports the same time-range buttons as other daily charts (e.g. `1W`, `1M`, `3M`, etc.).
-   * Time-range selection:
-
-     * Uses the same **initial default time range** (`DEFAULT_TIME_RANGE = '1W'`) as other charts.
-     * Calls into `fetchChartData(processName, timeRange)` when a longer range requires fetching more historical daily periods (mirror how `bazarAADaily` behaves in `ui.js` and `charts.js`).
-   * Filtering, de-duplication by date, and labeling should all be handled by existing generic logic (i.e. `updateChartTimeRange`, `filterDataByTimeRange`, `removeDuplicateDates`, `UTC_TIMESTAMP_PROCESSES`).
-
-5. **Visual design & colors**
-
-   * The new chart must use **exactly the same color** as the existing Bazar chart:
-
-     * Either by adding `bazarSalesDaily: CHART_COLORS.bazarAADaily` to `CHART_COLORS`, or by explicitly setting the dataset’s `borderColor` via `getProcessColor` to that value.
-   * Legend entry and tooltip formatting should match other standard single-line charts (same font, number formatting, date format via UTC config).
-
-6. **Loaders, modal, and UX parity**
-
-   * The chart’s loader uses the same `toggleChartLoader(processName, show)` pattern, with a dedicated loader element `id="bazarSalesDailyLoader"` following existing naming conventions.
-   * The chart supports:
-
-     * Time-range changes in the main dashboard.
-     * Enlarge-to-modal behavior via `openChartModal('bazarSalesDaily')`, including cloned time-range buttons and modal-specific loader behavior already implemented in `charts.js` and `ui.js`.
-
-7. **Performance & caching**
-
-   * Reuses existing response caching in `fetchProcessData` (10-minute cache per key) with no bespoke caching logic.
-   * Uses the same chunked-period query batching and minor delay between chunks to stay within rate limits.
-
----
-
-### Non-Functional Requirements
-
-* **Resilience:** If the GQL endpoint errors for the new process, the chart should:
-
-  * Log the error.
-  * Render with zeroed data points (identical error behavior as other process charts).
-* **Consistency:** Changing time ranges for `bazarSalesDaily` must not affect other charts’ state (`chartTimeRanges` remains per-process).
-
----
-
-### Technical Implementation Notes (for dev subtasks)
-
-These are the key integration points in your existing code:
-
-1. **Define new process: `bazarSalesDaily`**
-
-   * File: `processes.js`
-   * Add a new entry to `PROCESSES`:
-
-     * `description`: e.g. `"Bazar Daily Sales (Update-Executed-Orders)"`.
-     * `displayName`: e.g. `"Bazar Daily Sales"`.
-     * `action`: `"Update-Executed-Orders"`.
-     * Add a `generateQuery` `case 'bazarSalesDaily':` that:
-
-       * Uses `blockRange` from the shared logic.
-       * Builds the `transactions` query with `tags: [{ name: "Action", values: ["Update-Executed-Orders"] }]`.
-
-2. **Wire into chart creation**
-
-   * File: `charts.js`
-   * In `initializeCharts()`, add `bazarSalesDaily` to the standard charts list so it uses `createStandardChart` just like `bazarAADaily`:
-
-     ```js
-     ['wUSDCVolume', 'wARweeklyTransfer', 'wARTransfer', 'wARVolume',
-      'AOTransfer','AOVolume', 'permaswap', 'botega', 'llamaLand',
-      'stargrid', 'bazarAADaily', 'bazarSalesDaily']
-     ```
-   * No further changes should be required for `updateStandardChart` since it is fully generic and keyed by `processName`.
-
-3. **Configure color & timestamp handling**
-
-   * File: `config.js`
-   * Add `bazarSalesDaily` to `CHART_COLORS` and map it to `bazarAADaily`’s color:
-
-     ```js
-     bazarSalesDaily: CHART_COLORS.bazarAADaily
-     ```
-
-     (or repeat the literal if you prefer, but sharing the constant is cleaner).
-   * Add `bazarSalesDaily` to `UTC_TIMESTAMP_PROCESSES` to ensure dates are rendered with UTC logic in `updateStandardChart()`.
-
-4. **Hook into dashboard initialization**
-
-   * File: `index.js`
-   * When loading remaining “standard daily process charts”, include `bazarSalesDaily` in the `oneWeekPeriods` list alongside `bazarAADaily` so it uses the same time-bucketing behavior as the existing Bazar metric:
-
-     ```js
-     const periods = ['AOTransfer', 'permaswap', 'botega',
-                      'llamaLand', 'bazarAADaily', 'bazarSalesDaily']
-                     .includes(processName) 
-       ? oneWeekPeriods 
-       : dailyPeriods;
-     ```
-
-5. **Time-range controls and loaders**
-
-   * File: `ui.js`
-   * Add `bazarSalesDaily` to `processNames` in `setupTimeRangeButtons` so time-range state and handlers are initialized:
-   * Where there is a special-case list for which `fetchDataCallback` is invoked on longer ranges (currently includes `'bazarAADaily'`), mirror that behavior for `bazarSalesDaily` so `1M` and `3M` ranges load enough historical periods.
-
-6. **HTML / template**
-
-   * Add a new `.chart-card` block with:
-
-     * Canvas `id="bazarSalesDailyChart"`.
-     * Loader `id="bazarSalesDailyLoader"`.
-     * Same `.chart-actions` time-range buttons as other daily charts.
-     * Same “expand to modal” icon wired to `openChartModal('bazarSalesDaily')`.
-
----
-
-### Acceptance Criteria
-
-1. **Chart appears and renders**
-
-   * [ ] A “Bazar Daily Sales” chart card is visible on the dashboard with the same color as the existing Bazar chart.
-   * [ ] On initial load, the chart displays data for the default time range (`1W`) without JS errors.
-
-2. **Correct data & daily aggregation**
-
-   * [ ] For a test period (e.g. a known date range), the daily counts in the chart match the total `transactions.count` returned by direct GraphQL queries where `Action = "Update-Executed-Orders"` over the same block ranges.
-   * [ ] Each chart data point corresponds to a unique UTC day; no duplicate days exist after de-duplication.
-
-3. **Time-range behavior**
-
-   * [ ] Changing time ranges (`1W`, `1M`, `3M`, etc.) updates the chart and labels, and triggers historical data fetches only when required, consistent with `bazarAADaily` and similar charts.
-   * [ ] Switching time ranges updates only `bazarSalesDaily` and does not affect other charts' time ranges.
-
-4. **UX parity with other charts**
-
-   * [ ] The chart shows a loader while fetching data and hides it when rendering completes, both on dashboard and in the modal.
-   * [ ] Opening the chart modal shows the `bazarSalesDaily` chart with cloned time-range buttons; changing time ranges in the modal updates the modal chart and underlying data without errors.
-   * [ ] Tooltips display the date (UTC) and the count for the day in the same format as other standard charts.
-
-5. **Error handling & performance**
-
-   * [ ] If the GQL endpoint returns an error or times out, the chart fails gracefully: logs an error and renders with zero data points instead of breaking the page.
-   * [ ] Repeated visits within 10 minutes reuse cached responses for the same periods (verified via logging or dev tools), in line with existing caching behavior.
-
----
+- `src/api/asset-mint.ts`
+- `src/api/asset-discovery.ts`
+- `src/api/asset-transactions.ts`
+- `docs/research/global-market-activity.md`

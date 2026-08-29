@@ -23,9 +23,8 @@ const DEFAULT_DATA = {
   lastUpdated: new Date().toISOString(),
   blockHeights: [],
   volumeData: {
-    wAR: [],
-    AO: [],
-    wUSDC: []
+    AO: []
+    // Disabled stablecoin volume placeholder: wUSDC: []
   }
 };
 
@@ -154,6 +153,12 @@ async function calculateDailyVolume() {
     if (fs.existsSync(DATA_FILE)) {
       console.log(`Loading existing data from ${DATA_FILE}`);
       volumeStats = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+      // Keep generated output limited to the currently supported tokens.
+      volumeStats.volumeData = Object.fromEntries(
+        Object.entries(volumeStats.volumeData || {})
+          // Disabled stablecoin allowlist placeholder: 'wUSDC'
+          .filter(([token]) => ['AO'].includes(token))
+      );
     } else {
       console.log(`No existing data file found at ${DATA_FILE}, creating new structure`);
       fs.mkdirSync(path.dirname(DATA_FILE), { recursive: true });
@@ -245,7 +250,8 @@ async function calculateDailyVolume() {
     console.log(`FINAL HEIGHT VALUES - Start: ${startHeight}, End: ${currentHeight}`);
     
     // 5. Run each PowerShell script with the appropriate heights
-    const scripts = ['wAR.ps1', 'AO.ps1', 'wUSDC.ps1'];
+    // Disabled stablecoin collector placeholder: 'wUSDC.ps1'
+    const scripts = ['AO.ps1'];
     
     for (const script of scripts) {
       console.log(`------------------------------------------------------------`);

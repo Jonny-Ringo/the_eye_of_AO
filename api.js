@@ -4,8 +4,6 @@
 import { dryrun } from "https://unpkg.com/@permaweb/aoconnect@0.0.82/dist/browser.js";
 import {
     BLOCK_TRACKING_PROCESS,
-    NODES_LIST_CACHE_TTL,
-    NODES_API_ENDPOINT,
     USE_VPS_ORACLE,
     BLOCKHEIGHT_API
 } from './config.js';
@@ -14,12 +12,244 @@ import { generateQuery, generateArweaveTransactionQuery } from './processes.js';
 // Cache for API responses
 const responseCache = new Map();
 
-// Node list cache
-let nodesListCache = null;
-let nodesCacheTimestamp = 0;
-
 // QGL Query Counter
 let qglQueryCounter = 0;
+
+const ARWEAVE_GRAPHQL_ENDPOINT = 'https://arweave-search.goldsky.com/graphql';
+const BAZAR_GRAPHQL_PAGE_SIZE = 100;
+const BAZAR_ORDER_ID_BATCH_SIZE = 75;
+const BAZAR_SETTLEMENT_CACHE_KEY = 'bazar-completed-settlements';
+
+async function fetchGraphql(query, variables = {}) {
+    qglQueryCounter++;
+
+    const response = await fetch(ARWEAVE_GRAPHQL_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query, variables }),
+    });
+
+    if (!response.ok) {
+        throw new Error(`GraphQL network error: ${response.status}`);
+    }
+
+    const payload = await response.json();
+    if (payload.errors?.length) {
+        throw new Error(payload.errors.map(error => error.message).join('; '));
+    }
+
+    return payload.data;
+}
+
+function tagsToObject(tags = []) {
+    return Object.fromEntries(tags.map(tag => [String(tag.name).toLowerCase(), tag.value]));
+}
+
+async function fetchAllBazarPurchaseRegistrations(currentHeight) {
+    const createQuery = maxHeight => `query BazarPurchaseRegistrations {
+        transactions(
+            first: ${BAZAR_GRAPHQL_PAGE_SIZE}
+            sort: HEIGHT_DESC
+            block: { min: 0, max: ${maxHeight} }
+            tags: [{ name: "action", values: ["register-interest"] }]
+        ) {
+            count
+            edges {
+                node {
+                    id
+                    recipient
+                    owner { address }
+                    block { height timestamp }
+                    tags { name value }
+                }
+            }
+        }
+    }`;
+
+    const registrations = [];
+    const seen = new Set();
+    let maxHeight = Number(currentHeight);
+    if (!Number.isFinite(maxHeight)) {
+        throw new Error('A current block height is required for the Bazar sales scan');
+    }
+
+    for (let page = 0; page < 1000; page++) {
+        const data = await fetchGraphql(createQuery(Math.floor(maxHeight)));
+        const connection = data?.transactions;
+        const edges = connection?.edges ?? [];
+
+        for (const { node } of edges) {
+            if (seen.has(node.id)) continue;
+            seen.add(node.id);
+            const tags = tagsToObject(node.tags);
+            if (!tags['order-id'] || !node.recipient || !node.owner?.address || !node.block?.height) {
+                continue;
+            }
+
+            registrations.push({
+                id: node.id,
+                orderId: tags['order-id'],
+                processId: node.recipient,
+                buyer: node.owner.address,
+                height: Number(node.block.height),
+            });
+        }
+
+        const remainingCount = Number(connection?.count ?? 0);
+        if (remainingCount <= edges.length) {
+            return registrations;
+        }
+
+        const oldestHeight = Math.min(...edges.map(edge => Number(edge.node.block?.height)));
+        if (!Number.isFinite(oldestHeight) || oldestHeight <= 0 || oldestHeight > maxHeight) {
+            throw new Error('Bazar purchase registration block pagination stalled');
+        }
+        maxHeight = oldestHeight - 1;
+    }
+
+    throw new Error('Bazar purchase registration pagination exceeded its safety limit');
+}
+
+async function fetchBazarOrderTransactions(orderIds, currentHeight) {
+    const createQuery = maxHeight => `query BazarOrderTransactions($orderIds: [String!]!) {
+        transactions(
+            first: ${BAZAR_GRAPHQL_PAGE_SIZE}
+            sort: HEIGHT_DESC
+            block: { min: 0, max: ${maxHeight} }
+            tags: [{ name: "order-id", values: $orderIds }]
+        ) {
+            count
+            edges {
+                node {
+                    id
+                    recipient
+                    owner { address }
+                    quantity { winston }
+                    block { height timestamp }
+                    tags { name value }
+                }
+            }
+        }
+    }`;
+
+    const transactions = [];
+    const seen = new Set();
+    let maxHeight = Number(currentHeight);
+
+    for (let page = 0; page < 1000; page++) {
+        const data = await fetchGraphql(createQuery(Math.floor(maxHeight)), { orderIds });
+        const connection = data?.transactions;
+        const edges = connection?.edges ?? [];
+        for (const { node } of edges) {
+            if (!seen.has(node.id)) {
+                seen.add(node.id);
+                transactions.push(node);
+            }
+        }
+
+        const remainingCount = Number(connection?.count ?? 0);
+        if (remainingCount <= edges.length) {
+            return transactions;
+        }
+
+        const oldestHeight = Math.min(...edges.map(edge => Number(edge.node.block?.height)));
+        if (!Number.isFinite(oldestHeight) || oldestHeight <= 0 || oldestHeight > maxHeight) {
+            throw new Error('Bazar order transaction block pagination stalled');
+        }
+        maxHeight = oldestHeight - 1;
+    }
+
+    throw new Error('Bazar order transaction pagination exceeded its safety limit');
+}
+
+/**
+ * Finds completed Bazar purchases by correlating each register-interest transaction
+ * with the later native-AR payment that Bazar assigns to the same asset process.
+ * This deliberately charts settlement payments, not merely submitted purchases.
+ */
+async function fetchBazarCompletedSettlements(currentHeight) {
+    const cached = responseCache.get(BAZAR_SETTLEMENT_CACHE_KEY);
+    if (cached && Date.now() - cached.timestamp < 10 * 60 * 1000) {
+        return cached.data;
+    }
+
+    const registrations = await fetchAllBazarPurchaseRegistrations(currentHeight);
+    const registrationsByOrderId = new Map();
+
+    for (const registration of registrations) {
+        const matches = registrationsByOrderId.get(registration.orderId) ?? [];
+        matches.push(registration);
+        registrationsByOrderId.set(registration.orderId, matches);
+    }
+
+    const orderIds = [...registrationsByOrderId.keys()];
+    const batches = [];
+    for (let index = 0; index < orderIds.length; index += BAZAR_ORDER_ID_BATCH_SIZE) {
+        batches.push(orderIds.slice(index, index + BAZAR_ORDER_ID_BATCH_SIZE));
+    }
+
+    const transactionBatches = await Promise.all(
+        batches.map(batch => fetchBazarOrderTransactions(batch, currentHeight))
+    );
+    const settlements = new Map();
+
+    for (const node of transactionBatches.flat()) {
+        const tags = tagsToObject(node.tags);
+        const orderId = tags['order-id'];
+        const assignedProcessId = tags['assign-to'];
+        const paymentWinston = String(node.quantity?.winston ?? '');
+        const paymentHeight = Number(node.block?.height);
+        const paymentTimestamp = Number(node.block?.timestamp);
+
+        // Bazar's payment transaction has order-id + assign-to, is signed by the
+        // registering buyer, and targets the seller instead of the asset process.
+        if (!orderId || !assignedProcessId || !node.owner?.address || !/^[1-9]\d*$/.test(paymentWinston) ||
+            !Number.isFinite(paymentHeight) || !Number.isFinite(paymentTimestamp)) {
+            continue;
+        }
+
+        const matchingRegistration = (registrationsByOrderId.get(orderId) ?? []).find(registration =>
+            registration.buyer === node.owner.address &&
+            registration.processId === assignedProcessId &&
+            registration.id !== node.id &&
+            registration.height <= paymentHeight &&
+            node.recipient !== registration.processId
+        );
+
+        if (matchingRegistration) {
+            settlements.set(node.id, {
+                id: node.id,
+                height: paymentHeight,
+                timestamp: paymentTimestamp,
+            });
+        }
+    }
+
+    const data = [...settlements.values()];
+    responseCache.set(BAZAR_SETTLEMENT_CACHE_KEY, { data, timestamp: Date.now() });
+    console.log(`[API] Matched ${data.length} completed Bazar settlement payments from ${registrations.length} submitted purchases`);
+    return data;
+}
+
+async function fetchBazarCompletedSales(periods, currentHeight) {
+    const settlements = await fetchBazarCompletedSettlements(currentHeight);
+    const chainTip = Number(currentHeight);
+
+    return periods.map(period => {
+        const startHeight = Number(period.startHeight);
+        const requestedEndHeight = Number(period.endHeight);
+        const endHeight = Number.isFinite(chainTip)
+            ? Math.min(requestedEndHeight, chainTip)
+            : requestedEndHeight;
+
+        return {
+            timestamp: period.endTime,
+            count: settlements.filter(settlement =>
+                settlement.height >= startHeight && settlement.height <= endHeight
+            ).length,
+        };
+    });
+}
 
 /**
  * Fetches the current Arweave network information
@@ -170,58 +400,6 @@ export async function fetchBlockHistory(days = 730) {
 }
 
 /**
- * Fetches supply history for wAR tokens
- * @returns {Promise<Object>} Object with wAR supply data
- */
-export async function fetchSupplyHistory() {
-    try {
-        const cacheKey = 'supply-history';
-        // Use cached data if it's less than 30 minutes old
-        if (responseCache.has(cacheKey)) {
-            const { data, timestamp } = responseCache.get(cacheKey);
-            if (Date.now() - timestamp < 30 * 60 * 1000) {
-                return data;
-            }
-        }
-        
-        // Fetch wAR supply history
-        const [wARResponse] = await Promise.all([
-            dryrun({
-                process: 'Bi6bSPz-IyOCX9ZNedmLzv7Z6yxsrj9nHE1TnZzm_ks',
-                data: '',
-                tags: [
-                    { name: "Action", value: "SupplyHistory" },
-                    { name: "Data-Protocol", value: "ao" },
-                    { name: "Type", value: "Message" },
-                    { name: "Variant", value: "ao.TN.1" }
-                ],
-            })
-        ]);
-
-        // Process wAR data
-        const wARSupplyTag = wARResponse.Messages[0].Tags.find(
-            tag => tag.name === "DailySupply"
-        );
-        const wARSupplyData = JSON.parse(wARSupplyTag.value);
-
-        const supplyData = {
-            wAR: wARSupplyData
-        };
-        
-        // Cache the result
-        responseCache.set(cacheKey, {
-            data: supplyData,
-            timestamp: Date.now()
-        });
-        
-        return supplyData;
-    } catch (error) {
-        console.error("Error fetching supply history:", error);
-        throw error;
-    }
-}
-
-/**
  * Fetches transaction counts for a specific process type over multiple time periods
  * @param {string} processName - The name of the process
  * @param {Array} periods - Array of time periods with start/end heights
@@ -239,6 +417,14 @@ export async function fetchProcessData(processName, periods, currentHeight) {
             if (Date.now() - timestamp < 10 * 60 * 1000) {
                 return data;
             }
+        }
+
+        // Bazar sales are a correlated two-transaction metric, so they cannot use
+        // the single transactions.count query path below.
+        if (processName === 'bazarSalesDaily') {
+            const results = await fetchBazarCompletedSales(periods, currentHeight);
+            responseCache.set(cacheKey, { data: results, timestamp: Date.now() });
+            return results;
         }
         
         // Process all periods in chunks (5 at a time) to avoid overwhelming the server
@@ -260,7 +446,7 @@ export async function fetchProcessData(processName, periods, currentHeight) {
                     
                     qglQueryCounter++;
                     
-                    const response = await fetch('https://arweave-search.goldsky.com/graphql', {
+                    const response = await fetch(ARWEAVE_GRAPHQL_ENDPOINT, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ query }),
@@ -323,9 +509,12 @@ export async function fetchArweaveTransactionAnalytics(periods, currentHeight) {
     try {
         const days = periods.length;
 
-        // Backend URL - VPS endpoint
-        // const backendUrl = 'https://arweave-stats.jonny-ringo.xyz';
-          const backendUrl = 'http://localhost:3000';
+        const configuredBackendUrl = import.meta.env.VITE_ANALYTICS_API_URL?.trim();
+        if (!configuredBackendUrl) {
+            throw new Error('VITE_ANALYTICS_API_URL is not configured');
+        }
+
+        const backendUrl = configuredBackendUrl.replace(/\/$/, '');
 
         // Include date range in cache key so the chart can roll over cleanly at UTC midnight.
         const periodDates = periods
@@ -360,6 +549,13 @@ export async function fetchArweaveTransactionAnalytics(periods, currentHeight) {
 
         if (!bundleResponse.ok) {
             throw new Error(`Backend API error: ${bundleResponse.status}`);
+        }
+
+        const responseContentType = bundleResponse.headers.get('content-type') || '';
+        if (!responseContentType.toLowerCase().includes('application/json')) {
+            throw new Error(
+                `Analytics API returned ${responseContentType || 'an unknown content type'} instead of JSON`
+            );
         }
 
         const bundleResult = await bundleResponse.json();
@@ -478,7 +674,7 @@ async function fetchAOMessageCounts(periods, currentHeight, dateKey = 'endTime')
             }`;
 
             try {
-                const response = await fetch('https://arweave-search.goldsky.com/graphql', {
+                    const response = await fetch(ARWEAVE_GRAPHQL_ENDPOINT, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ query })
@@ -617,15 +813,13 @@ export async function fetchVolumeData() {
             AO: volumeData.AO.map(entry => ({
                 timestamp: new Date(entry.date).getTime(),
                 value: entry.volume
-            })),
-            wAR: volumeData.wAR.map(entry => ({
-                timestamp: new Date(entry.date).getTime(),
-                value: entry.volume
-            })),
+            }))
+            /* Disabled stablecoin volume placeholder:
             wUSDC: volumeData.wUSDC.map(entry => ({
                 timestamp: new Date(entry.date).getTime(),
                 value: entry.volume
             }))
+            */
         };
 
         responseCache.set(cacheKey, {
@@ -714,61 +908,8 @@ if (typeof window !== 'undefined') {
 }
 
 /**
- * Fetches the node list from the server with 5-minute caching
- * @returns {Promise<Array>} Array of node objects
- */
-export async function fetchNodesList() {
-    try {
-        // Check if cache is valid (less than 5 minutes old)
-        if (nodesListCache && (Date.now() - nodesCacheTimestamp < NODES_LIST_CACHE_TTL)) {
-            console.log('Using cached node list');
-            return nodesListCache;
-        }
-
-        console.log('Fetching fresh node list from server...');
-        const response = await fetch(NODES_API_ENDPOINT);
-
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-
-        // Support different response formats
-        // If response has 'items' property, use that; otherwise use the data directly
-        const nodesList = data.items || data;
-
-        // Validate that we got an array
-        if (!Array.isArray(nodesList)) {
-            throw new Error('Invalid response format: expected array of nodes');
-        }
-
-        // Update cache
-        nodesListCache = nodesList;
-        nodesCacheTimestamp = Date.now();
-
-        console.log(`Node list loaded: ${nodesList.length} nodes`);
-        return nodesListCache;
-
-    } catch (error) {
-        console.error('Error fetching nodes list:', error);
-
-        // Return stale cached data if available (graceful degradation)
-        if (nodesListCache) {
-            console.warn('Using stale cache due to fetch error');
-            return nodesListCache;
-        }
-
-        // If no cache available, throw the error
-        throw error;
-    }
-}
-
-/**
  * Clears the API response cache
  */
 export function clearCache() {
     responseCache.clear();
-    nodesListCache = null;
-    nodesCacheTimestamp = 0;
 }

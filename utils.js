@@ -86,28 +86,6 @@ export function getLastDailyCheckpoint(now) {
 }
 
 /**
- * Gets the most recent Sunday at 00:00 UTC
- * @param {Date} now - Current date
- * @returns {Date} Date representing the last Sunday at 00:00 UTC
- */
-export function getLastSundayCheckpoint(now) {
-    // Set the time to 0:00 UTC
-    const sunday = new Date(now);
-    sunday.setUTCHours(0, 0, 0, 0);
-
-    // Go back to the most recent Sunday
-    const dayOfWeek = sunday.getUTCDay();
-    sunday.setUTCDate(sunday.getUTCDate() - dayOfWeek);
-
-    // If the current time is before Sunday 0:00 UTC, go back one week
-    if (now < sunday) {
-        sunday.setUTCDate(sunday.getUTCDate() - 7);
-    }
-
-    return sunday;
-}
-
-/**
  * Generates daily time periods based on block data
  * @param {number} currentHeight - Current block height
  * @param {Array} blockData - Array of blocks with dates and heights
@@ -148,53 +126,6 @@ export function getDailyPeriods(currentHeight, blockData) {
     }
 
     return periods.reverse(); // Put in chronological order
-}
-
-/**
- * Generates weekly time periods based on block data
- * @param {number} currentHeight - Current block height
- * @param {Array} blockData - Array of blocks with dates and heights
- * @returns {Array} Array of time periods with start/end times and heights
- */
-export function getWeeklyPeriods(currentHeight, blockData) {
-    // Find the most recent Sunday at 0:00 UTC
-    const lastCheckpoint = getLastSundayCheckpoint(new Date());
-
-    // For the current period, we need to find the block at the start of this week
-    const currentWeekStartBlock = findBlockNearDate(blockData, lastCheckpoint);
-    
-    // Add current period (from last Sunday to now)
-    const periods = [{
-        endTime: new Date(),
-        startTime: lastCheckpoint,
-        endHeight: currentHeight,
-        startHeight: currentWeekStartBlock ? currentWeekStartBlock.blockHeight : blockData[0].blockHeight
-    }];
-
-    // Then add historical periods (7 weeks back)
-    for (let i = 1; i < 8; i++) {
-        const endDate = new Date(lastCheckpoint);
-        endDate.setDate(endDate.getDate() - (i - 1) * 7);
-
-        const startDate = new Date(endDate);
-        startDate.setDate(startDate.getDate() - 7);
-
-        // Find blocks closest to these dates
-        const endBlock = findBlockNearDate(blockData, endDate);
-        const startBlock = findBlockNearDate(blockData, startDate);
-
-        if (endBlock && startBlock) {
-            periods.push({
-                endTime: endDate,
-                startTime: startDate,
-                endHeight: endBlock.blockHeight,
-                startHeight: startBlock.blockHeight
-            });
-        }
-    }
-
-    // Sort periods chronologically
-    return periods.sort((a, b) => a.startTime - b.startTime);
 }
 
 /**

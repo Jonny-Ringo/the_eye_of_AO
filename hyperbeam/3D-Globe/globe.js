@@ -1,16 +1,15 @@
-import { mainnetNodes } from '../mainnet-node-list.js';
-import { USE_SERVER_NODES_LIST } from '../../config.js';
-import { fetchNodesList } from '../../api.js';
+import {
+  fitHostnameToElement,
+  getCachedHyperbeamNodeCache,
+  HYPERBEAM_NODE_CACHE_KEY,
+  HYPERBEAM_ROSTER_EVENT
+} from '../node-discovery.js';
+
+const WORKING_SET_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
 // Globe application using globe.gl
 class HyperBEAMGlobe {
   constructor() {
-    // still here in case you reuse elsewhere
-    this.proxyURL = "https://hyperbeam-uptime.xyz/?url=";
-
-    // NEW: use the same aggregated endpoint as the dashboard
-    this.statusEndpoint = "https://hyperbeam-uptime.xyz/status";
-
     this.globe = null;
     this.nodeData = [];
     this.showLabels = true;
@@ -24,19 +23,18 @@ class HyperBEAMGlobe {
     this.init();
   }
 
-  async init() {
-    try {
-      await this.loadNodeData();
-      this.createGlobe();
-      this.hideLoading();
-    } catch (error) {
-      console.error('Error initializing globe:', error);
-      this.hideLoading();
-    }
-  }
+  init() {
+    this.loadNodeData();
+    this.createGlobe();
+    this.hideLoading();
 
-  // Note: Status data is now included in the node list response from fetchNodesList()
-  // No need for separate status fetching or URL normalization
+    this.cacheUpdateHandler = () => this.refreshFromNodeCache();
+    this.storageHandler = event => {
+      if (event.key === HYPERBEAM_NODE_CACHE_KEY) this.refreshFromNodeCache();
+    };
+    window.addEventListener(HYPERBEAM_ROSTER_EVENT, this.cacheUpdateHandler);
+    window.addEventListener('storage', this.storageHandler);
+  }
 
   extractHostname(url) {
     try {
@@ -48,53 +46,79 @@ class HyperBEAMGlobe {
     }
   }
 
-  async loadNodeData() {
-  try {
-    // Get enriched node list (already includes status from server!)
-    let nodesFromFile;
-    if (USE_SERVER_NODES_LIST) {
-      try {
-        nodesFromFile = await fetchNodesList();
-      } catch (error) {
-        console.warn('Failed to fetch nodes from server, using bundled list:', error);
-        nodesFromFile = mainnetNodes;
-      }
-    } else {
-      nodesFromFile = mainnetNodes;
-    }
+  formatLastSeen(timestamp) {
+    return timestamp ? new Date(timestamp).toLocaleString() : 'No successful response retained';
+  }
 
-    // Transform enriched data for globe display
-    const nodesWithStatus = nodesFromFile.map(node => {
-      // Determine status from the enriched data
-      let status = 'offline';
-      if (node.hbOnline) {
-        status = node.hbResponseTime > this.busyMs ? 'busy' : 'online';
-      }
+  applyRoster(roster) {
+    const oldestAccepted = Date.now() - WORKING_SET_MAX_AGE_MS;
+    const nodesWithStatus = roster.peers
+      .filter(node => {
+        const lastWorking = Number(node.lastSeen || (node.probe?.online ? node.probe.checkedAt : 0));
+        return node.probeability?.ok && lastWorking >= oldestAccepted;
+      })
+      .map(node => {
+        const fallback = this.getFallbackCoordinates(node.url);
+        const responseTime = node.probe?.responseTime;
+        const status = node.probe?.online
+          ? (responseTime > this.busyMs ? 'busy' : 'online')
+          : 'offline';
+        const geo = node.geo?.ok ? node.geo : null;
 
-      return {
-        url: this.extractHostname(node.hb),
-        lat: node.lat,
-        lng: node.lng,
-        status,
-        location: node.location || 'Unknown Location',
-        country: node.country || 'Unknown',
-        fullUrl: node.hb,
-        proxy: node.proxy || false,
-        responseTime: node.hbResponseTime
-      };
-    });
+        return {
+          url: this.extractHostname(node.url),
+          lat: geo?.lat ?? fallback.lat,
+          lng: geo?.lng ?? fallback.lng,
+          status,
+          location: geo?.location || 'Location lookup pending',
+          country: geo?.country || 'Unknown',
+          ip: geo?.ip || null,
+          fullUrl: node.url,
+          proxy: false,
+          responseTime,
+          lastSeen: Number(node.lastSeen || node.probe?.checkedAt) || 0
+        };
+      });
 
     this.nodeData = this.clusterNodesByLocation(nodesWithStatus);
     this.updateStats();
-  } catch (error) {
-    console.error('Error loading node data:', error);
-    this.nodeData = [{
-      url: 'Sample Node', lat: 0, lng: 0, status: 'offline',
-      location: 'Error loading nodes', fullUrl: '#', proxy: false
-    }];
-    this.updateStats();
   }
-}
+
+  refreshGlobeData() {
+    if (!this.globe) return;
+    this.globe.pointsData(this.nodeData);
+    this.globe.ringsData(this.nodeData);
+  }
+
+  loadNodeData() {
+    const roster = getCachedHyperbeamNodeCache();
+    if (!roster.peers.length) {
+      this.nodeData = [];
+      this.updateStats();
+      return false;
+    }
+    this.applyRoster(roster);
+    return this.nodeData.length > 0;
+  }
+
+  refreshFromNodeCache() {
+    const loaded = this.loadNodeData();
+    this.refreshGlobeData();
+    if (loaded) document.getElementById('loading')?.remove();
+  }
+
+  getFallbackCoordinates(url) {
+    let first = 2166136261;
+    let second = 5381;
+    for (const character of url) {
+      first = Math.imul(first ^ character.charCodeAt(0), 16777619);
+      second = Math.imul(second, 33) ^ character.charCodeAt(0);
+    }
+    return {
+      lat: ((first >>> 0) % 12000) / 100 - 60,
+      lng: ((second >>> 0) % 36000) / 100 - 180
+    };
+  }
 
 
   // Cluster nodes by location (kept your behavior; comment said 4+ but code used >=2)
@@ -298,6 +322,14 @@ class HyperBEAMGlobe {
     }
   }
 
+  sortNodesForStatusList(nodes) {
+    const priority = { offline: 0, busy: 1, online: 2 };
+    return [...nodes].sort((left, right) =>
+      (priority[left.status] ?? 3) - (priority[right.status] ?? 3) ||
+      left.url.localeCompare(right.url)
+    );
+  }
+
   createTooltip(nodeData) {
     const statusColor = this.getStatusColor(nodeData.status);
 
@@ -305,13 +337,13 @@ class HyperBEAMGlobe {
       // Cluster tooltip - show all nodes
       const { online, busy, offline } = nodeData.clusterStats;
 
-      let nodeList = nodeData.allNodes.map(node => {
+      let nodeList = this.sortNodesForStatusList(nodeData.allNodes).map(node => {
         const nodeStatusColor = this.getStatusColor(node.status);
         return `
-          <div style="margin: 2px 0; display: flex; align-items: center;">
-            <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: ${nodeStatusColor}; margin-right: 6px;"></span>
-            <span style="font-size: 12px;">${node.url}</span>
-            <span style="font-size: 11px; opacity: 0.7; margin-left: 4px;">(${node.status})</span>
+          <div class="cluster-node-row">
+            <span class="cluster-node-dot" style="background: ${nodeStatusColor};"></span>
+            <span class="cluster-node-url" title="${node.url}">${node.url}</span>
+            <span class="cluster-node-status">(${node.status})</span>
           </div>
         `;
       }).join('');
@@ -336,10 +368,11 @@ class HyperBEAMGlobe {
         <div class="globe-tooltip">
           <div style="font-weight: bold; margin-bottom: 8px;">
             <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: ${statusColor}; margin-right: 8px;"></span>
-            ${nodeData.url}
+            <span title="${nodeData.url}">${nodeData.url}</span>
           </div>
           <div style="margin-bottom: 4px;"><strong>Location:</strong> ${nodeData.location}</div>
           <div style="margin-bottom: 4px;"><strong>Status:</strong> ${nodeData.status.charAt(0).toUpperCase() + nodeData.status.slice(1)}</div>
+          <div style="margin-bottom: 4px;"><strong>Last working:</strong> ${this.formatLastSeen(nodeData.lastSeen)}</div>
         </div>
       `;
     }
@@ -365,17 +398,15 @@ class HyperBEAMGlobe {
       // Cluster tooltip with clickable links
       const { online, busy, offline } = nodeData.clusterStats;
 
-      let nodeList = nodeData.allNodes.map(node => {
+      let nodeList = this.sortNodesForStatusList(nodeData.allNodes).map(node => {
         const nodeStatusColor = this.getStatusColor(node.status);
         const hbUrl = node.fullUrl;
 
         return `
-          <div style="margin: 4px 0;">
-            <div style="display: flex; align-items: center;">
-              <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: ${nodeStatusColor}; margin-right: 6px;"></span>
-              <a href="${hbUrl}" target="_blank" style="color: #60a5fa; text-decoration: none; font-size: 12px;">${node.url}</a>
-              <span style="font-size: 11px; opacity: 0.7; margin-left: 4px;">(${node.status})</span>
-            </div>
+          <div class="cluster-node-row">
+            <span class="cluster-node-dot" style="background: ${nodeStatusColor};"></span>
+            <a class="cluster-node-url" href="${hbUrl}" target="_blank" rel="noreferrer" title="${node.url}">${node.url}</a>
+            <span class="cluster-node-status">(${node.status})</span>
           </div>
         `;
       }).join('');
@@ -399,10 +430,11 @@ class HyperBEAMGlobe {
       content = `
         <div style="font-weight: bold; margin-bottom: 8px;">
           <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: ${statusColor}; margin-right: 8px;"></span>
-          <a href="${hbUrl}" target="_blank" style="color: #60a5fa; text-decoration: none;">${nodeData.url}</a>
+          <a class="node-hostname" href="${hbUrl}" target="_blank" title="${nodeData.url}" style="color: #60a5fa; text-decoration: none;">${nodeData.url}</a>
         </div>
         <div style="margin-bottom: 4px;"><strong>Location:</strong> ${nodeData.location}</div>
         <div style="margin-bottom: 4px;"><strong>Status:</strong> ${nodeData.status.charAt(0).toUpperCase() + nodeData.status.slice(1)}</div>
+        <div style="margin-bottom: 4px;"><strong>Last working:</strong> ${this.formatLastSeen(nodeData.lastSeen)}</div>
       `;
     }
 
@@ -441,6 +473,9 @@ class HyperBEAMGlobe {
     this.currentTooltipData = { isHoveringTooltip, isHoveringNode };
 
     document.body.appendChild(tooltip);
+    tooltip.querySelectorAll('.cluster-node-url, .node-hostname').forEach(element => {
+      fitHostnameToElement(element, element.title);
+    });
   }
 
   hideCustomTooltip() {
@@ -460,7 +495,7 @@ class HyperBEAMGlobe {
     details.innerHTML = `
       <div style="margin-bottom: 15px;">
         <span class="node-status-indicator status-${nodeData.status}"></span>
-        <strong>${nodeData.url}</strong>
+        <strong class="node-hostname" title="${nodeData.url}">${nodeData.url}</strong>
       </div>
       <div style="margin-bottom: 8px;">
         <strong>Location:</strong> ${nodeData.location}
@@ -469,9 +504,13 @@ class HyperBEAMGlobe {
         <strong>Status:</strong> ${nodeData.status.charAt(0).toUpperCase() + nodeData.status.slice(1)}
       </div>
       <div style="margin-bottom: 8px;">
+        <strong>Last working:</strong> ${this.formatLastSeen(nodeData.lastSeen)}
+      </div>
+      <div style="margin-bottom: 8px;">
         <strong>Coordinates:</strong> ${nodeData.lat.toFixed(4)}, ${nodeData.lng.toFixed(4)}
       </div>
     `;
+    fitHostnameToElement(details.querySelector('.node-hostname'), nodeData.url);
 
     panel.classList.add('visible');
   }
@@ -490,45 +529,34 @@ class HyperBEAMGlobe {
   }
 
   updateStats() {
-    let totalNodes = 0;
-    let online = 0;
-    let busy = 0;
-    let offline = 0;
+    const roster = this.nodeData.flatMap(node => node.isCluster ? node.allNodes : [node]);
+    const onlineNodes = roster.filter(node => node.status === 'online');
+    const busyNodes = roster.filter(node => node.status === 'busy');
+    const offlineNodes = roster.filter(node => node.status === 'offline');
 
-    this.nodeData.forEach(n => {
-      if (n.isCluster) {
-        // For clusters, count all nodes in the cluster
-        totalNodes += n.clusterSize;
-        online += n.clusterStats.online;
-        busy += n.clusterStats.busy;
-        offline += n.clusterStats.offline;
-      } else {
-        // For individual nodes, count as 1
-        totalNodes += 1;
-        if (n.status === 'online') online++;
-        else if (n.status === 'busy') busy++;
-        else if (n.status === 'offline') offline++;
-      }
-    });
-
-    document.getElementById('totalNodes').textContent = totalNodes;
-    document.getElementById('onlineNodes').textContent = online;
-    document.getElementById('busyNodes').textContent = busy;
-    document.getElementById('offlineNodes').textContent = offline;
+    document.getElementById('totalNodes').textContent = roster.length;
+    document.getElementById('onlineNodes').textContent = onlineNodes.length;
+    document.getElementById('busyNodes').textContent = busyNodes.length;
+    document.getElementById('offlineNodes').textContent = offlineNodes.length;
   }
 
   hideLoading() {
-    // Start 5-minute refresh timer
-    this.refreshTimer = setInterval(() => {
-      console.log('🔄 Refreshing nodes...');
-      this.loadNodeData().then(() => {
-        // Update the globe visualization with new data
-        this.globe.pointsData(this.nodeData);
-        this.globe.ringsData(this.nodeData);
-      });
-    }, 5 * 60 * 1000); // 5 minutes
+    const loading = document.getElementById('loading');
+    if (this.nodeData.length) {
+      loading?.remove();
+    } else if (loading) {
+      loading.innerHTML = `
+        <div>No recently working HyperBEAM nodes are cached yet.</div>
+        <div style="font-size: 0.9rem; margin-top: 10px; opacity: 0.75;">
+          Open the main dashboard or node field view to populate the seven-day working roster.
+        </div>
+      `;
+    }
 
-    console.log('⏰ Auto-refresh timer started (5 minutes)');
+    // Re-read the established node cache; the globe never discovers or probes nodes itself.
+    this.refreshTimer = setInterval(() => {
+      this.refreshFromNodeCache();
+    }, 15 * 1000);
 
     const autoRotateBtn = document.querySelector('.control-btn');
     if (autoRotateBtn && this.autoRotate) {
@@ -629,6 +657,9 @@ window.addEventListener('load', () => {
 // Cleanup on page unload
 window.addEventListener('beforeunload', () => {
   try {
+    if (globe?.refreshTimer) clearInterval(globe.refreshTimer);
+    if (globe?.cacheUpdateHandler) window.removeEventListener(HYPERBEAM_ROSTER_EVENT, globe.cacheUpdateHandler);
+    if (globe?.storageHandler) window.removeEventListener('storage', globe.storageHandler);
     if (globe && globe.globe && typeof globe.globe._destructor === 'function') {
       globe.globe._destructor();
     }
